@@ -1,0 +1,15 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  padding: 2rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  max-width: 48rem;
+}
+
+h1 {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
