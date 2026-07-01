@@ -1,0 +1,57 @@
+{
+  "capturedAt": "2026-01-15T09:12:05Z",
+  "output": {
+    "namespace": "shop",
+    "name": "checkout-6f9c8b7d54-q4m2p",
+    "phase": "Running",
+    "node": "kind-worker",
+    "labels": {
+      "app": "checkout",
+      "pod-template-hash": "6f9c8b7d54"
+    },
+    "containers": [
+      {
+        "name": "checkout",
+        "ready": false,
+        "restartCount": 6,
+        "state": "waiting",
+        "reason": "CrashLoopBackOff",
+        "message": "back-off 5m0s restarting failed container",
+        "lastTerminated": {
+          "exitCode": 1,
+          "reason": "Error",
+          "startedAt": "2026-01-15T09:11:40Z",
+          "finishedAt": "2026-01-15T09:11:40Z",
+          "message": "container checkout terminated with exit code 1"
+        }
+      }
+    ],
+    "conditions": [
+      { "type": "Initialized", "status": "True" },
+      {
+        "type": "Ready",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [checkout]"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [checkout]"
+      },
+      { "type": "PodScheduled", "status": "True" }
+    ],
+    "events": [
+      {
+        "type": "Warning",
+        "reason": "BackOff",
+        "message": "Back-off restarting failed container checkout in pod checkout-6f9c8b7d54-q4m2p_shop",
+        "count": 42,
+        "firstSeen": "2026-01-15T09:04:20Z",
+        "lastSeen": "2026-01-15T09:12:01Z",
+        "involvedObject": "Pod/checkout-6f9c8b7d54-q4m2p"
+      }
+    ]
+  }
+}

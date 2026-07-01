@@ -1,0 +1,26 @@
+{
+  "capturedAt": "2026-01-15T09:12:04Z",
+  "output": {
+    "namespace": "shop",
+    "pods": [
+      {
+        "name": "checkout-6f9c8b7d54-q4m2p",
+        "phase": "Running",
+        "ready": "0/1",
+        "restarts": 6,
+        "age": "8m",
+        "node": "kind-worker",
+        "containerStatuses": [
+          {
+            "name": "checkout",
+            "ready": false,
+            "restartCount": 6,
+            "state": "waiting",
+            "reason": "CrashLoopBackOff",
+            "message": "back-off 5m0s restarting failed container=checkout pod=checkout-6f9c8b7d54-q4m2p_shop"
+          }
+        ]
+      }
+    ]
+  }
+}

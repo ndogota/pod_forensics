@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-01-15T09:12:06Z",
+  "output": {
+    "namespace": "shop",
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "Scheduled",
+        "message": "Successfully assigned shop/checkout-6f9c8b7d54-q4m2p to kind-worker",
+        "count": 1,
+        "firstSeen": "2026-01-15T09:04:02Z",
+        "lastSeen": "2026-01-15T09:04:02Z",
+        "involvedObject": "Pod/checkout-6f9c8b7d54-q4m2p"
+      },
+      {
+        "type": "Normal",
+        "reason": "Pulled",
+        "message": "Container image \"ghcr.io/example/checkout:1.4.2\" already present on machine",
+        "count": 7,
+        "firstSeen": "2026-01-15T09:04:03Z",
+        "lastSeen": "2026-01-15T09:11:40Z",
+        "involvedObject": "Pod/checkout-6f9c8b7d54-q4m2p"
+      },
+      {
+        "type": "Normal",
+        "reason": "Created",
+        "message": "Created container checkout",
+        "count": 7,
+        "firstSeen": "2026-01-15T09:04:03Z",
+        "lastSeen": "2026-01-15T09:11:40Z",
+        "involvedObject": "Pod/checkout-6f9c8b7d54-q4m2p"
+      },
+      {
+        "type": "Normal",
+        "reason": "Started",
+        "message": "Started container checkout",
+        "count": 7,
+        "firstSeen": "2026-01-15T09:04:03Z",
+        "lastSeen": "2026-01-15T09:11:40Z",
+        "involvedObject": "Pod/checkout-6f9c8b7d54-q4m2p"
+      },
+      {
+        "type": "Warning",
+        "reason": "BackOff",
+        "message": "Back-off restarting failed container checkout in pod checkout-6f9c8b7d54-q4m2p_shop",
+        "count": 42,
+        "firstSeen": "2026-01-15T09:04:20Z",
+        "lastSeen": "2026-01-15T09:12:01Z",
+        "involvedObject": "Pod/checkout-6f9c8b7d54-q4m2p"
+      }
+    ]
+  }
+}

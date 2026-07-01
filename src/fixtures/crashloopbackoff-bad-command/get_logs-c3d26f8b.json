@@ -1,0 +1,14 @@
+{
+  "capturedAt": "2026-01-15T09:12:07Z",
+  "output": {
+    "namespace": "shop",
+    "pod": "checkout-6f9c8b7d54-q4m2p",
+    "container": "checkout",
+    "previous": true,
+    "lines": [
+      "FATAL: missing required flag --config",
+      "the checkout service cannot start without a configuration file"
+    ],
+    "truncated": false
+  }
+}

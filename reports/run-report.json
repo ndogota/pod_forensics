@@ -1,0 +1,318 @@
+{
+  "createdAt": "2026-07-01T16:47:04.535Z",
+  "model": "fake-model",
+  "scenarioScores": [
+    {
+      "scenarioId": "crashloopbackoff-bad-command",
+      "tier": "obvious",
+      "runs": 3,
+      "classAccuracy": 1,
+      "evidenceRecall": 1,
+      "rootCauseJudgeScore": 0.8636363636363636
+    }
+  ],
+  "confusionMatrix": {
+    "CrashLoopBackOff": {
+      "CrashLoopBackOff": 3
+    }
+  },
+  "traces": [
+    {
+      "scenarioId": "crashloopbackoff-bad-command",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "CrashLoopBackOff",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 6"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p"
+            },
+            "excerpt": "last state terminated with exit code 1 (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
+          }
+        ],
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "costUsd": 0,
+      "totalLatencyMs": 25
+    },
+    {
+      "scenarioId": "crashloopbackoff-bad-command",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "CrashLoopBackOff",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 6"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p"
+            },
+            "excerpt": "last state terminated with exit code 1 (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
+          }
+        ],
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "costUsd": 0,
+      "totalLatencyMs": 25
+    },
+    {
+      "scenarioId": "crashloopbackoff-bad-command",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "CrashLoopBackOff",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 6"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p"
+            },
+            "excerpt": "last state terminated with exit code 1 (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
+          }
+        ],
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "costUsd": 0,
+      "totalLatencyMs": 25
+    }
+  ]
+}

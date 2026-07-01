@@ -7,10 +7,10 @@
 // This quest implements path resolution and read only. No fixtures exist yet,
 // so resolve throws a clear not-found error pointing at the path it looked for.
 
-import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { argsHash } from "../tools/argsHash";
 import { toolDefinitions } from "../tools";
 import type {
   ToolCall,
@@ -24,17 +24,6 @@ import type {
 // TODO: make the base directory robust to the working directory once the
 // capture and eval harnesses exist.
 const DEFAULT_FIXTURES_ROOT = path.resolve(process.cwd(), "src/fixtures");
-
-// Stable short hash of tool arguments. Keys are sorted so the hash does not
-// depend on insertion order.
-export function argsHash(args: Record<string, string>): string {
-  const canonical = JSON.stringify(
-    Object.keys(args)
-      .sort()
-      .map((k) => [k, args[k]]),
-  );
-  return createHash("sha1").update(canonical).digest("hex").slice(0, 8);
-}
 
 export class FixtureProvider implements ToolProvider {
   private readonly scenarioId: string;

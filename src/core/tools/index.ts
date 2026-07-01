@@ -21,15 +21,26 @@ import type { ToolDefinition } from "../types";
 
 // --- Shared output fragments ------------------------------------------------
 
+// The prior terminated instance of a container. Present on a container that has
+// restarted, which is the signal a crash loop leaves behind.
+export interface ContainerStateTerminated {
+  exitCode: number;
+  reason?: string;    // e.g. Error, OOMKilled, Completed
+  startedAt?: string;
+  finishedAt?: string;
+  message?: string;
+}
+
 // A single container state as surfaced by a pod read.
 export interface ContainerStatusSummary {
   name: string;
   ready: boolean;
   restartCount: number;
   state: "running" | "waiting" | "terminated";
-  reason?: string;    // e.g. CrashLoopBackOff, ImagePullBackOff, OOMKilled
+  reason?: string;    // current waiting/terminated reason, e.g. CrashLoopBackOff
   message?: string;
-  exitCode?: number;
+  exitCode?: number;  // set when the container is currently terminated
+  lastTerminated?: ContainerStateTerminated; // prior instance, for crash loops
 }
 
 // A normalized Kubernetes event.

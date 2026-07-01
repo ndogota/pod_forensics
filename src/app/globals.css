@@ -1,5 +1,7 @@
 :root {
   color-scheme: light dark;
+  --border: color-mix(in srgb, currentColor 18%, transparent);
+  --muted: color-mix(in srgb, currentColor 60%, transparent);
 }
 
 body {
@@ -7,9 +9,67 @@ body {
   padding: 2rem;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   line-height: 1.5;
-  max-width: 48rem;
+  max-width: 60rem;
 }
 
-h1 {
+h1,
+h2,
+h3,
+h4 {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+section {
+  margin-top: 2.5rem;
+}
+
+.note,
+.meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.run {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.diagnosis {
+  margin-bottom: 1rem;
+}
+
+.fix {
+  color: var(--muted);
+}
+
+ul.evidence {
+  list-style: none;
+  padding-left: 0;
+}
+
+ul.evidence li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
 }
