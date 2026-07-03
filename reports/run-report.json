@@ -1,6 +1,6 @@
 {
-  "createdAt": "2026-07-03T15:50:55.723Z",
-  "model": "claude-opus-4-8",
+  "createdAt": "2026-07-03T15:58:46.798Z",
+  "model": "fake-model",
   "scenarioScores": [
     {
       "scenarioId": "crashloopbackoff-bad-command",
@@ -8,8 +8,8 @@
       "runs": 3,
       "completionRate": 1,
       "classAccuracy": 1,
-      "evidenceRecall": 0.6666666666666666,
-      "rootCauseJudgeScore": 0.6999999999999998
+      "evidenceRecall": 1,
+      "rootCauseJudgeScore": 0.8636363636363636
     }
   ],
   "confusionMatrix": {
@@ -29,27 +29,12 @@
               "namespace": "shop"
             }
           },
-          "latencyMs": 12353,
-          "tokensIn": 2886,
-          "tokensOut": 80
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         },
         {
           "index": 1,
-          "toolCall": {
-            "tool": "get_logs",
-            "args": {
-              "container": "checkout",
-              "namespace": "shop",
-              "pod": "checkout-6fff987c78-27bm6",
-              "previous": "true"
-            }
-          },
-          "latencyMs": 3353,
-          "tokensIn": 3249,
-          "tokensOut": 256
-        },
-        {
-          "index": 2,
           "toolCall": {
             "tool": "describe_pod",
             "args": {
@@ -57,46 +42,47 @@
               "pod": "checkout-6fff987c78-27bm6"
             }
           },
-          "latencyMs": 0,
-          "tokensIn": 0,
-          "tokensOut": 0
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         },
         {
-          "index": 3,
-          "toolCall": {
-            "tool": "describe_deployment",
-            "args": {
-              "deployment": "checkout",
-              "namespace": "shop"
-            }
-          },
-          "latencyMs": 3405,
-          "tokensIn": 5027,
-          "tokensOut": 156
-        },
-        {
-          "index": 4,
+          "index": 2,
           "toolCall": {
             "tool": "get_events",
             "args": {
               "namespace": "shop"
             }
           },
-          "latencyMs": 2161,
-          "tokensIn": 5315,
-          "tokensOut": 80
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6fff987c78-27bm6",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         }
       ],
       "diagnosis": {
         "failureClass": "CrashLoopBackOff",
-        "rootCause": "The checkout container starts successfully (image busybox:1.36 pulls and the container is created/started) but its process exits immediately with exit code 1 on every attempt, causing repeated restarts and CrashLoopBackOff. The container terminates the instant it starts (lastTerminated startedAt and finishedAt are identical), which is the signature of a failing entrypoint/command inside the container rather than an environment issue (no image pull failure, no scheduling failure, no probe failure, no OOMKilled, and no config/secret-related events). The application command itself is failing immediately.",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
         "evidence": [
           {
             "tool": "get_pods",
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "\"reason\":\"CrashLoopBackOff\",...\"lastTerminated\":{\"exitCode\":1,\"reason\":\"Error\",\"startedAt\":\"2026-07-03T13:54:30.000Z\",\"finishedAt\":\"2026-07-03T13:54:30.000Z\"}"
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
           },
           {
             "tool": "describe_pod",
@@ -104,31 +90,32 @@
               "namespace": "shop",
               "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "{\"type\":\"Normal\",\"reason\":\"Started\",\"message\":\"Started container checkout\",\"count\":5} and \"Successfully pulled image \\\"busybox:1.36\\\"\" — container starts and image pulls fine, yet exits with exitCode 1"
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
           {
-            "tool": "describe_pod",
+            "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6fff987c78-27bm6"
+              "pod": "checkout-6fff987c78-27bm6",
+              "previous": "true"
             },
-            "excerpt": "\"reason\":\"BackOff\",\"message\":\"Back-off restarting failed container checkout ...\",\"count\":116 — repeated restart backoff with no probe, OOM, or scheduling warnings"
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
           },
           {
             "tool": "get_events",
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "Events include only Scheduled/Pulling/Pulled/Created/Started/BackOff — no ImagePull, FailedScheduling, Unhealthy(probe), OOMKilled, or missing config/secret events"
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
           }
         ],
-        "suggestedFix": "Inspect and correct the container's command/args (entrypoint) in the deployment spec. The current command exits with error code 1 immediately on startup; fix the invoked command/script (e.g., a missing binary, invalid flag, or a script that exits non-zero) so the process runs and stays alive. Retrieving the container logs (get_logs previous) once available will confirm the exact error message from the failing command.",
-        "confidence": 0.78
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9
       },
-      "stepCount": 5,
-      "totalTokens": 24966,
-      "costUsd": 0.16313,
-      "totalLatencyMs": 38631
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "costUsd": 0,
+      "totalLatencyMs": 25
     },
     {
       "scenarioId": "crashloopbackoff-bad-command",
@@ -141,39 +128,12 @@
               "namespace": "shop"
             }
           },
-          "latencyMs": 2442,
-          "tokensIn": 2886,
-          "tokensOut": 134
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         },
         {
           "index": 1,
-          "toolCall": {
-            "tool": "get_events",
-            "args": {
-              "namespace": "shop"
-            }
-          },
-          "latencyMs": 0,
-          "tokensIn": 0,
-          "tokensOut": 0
-        },
-        {
-          "index": 2,
-          "toolCall": {
-            "tool": "get_logs",
-            "args": {
-              "container": "checkout",
-              "namespace": "shop",
-              "pod": "checkout-6fff987c78-27bm6",
-              "previous": "true"
-            }
-          },
-          "latencyMs": 4828,
-          "tokensIn": 4529,
-          "tokensOut": 269
-        },
-        {
-          "index": 3,
           "toolCall": {
             "tool": "describe_pod",
             "args": {
@@ -181,48 +141,47 @@
               "pod": "checkout-6fff987c78-27bm6"
             }
           },
-          "latencyMs": 0,
-          "tokensIn": 0,
-          "tokensOut": 0
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         },
         {
-          "index": 4,
+          "index": 2,
           "toolCall": {
-            "tool": "describe_deployment",
+            "tool": "get_events",
             "args": {
-              "deployment": "checkout",
               "namespace": "shop"
             }
           },
-          "latencyMs": 2728,
-          "tokensIn": 6320,
-          "tokensOut": 119
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6fff987c78-27bm6",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         }
       ],
       "diagnosis": {
         "failureClass": "CrashLoopBackOff",
-        "rootCause": "The checkout container starts successfully but its process exits immediately with a non-zero code (exit code 1), causing Kubernetes to repeatedly restart it and enter CrashLoopBackOff. The image pulls fine and the container is created and started, but it terminates the instant it starts (startedAt equals finishedAt). This is the signature of a failing container command/args — the entrypoint runs a command that errors out and exits 1 rather than staying up as a long-running process. It is not an image, scheduling, OOM, or probe problem.",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
         "evidence": [
           {
             "tool": "get_pods",
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "\"reason\":\"CrashLoopBackOff\",...\"restartCount\":10,...\"lastTerminated\":{\"exitCode\":1,\"reason\":\"Error\",\"startedAt\":\"2026-07-03T13:54:30.000Z\",\"finishedAt\":\"2026-07-03T13:54:30.000Z\"}"
-          },
-          {
-            "tool": "get_events",
-            "args": {
-              "namespace": "shop"
-            },
-            "excerpt": "\"reason\":\"Started\",\"message\":\"Started container checkout\",\"count\":5 ... \"reason\":\"BackOff\",\"message\":\"Back-off restarting failed container checkout\",\"count\":116"
-          },
-          {
-            "tool": "get_events",
-            "args": {
-              "namespace": "shop"
-            },
-            "excerpt": "\"reason\":\"Pulled\",\"message\":\"Successfully pulled image \\\"busybox:1.36\\\" in 3.552s\" (image pull succeeded, not ImagePullBackOff)"
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
           },
           {
             "tool": "describe_pod",
@@ -230,16 +189,32 @@
               "namespace": "shop",
               "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "\"conditions\":[{\"type\":\"Initialized\",\"status\":\"True\"},...{\"type\":\"Ready\",\"status\":\"False\",\"reason\":\"ContainersNotReady\"}] and lastTerminated exitCode 1 with startedAt==finishedAt (immediate exit, no OOM/probe reason present)"
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6fff987c78-27bm6",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
           }
         ],
-        "suggestedFix": "Fix the container's command/args in the checkout deployment so the entrypoint launches a valid long-running process (e.g., correct the busybox command that is currently erroring). Inspect the intended command; run it locally against busybox:1.36 to confirm it stays up and exits 0. After correcting the command, roll out the deployment again.",
-        "confidence": 0.78
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9
       },
-      "stepCount": 5,
-      "totalTokens": 22157,
-      "costUsd": 0.147805,
-      "totalLatencyMs": 27212
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "costUsd": 0,
+      "totalLatencyMs": 25
     },
     {
       "scenarioId": "crashloopbackoff-bad-command",
@@ -252,27 +227,12 @@
               "namespace": "shop"
             }
           },
-          "latencyMs": 1953,
-          "tokensIn": 2886,
-          "tokensOut": 80
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         },
         {
           "index": 1,
-          "toolCall": {
-            "tool": "get_logs",
-            "args": {
-              "container": "checkout",
-              "namespace": "shop",
-              "pod": "checkout-6fff987c78-27bm6",
-              "previous": "true"
-            }
-          },
-          "latencyMs": 3424,
-          "tokensIn": 3249,
-          "tokensOut": 251
-        },
-        {
-          "index": 2,
           "toolCall": {
             "tool": "describe_pod",
             "args": {
@@ -280,46 +240,47 @@
               "pod": "checkout-6fff987c78-27bm6"
             }
           },
-          "latencyMs": 0,
-          "tokensIn": 0,
-          "tokensOut": 0
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         },
         {
-          "index": 3,
-          "toolCall": {
-            "tool": "describe_deployment",
-            "args": {
-              "deployment": "checkout",
-              "namespace": "shop"
-            }
-          },
-          "latencyMs": 3282,
-          "tokensIn": 5022,
-          "tokensOut": 144
-        },
-        {
-          "index": 4,
+          "index": 2,
           "toolCall": {
             "tool": "get_events",
             "args": {
               "namespace": "shop"
             }
           },
-          "latencyMs": 2064,
-          "tokensIn": 5298,
-          "tokensOut": 69
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6fff987c78-27bm6",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
         }
       ],
       "diagnosis": {
         "failureClass": "CrashLoopBackOff",
-        "rootCause": "The checkout container starts successfully but its process exits immediately with a non-zero exit code (Error, exit code 1), causing Kubernetes to repeatedly restart it and enter CrashLoopBackOff. The image (busybox:1.36) pulls and the container is created/started fine, so this is not an image or scheduling problem — the container's command/entrypoint itself fails on startup (a bad command or the program erroring out instantly). The lastTerminated startedAt and finishedAt are identical (13:54:30), confirming the process dies at launch rather than being killed by a probe or OOM.",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
         "evidence": [
           {
             "tool": "get_pods",
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "\"reason\":\"CrashLoopBackOff\",...\"lastTerminated\":{\"exitCode\":1,\"reason\":\"Error\",\"startedAt\":\"2026-07-03T13:54:30.000Z\",\"finishedAt\":\"2026-07-03T13:54:30.000Z\"}"
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
           },
           {
             "tool": "describe_pod",
@@ -327,30 +288,32 @@
               "namespace": "shop",
               "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "\"restartCount\":10,\"state\":\"waiting\",\"reason\":\"CrashLoopBackOff\" ... lastTerminated exitCode 1 with startedAt and finishedAt both 13:54:30 (immediate exit)"
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-6fff987c78-27bm6",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
           },
           {
             "tool": "get_events",
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "\"Successfully pulled image \\\"busybox:1.36\\\"\" and \"Created container checkout\" (count 5) and \"Started container checkout\" (count 5) — image pulls and container starts fine, ruling out ImagePullBackOff"
-          },
-          {
-            "tool": "get_events",
-            "args": {
-              "namespace": "shop"
-            },
-            "excerpt": "\"Warning\",\"reason\":\"BackOff\",\"message\":\"Back-off restarting failed container checkout...\",\"count\":116 — repeated crash/restart loop with no Liveness/Readiness probe failure events (not ProbeMisconfigured) and no OOMKilled reason (not OOM)"
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
           }
         ],
-        "suggestedFix": "Inspect and correct the container's command/args (entrypoint) in the checkout deployment spec. The busybox process is exiting with code 1 immediately on startup — fix the command so it runs a valid long-lived process (or correct the invalid argument/binary). Reviewing the container's stdout/stderr logs will show the exact error message once log access is available.",
-        "confidence": 0.82
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9
       },
-      "stepCount": 5,
-      "totalTokens": 25026,
-      "costUsd": 0.16563,
-      "totalLatencyMs": 29658
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "costUsd": 0,
+      "totalLatencyMs": 25
     }
   ]
 }
