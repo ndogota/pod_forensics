@@ -46,6 +46,15 @@ export function classCorrect(
 // Fraction of expected evidence markers that appear in the cited excerpts.
 // Matching is case-insensitive substring, so "CrashLoopBackOff" matches an
 // excerpt that mentions it in any casing.
+//
+// TODO: substring matching cannot express a signal that lives in a structured
+// field value, such as a container's exit code being non-zero. A field name
+// like "exitCode" is present whenever a container has terminated at all, so it
+// does not discriminate the failure, and the bare value "1" is too weak to
+// match as a substring. Evidence scoring should grow structured-field
+// assertions (for example, lastTerminated.exitCode != 0) alongside substring
+// markers, so non-zero-exit style signals can be scored without a fragile
+// literal.
 export function evidenceRecall(
   diagnosis: Diagnosis,
   groundTruth: GroundTruth,

@@ -3,7 +3,6 @@
   "rootCause": "The checkout container start command exits non-zero immediately because a required --config flag is missing, so the kubelet restarts it repeatedly and the pod settles into CrashLoopBackOff.",
   "expectedEvidence": [
     "CrashLoopBackOff",
-    "exitCode",
     "missing required flag --config",
     "back-off restarting failed container"
   ]

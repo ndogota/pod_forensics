@@ -94,7 +94,7 @@ export function buildCrashloopScript(namespace: string): CompletionResult[] {
                 tool: "describe_pod",
                 args: { namespace, pod },
                 excerpt:
-                  "last state terminated with exitCode 1, reason Error",
+                  "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)",
               },
               {
                 tool: "get_logs",

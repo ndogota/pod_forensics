@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-07-03T14:04:51.815Z",
+  "createdAt": "2026-07-03T14:24:55.453Z",
   "model": "fake-model",
   "scenarioScores": [
     {
@@ -90,7 +90,7 @@
               "namespace": "shop",
               "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "last state terminated with exitCode 1, reason Error"
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
           {
             "tool": "get_logs",
@@ -189,7 +189,7 @@
               "namespace": "shop",
               "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "last state terminated with exitCode 1, reason Error"
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
           {
             "tool": "get_logs",
@@ -288,7 +288,7 @@
               "namespace": "shop",
               "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "last state terminated with exitCode 1, reason Error"
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
           {
             "tool": "get_logs",

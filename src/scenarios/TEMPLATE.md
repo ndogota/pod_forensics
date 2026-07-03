@@ -12,6 +12,17 @@ A scenario is data. To add one:
 2. Make sure each `expectedEvidence` marker actually appears in the captured
    fixtures for that scenario, so evidence recall measures something real.
 
+   Each marker must be a discriminating signal: a substring that this specific
+   failure produces and that a healthy workload, or one failing a different way,
+   would not. Never use a field name (for example `exitCode`), and never use a
+   token that shows up regardless of the failure (a terminated container always
+   has an `exitCode` field, so it discriminates nothing). Prefer the signal that
+   names the cause, such as the crash log line or the specific waiting reason. If
+   the only distinguishing signal is a structured field value that has no clean
+   discriminating substring (such as a non-zero exit code), leave it out rather
+   than adding a weak marker; scoring it well needs structured-field assertions,
+   which the scorer does not yet support.
+
 3. Register it in `src/scenarios/index.ts` by adding a `Scenario` entry with the
    metadata, including `namespace` and `target` (the workload kind and name).
    The failing pod name, when it differs from the target, is a fixture detail
