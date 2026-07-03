@@ -16,6 +16,7 @@ import { DEFAULT_AGENT_CONFIG, type AgentConfig } from "./config";
 import {
   SUBMIT_DIAGNOSIS_TOOL,
   diagnosisSchema,
+  formatDiagnosisIssues,
   submitDiagnosisDefinition,
 } from "./diagnosisSchema";
 import type {
@@ -26,6 +27,12 @@ import type {
 } from "./modelClient";
 import { SYSTEM_PROMPT, buildInitialUserPrompt } from "./prompts";
 
+// How many times an invalid submit_diagnosis is returned to the model with its
+// validation issues so it can correct itself. After this many corrections a
+// still-invalid submit fails the run cleanly. This bounds the exchange: the loop
+// never retries blindly and never loops unbounded.
+const MAX_DIAGNOSIS_CORRECTIONS = 2;
+
 export interface RunAgentOptions {
   scenarioId: string;
   namespace: string;
@@ -35,7 +42,8 @@ export interface RunAgentOptions {
 }
 
 // Thrown when the agent fails to produce a valid diagnosis within the step
-// budget, including after one retry on an invalid submit_diagnosis payload.
+// budget, including after up to MAX_DIAGNOSIS_CORRECTIONS informed correction
+// turns on an invalid submit_diagnosis payload.
 export class AgentRunError extends Error {}
 
 export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
@@ -99,17 +107,24 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
           concluded = parsed.data as Diagnosis;
           break;
         }
-        // Invalid diagnosis. Retry once, then fail cleanly.
+        // Invalid diagnosis. Do not retry with identical context. Return the
+        // specific validation issues (each failing field path and message) as an
+        // error tool_result so the model can resubmit a corrected diagnosis on
+        // its next turn. Allow up to MAX_DIAGNOSIS_CORRECTIONS such turns; if it
+        // still fails, fail the run cleanly so it is recorded, never looped.
         invalidSubmitCount++;
-        if (invalidSubmitCount > 1) {
+        if (invalidSubmitCount > MAX_DIAGNOSIS_CORRECTIONS) {
           throw new AgentRunError(
-            `agent submitted an invalid diagnosis twice for scenario "${scenarioId}": ${parsed.error.message}`,
+            `agent submitted an invalid diagnosis ${invalidSubmitCount} times for scenario "${scenarioId}"; last validation issues:\n${formatDiagnosisIssues(parsed.error)}`,
           );
         }
         toolResults.push({
           toolUseId: block.id,
           isError: true,
-          content: `The diagnosis did not match the required shape. Fix these problems and call submit_diagnosis again: ${parsed.error.message}`,
+          content:
+            "submit_diagnosis was rejected: the payload failed validation. " +
+            "Fix exactly these problems and call submit_diagnosis again:\n" +
+            formatDiagnosisIssues(parsed.error),
         });
         // A submit attempt is terminal intent for this turn. Ignore any other
         // tool calls in the same response.

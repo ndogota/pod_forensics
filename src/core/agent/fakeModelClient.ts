@@ -123,3 +123,48 @@ export function buildCrashloopScript(namespace: string): CompletionResult[] {
     },
   ];
 }
+
+// A variant of the crashloop script that exercises the self-correction path.
+// The first submit_diagnosis omits confidence and suggestedFix, so it fails the
+// Diagnosis schema. The loop returns the validation issues, and the next turn
+// submits the same, now-valid diagnosis. Position is derived from assistant-turn
+// count, so the rejected submit advances the script exactly like any other turn.
+// This lets an offline test assert that an invalid submit is surfaced and then
+// self-corrected, deterministically and with no API key.
+export function buildCrashloopSelfCorrectionScript(
+  namespace: string,
+): CompletionResult[] {
+  const base = buildCrashloopScript(namespace);
+  const validSubmit = base[base.length - 1];
+  const investigative = base.slice(0, base.length - 1);
+
+  const submitBlock = validSubmit.content[0];
+  if (submitBlock.type !== "tool_use") {
+    throw new Error(
+      "expected the final crashloop step to be a submit_diagnosis tool_use",
+    );
+  }
+
+  // Same diagnosis, minus the two required fields the real run forgot.
+  const invalidInput: Record<string, unknown> = { ...submitBlock.input };
+  delete invalidInput.confidence;
+  delete invalidInput.suggestedFix;
+
+  const invalidSubmit: CompletionResult = {
+    content: [
+      {
+        type: "tool_use",
+        id: "call-invalid-submit",
+        name: SUBMIT_DIAGNOSIS_TOOL,
+        input: invalidInput,
+      },
+    ],
+    stopReason: "tool_use",
+    tokensIn: FAKE_TOKENS_IN,
+    tokensOut: 120,
+    costUsd: 0,
+    latencyMs: FAKE_LATENCY_MS,
+  };
+
+  return [...investigative, invalidSubmit, validSubmit];
+}
