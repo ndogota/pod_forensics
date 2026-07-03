@@ -1,0 +1,47 @@
+# service-no-endpoints
+#
+# Healthy, Running pods plus a Service whose selector does not match the pod
+# labels. The Deployment labels its pods app=web-backend, but the Service selects
+# app=web-api, so the Service matches no pods and has no endpoints. Nothing
+# crashes; the failure is the label/selector mismatch. This manifest is data for
+# the capture step. It is never applied by the agent or the eval, which are read
+# only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: storefront
+  labels:
+    app: web-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-backend
+  template:
+    metadata:
+      labels:
+        app: web-backend
+    spec:
+      containers:
+        - name: web
+          # A real, always-pullable image that runs and stays Ready with no
+          # probes, so the pod is healthy and the only fault is the Service
+          # selector. pause does nothing but hold the pod Running.
+          image: registry.k8s.io/pause:3.9
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: storefront
+spec:
+  # Mismatch: the pods are labeled app=web-backend, so this selector matches no
+  # pods and the Service has no endpoints.
+  selector:
+    app: web-api
+  ports:
+    - port: 80
+      targetPort: 8080

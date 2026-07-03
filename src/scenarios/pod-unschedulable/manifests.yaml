@@ -1,0 +1,38 @@
+# pod-unschedulable
+#
+# A Deployment whose pod requests far more memory than any node can provide, so
+# the scheduler can never place it. The pod stays Pending, no container ever
+# runs, and the scheduler emits a FailedScheduling event citing Insufficient
+# memory. This manifest is data for the capture step. It is never applied by the
+# agent or the eval, which are read only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregator
+  namespace: analytics
+  labels:
+    app: aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aggregator
+  template:
+    metadata:
+      labels:
+        app: aggregator
+    spec:
+      containers:
+        - name: aggregator
+          # A small, always-pullable image. The failure under test is scheduling,
+          # not the image, and the image is never even pulled because the pod
+          # never lands on a node. Using a real, pullable image avoids masking
+          # the scheduling failure behind an ImagePullBackOff.
+          image: busybox:1.36
+          command: ["/bin/sh", "-c", "sleep 3600"]
+          resources:
+            requests:
+              # No node has a terabyte of memory, so the pod is unschedulable.
+              memory: "1024Gi"
+          ports:
+            - containerPort: 8080

@@ -1,0 +1,28 @@
+// Capture registry: scenario id to its CaptureSpec.
+//
+// The capture harness looks a scenario up here to get its wait predicate and
+// captureSet. Adding a scenario means adding its directory (manifests,
+// groundtruth, captureSet) and one line here, so the harness itself stays
+// scenario-agnostic.
+
+import { captureSpec as crashloopSpec } from "./crashloopbackoff-bad-command/captureSet";
+import { captureSpec as unschedulableSpec } from "./pod-unschedulable/captureSet";
+import { captureSpec as serviceNoEndpointsSpec } from "./service-no-endpoints/captureSet";
+import { captureSpec as rbacDeniedSpec } from "./rbac-denied/captureSet";
+import type { CaptureSpec } from "./captureSpec";
+
+export const CAPTURE_SPECS: Record<string, CaptureSpec> = {
+  "crashloopbackoff-bad-command": crashloopSpec,
+  "pod-unschedulable": unschedulableSpec,
+  "service-no-endpoints": serviceNoEndpointsSpec,
+  "rbac-denied": rbacDeniedSpec,
+};
+
+// TODO: remaining scenarios to add a CaptureSpec for as they are seeded: the
+// four other obvious-tier classes (ImagePullBackOff, OOMKilled,
+// ProbeMisconfigured, MissingConfigOrSecret) and the two misleading-tier
+// scenarios. See src/scenarios/TEMPLATE.md.
+
+export function findCaptureSpec(scenarioId: string): CaptureSpec | undefined {
+  return CAPTURE_SPECS[scenarioId];
+}

@@ -6,6 +6,9 @@
 
 import type { GroundTruth, Scenario } from "../core/types";
 import crashloopGroundTruth from "./crashloopbackoff-bad-command/groundtruth.json";
+import unschedulableGroundTruth from "./pod-unschedulable/groundtruth.json";
+import serviceNoEndpointsGroundTruth from "./service-no-endpoints/groundtruth.json";
+import rbacDeniedGroundTruth from "./rbac-denied/groundtruth.json";
 
 export const SCENARIOS: Scenario[] = [
   {
@@ -18,11 +21,44 @@ export const SCENARIOS: Scenario[] = [
     groundTruth: crashloopGroundTruth as GroundTruth,
     tier: "obvious",
   },
+  {
+    id: "pod-unschedulable",
+    description:
+      "A Deployment whose pod requests more memory than any node can satisfy, so it never schedules and stays Pending with no container running.",
+    namespace: "analytics",
+    target: { kind: "Deployment", name: "aggregator" },
+    manifestsPath: "src/scenarios/pod-unschedulable/manifests.yaml",
+    groundTruth: unschedulableGroundTruth as GroundTruth,
+    tier: "obvious",
+  },
+  {
+    id: "service-no-endpoints",
+    description:
+      "Healthy Running pods plus a Service whose selector does not match the pod labels, so the Service has no endpoints.",
+    namespace: "storefront",
+    target: { kind: "Service", name: "web" },
+    manifestsPath: "src/scenarios/service-no-endpoints/manifests.yaml",
+    groundTruth: serviceNoEndpointsGroundTruth as GroundTruth,
+    tier: "obvious",
+  },
+  {
+    id: "rbac-denied",
+    description:
+      "A Running workload whose ServiceAccount is bound to no Role, so its calls to list secrets are denied by RBAC.",
+    namespace: "telemetry",
+    target: { kind: "Deployment", name: "log-shipper" },
+    manifestsPath: "src/scenarios/rbac-denied/manifests.yaml",
+    groundTruth: rbacDeniedGroundTruth as GroundTruth,
+    tier: "obvious",
+  },
 ];
 
-// TODO: nine more scenarios to seed per the architecture doc: seven more obvious
-// tier (one per remaining failure class) and two misleading tier. Add each as a
-// directory plus a registry entry here. See TEMPLATE.md.
+// TODO: six more scenarios to seed per the architecture doc. Obvious tier, one
+// per remaining failure class: ImagePullBackOff, OOMKilled, ProbeMisconfigured,
+// MissingConfigOrSecret. Misleading tier: the two scenarios where the obvious
+// surface signal is a symptom of a different root cause. Add each as a directory
+// plus a registry entry here and a CaptureSpec in captureRegistry.ts. See
+// TEMPLATE.md.
 
 export function findScenario(id: string): Scenario | undefined {
   return SCENARIOS.find((s) => s.id === id);

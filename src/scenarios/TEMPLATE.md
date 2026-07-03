@@ -32,23 +32,35 @@ A scenario is data. To add one:
    `<tool>-<argshash>.json`, where the hash comes from the shared
    `argsHash` function. Each file holds `{ capturedAt, output }`.
 
-## Still to seed
+## Seeded so far
 
-Per the architecture doc, nine more scenarios remain: seven more at the obvious
+Four obvious-tier scenarios are seeded, one per failure class:
+
+- CrashLoopBackOff from a bad container command
+- PodUnschedulable from a memory request no node can satisfy
+- ServiceNoEndpoints from a selector that does not match pod labels
+- RbacDenied from a ServiceAccount bound to no Role (checked with a
+  SubjectAccessReview against the workload identity)
+
+Each has a directory (manifests, groundtruth, captureSet+captureSpec), an entry
+in `index.ts`, a `CaptureSpec` in `captureRegistry.ts`, and a FakeModelClient
+script wired into `FAKE_SCRIPTS` in `scripts/eval.ts`.
+
+## Still to seed (TODO)
+
+Per the architecture doc, six more scenarios remain: four more at the obvious
 tier (one per remaining failure class) and two at the misleading tier, where the
 obvious surface signal is a symptom of a different root cause.
 
 - ImagePullBackOff from a wrong image tag (obvious)
 - OOMKilled from a memory limit set too low (obvious)
 - ProbeMisconfigured from a readiness probe on the wrong port (obvious)
-- PodUnschedulable from a resource request no node can satisfy (obvious)
-- ServiceNoEndpoints from a selector that does not match pod labels (obvious)
 - MissingConfigOrSecret from a volume referencing a missing ConfigMap (obvious)
-- RbacDenied from a ServiceAccount lacking the required role (obvious)
 - CrashLoopBackOff whose true cause is a missing ConfigMap at startup, class
   MissingConfigOrSecret (misleading)
 - ServiceNoEndpoints whose true cause is that the backing pods are all
   unschedulable, class PodUnschedulable (misleading)
 
-Each will also need a FakeModelClient script, or a switch to
-AnthropicModelClient, so the eval can run against it.
+Each will also need a `CaptureSpec`, a FakeModelClient script (or a switch to
+AnthropicModelClient), and the two misleading-tier entries carry `tier:
+"misleading"`. These are intentionally left as TODOs.

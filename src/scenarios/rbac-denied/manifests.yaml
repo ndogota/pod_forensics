@@ -1,0 +1,40 @@
+# rbac-denied
+#
+# A workload whose ServiceAccount lacks a required permission. The log-shipper
+# Deployment runs under the log-shipper ServiceAccount, which is bound to no Role.
+# The pod runs fine, but the ServiceAccount cannot list secrets, so the
+# workload's API calls are denied. This manifest is data for the capture step. It
+# is never applied by the agent or the eval, which are read only.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: log-shipper
+  namespace: telemetry
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-shipper
+  namespace: telemetry
+  labels:
+    app: log-shipper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-shipper
+  template:
+    metadata:
+      labels:
+        app: log-shipper
+    spec:
+      # Run under the log-shipper ServiceAccount. No RoleBinding grants it any
+      # permission, so it cannot list secrets. That denial is the failure under
+      # test; the pod itself stays healthy.
+      serviceAccountName: log-shipper
+      containers:
+        - name: log-shipper
+          # A real, always-pullable image that just sleeps, so the pod is Running
+          # and the only fault is the missing RBAC permission.
+          image: busybox:1.36
+          command: ["/bin/sh", "-c", "sleep 3600"]

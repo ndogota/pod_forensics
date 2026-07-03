@@ -1,0 +1,8 @@
+{
+  "failureClass": "ServiceNoEndpoints",
+  "rootCause": "The web Service selects pods with label app=web-api, but the running pods are labeled app=web-backend. The selector matches no pods, so the Service has no endpoints and cannot route traffic.",
+  "expectedEvidence": [
+    "web-api",
+    "web-backend"
+  ]
+}

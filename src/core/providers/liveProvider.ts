@@ -10,12 +10,16 @@
 // workload. get_secret_meta returns the secret name and its key names only,
 // never a value, so no secret value can reach a fixture or a trace.
 //
-// Identity note: check_rbac uses a SelfSubjectAccessReview, which answers "can
-// the caller (the current kubeconfig identity) do this", not "can an arbitrary
-// service account do this". The serviceAccount argument is echoed back for the
-// record but does not change whose access is checked. A per-service-account
-// check would need a SubjectAccessReview or impersonation, which is out of
-// scope for the read-only local capture path.
+// Identity note: check_rbac uses a SubjectAccessReview that names the workload's
+// ServiceAccount as the subject, so it answers "can THIS service account do
+// this", not "can the caller (the current kubeconfig identity) do this". The
+// serviceAccount argument is mapped to the Kubernetes username
+// "system:serviceaccount:<namespace>:<serviceAccount>" and that identity is what
+// is tested. This is the workload identity the rbac scenario cares about. A
+// SubjectAccessReview is a read-only authorization query: it evaluates access
+// and mutates nothing, and the admin kubeconfig on a kind cluster is allowed to
+// create one. (It replaces the earlier SelfSubjectAccessReview, which only ever
+// answered for the caller and ignored the serviceAccount argument.)
 
 import * as k8s from "@kubernetes/client-node";
 
@@ -401,9 +405,16 @@ export class LiveProvider implements ToolProvider {
     verb: string,
     resource: string,
   ): Promise<CheckRbacOutput> {
-    const review = await this.authz.createSelfSubjectAccessReview({
+    // Map the workload's ServiceAccount to its Kubernetes username and ask
+    // whether THAT identity may perform the verb, using a SubjectAccessReview.
+    // This tests the workload identity, not the caller's kubeconfig identity.
+    // Creating a SubjectAccessReview is a read-only authorization query; it
+    // evaluates access and changes nothing in the cluster.
+    const user = `system:serviceaccount:${namespace}:${serviceAccount}`;
+    const review = await this.authz.createSubjectAccessReview({
       body: {
         spec: {
+          user,
           resourceAttributes: { namespace, verb, resource },
         },
       },

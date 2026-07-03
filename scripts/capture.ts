@@ -25,8 +25,8 @@ import path from "node:path";
 
 import { LiveProvider } from "../src/core/providers/liveProvider";
 import { RecordingProvider } from "../src/core/providers/recordingProvider";
-import type { GetPodsOutput } from "../src/core/tools";
-import { buildCaptureSet } from "../src/scenarios/crashloopbackoff-bad-command/captureSet";
+import { findCaptureSpec } from "../src/scenarios/captureRegistry";
+import type { CaptureSpec } from "../src/scenarios/captureSpec";
 import { findScenario } from "../src/scenarios";
 import type { Scenario } from "../src/core/types";
 
@@ -85,58 +85,41 @@ function deleteNamespace(namespace: string): void {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// Find the pod created by the target workload. A Deployment names its pods with
-// a template hash suffix, so match on the workload name prefix.
-function findTargetPod(pods: GetPodsOutput, targetName: string) {
-  return pods.pods.find((p) => p.name.startsWith(`${targetName}-`));
-}
-
-// The failure is "manifested" once a container is waiting in CrashLoopBackOff or
-// has restarted enough times that the loop is unambiguous.
-function crashLoopReached(pod: ReturnType<typeof findTargetPod>): boolean {
-  if (!pod) return false;
-  return pod.containerStatuses.some(
-    (c) => c.reason === "CrashLoopBackOff" || c.restartCount >= 3,
-  );
-}
-
-// Poll get_pods through the live provider until the target pod is in the failure
-// state, or fail loudly on timeout. Backoff grows because CrashLoopBackOff is
-// itself exponential and can take a minute or two to settle.
-async function waitForCrashLoop(
+// Poll the scenario's own wait predicate through the live provider until its
+// failure has manifested, or fail loudly on timeout. The polling loop, the
+// bounded timeout, the exponential backoff, and the progress logging are shared
+// across all scenarios; only the predicate (spec.poll) is scenario-specific.
+// Backoff grows because some failures (CrashLoopBackOff especially) are
+// themselves exponential and can take a minute or two to settle. Returns the
+// resolved pod name for the captureSet, which may be empty if the scenario needs
+// none.
+async function waitForFailure(
   provider: LiveProvider,
   scenario: Scenario,
+  spec: CaptureSpec,
 ): Promise<string> {
   const start = Date.now();
   let delay = POLL_START_MS;
   let attempt = 0;
   while (Date.now() - start < TIMEOUT_MS) {
     attempt++;
-    const elapsed = Math.round((Date.now() - start) / 1000);
-    const result = await provider.resolve({
-      tool: "get_pods",
-      args: { namespace: scenario.namespace },
-    });
-    const pod = findTargetPod(result.output as GetPodsOutput, scenario.target.name);
-    if (pod) {
-      const status = pod.containerStatuses[0];
+    const elapsedMs = Date.now() - start;
+    const elapsed = Math.round(elapsedMs / 1000);
+    const result = await spec.poll({ provider, scenario, elapsedMs });
+    console.log(`poll ${attempt} (${elapsed}s): ${result.detail}`);
+    if (result.done) {
       console.log(
-        `poll ${attempt} (${elapsed}s): pod ${pod.name} phase=${pod.phase} ` +
-          `restarts=${pod.restarts} reason=${status?.reason ?? "-"}`,
+        `failure manifested for "${scenario.id}" after ${elapsed}s` +
+          (result.pod ? `: ${result.pod}` : ""),
       );
-      if (crashLoopReached(pod)) {
-        console.log(`CrashLoopBackOff reached after ${elapsed}s: ${pod.name}`);
-        return pod.name;
-      }
-    } else {
-      console.log(`poll ${attempt} (${elapsed}s): target pod not scheduled yet`);
+      return result.pod;
     }
     await sleep(delay);
     delay = Math.min(delay * 1.5, POLL_MAX_MS);
   }
   throw new Error(
     `timed out after ${Math.round(TIMEOUT_MS / 1000)}s waiting for ` +
-      `${scenario.target.name} to reach CrashLoopBackOff. Namespace ` +
+      `"${scenario.id}" to manifest its failure. Namespace ` +
       `${scenario.namespace} left in place for inspection.`,
   );
 }
@@ -148,10 +131,11 @@ async function main(): Promise<void> {
   if (!scenario) {
     throw new Error(`unknown scenario: ${args.scenario}`);
   }
-  if (scenario.id !== "crashloopbackoff-bad-command") {
+  const spec = findCaptureSpec(scenario.id);
+  if (!spec) {
     throw new Error(
-      `no captureSet defined for scenario "${scenario.id}". Only ` +
-        `crashloopbackoff-bad-command is wired for capture in this run.`,
+      `no captureSpec defined for scenario "${scenario.id}". Declare one in its ` +
+        `directory and register it in src/scenarios/captureRegistry.ts.`,
     );
   }
 
@@ -162,7 +146,7 @@ async function main(): Promise<void> {
 
   // On timeout this throws before teardown, so the namespace is left for
   // inspection, as intended.
-  const podName = await waitForCrashLoop(live, scenario);
+  const podName = await waitForFailure(live, scenario, spec);
 
   // Clear any prior fixtures for this scenario so a stale pod-name hash cannot
   // linger. RecordingProvider then recreates the directory as it writes.
@@ -174,7 +158,7 @@ async function main(): Promise<void> {
   await rm(scenarioFixtures, { recursive: true, force: true });
 
   const recorder = new RecordingProvider(live, scenario.id);
-  const captureSet = buildCaptureSet(scenario.namespace, podName);
+  const captureSet = spec.buildCaptureSet(scenario.namespace, podName);
   console.log(`recording ${captureSet.length} fixtures for ${scenario.id}`);
   for (const call of captureSet) {
     const result = await recorder.resolve(call);
@@ -182,11 +166,13 @@ async function main(): Promise<void> {
     void result;
   }
 
-  console.log(`captured pod name: ${podName}`);
-  console.log(
-    "if this differs from the fake client's CRASHLOOP_POD, update it so the " +
-      "deterministic replay hits these same fixture hashes.",
-  );
+  if (podName) {
+    console.log(`captured pod name: ${podName}`);
+    console.log(
+      `if this differs from the fake client's pod constant for "${scenario.id}", ` +
+        "update it so the deterministic replay hits these same fixture hashes.",
+    );
+  }
 
   if (args.keep) {
     console.log(`--keep set, leaving namespace ${scenario.namespace} in place`);

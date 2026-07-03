@@ -6,10 +6,14 @@
 // reused across runs. This is what makes the committed eval reproducible and
 // free: no network, no model, same output every time.
 //
-// The script is scenario specific. buildCrashloopScript below drives the
-// crashloopbackoff-bad-command scenario.
-// TODO: add a script per scenario, or switch to AnthropicModelClient, as more
-// scenarios are seeded.
+// The script is scenario specific. buildCrashloopScript and the three builders
+// below drive the four currently-seeded scenarios. Each walks a plausible
+// read-only investigation and then submits a valid one-shot diagnosis whose
+// cited excerpts carry the scenario's expectedEvidence markers, so evidence
+// recall is meaningful.
+// TODO: add a script per scenario, or switch to AnthropicModelClient, as the
+// remaining scenarios (four obvious classes and the two misleading tier) are
+// seeded.
 
 import { SUBMIT_DIAGNOSIS_TOOL } from "./diagnosisSchema";
 import type {
@@ -121,6 +125,167 @@ export function buildCrashloopScript(namespace: string): CompletionResult[] {
       costUsd: 0,
       latencyMs: FAKE_LATENCY_MS,
     },
+  ];
+}
+
+// A terminal submit_diagnosis step. The submit turn tends to emit more output
+// tokens than an investigative turn, so it carries its own token count.
+function submitStep(
+  callId: string,
+  input: Record<string, unknown>,
+): CompletionResult {
+  return {
+    content: [{ type: "tool_use", id: callId, name: SUBMIT_DIAGNOSIS_TOOL, input }],
+    stopReason: "tool_use",
+    tokensIn: FAKE_TOKENS_IN,
+    tokensOut: 160,
+    costUsd: 0,
+    latencyMs: FAKE_LATENCY_MS,
+  };
+}
+
+// The Pending pod for the pod-unschedulable scenario. The Deployment target is
+// "aggregator"; this is the pod it creates. It is a fixture detail, so it lives
+// with the script. After a real capture, align this to the captured pod name.
+const UNSCHEDULABLE_POD = "aggregator-7c9d8f6b54-mn2xk";
+
+// A plausible investigation for pod-unschedulable: list pods, describe the
+// Pending pod, read events, then diagnose from the FailedScheduling event. The
+// pod never runs a container, so this path never reads logs, matching the
+// captureSet. Cited excerpts carry the "FailedScheduling" and "Insufficient
+// memory" markers.
+export function buildUnschedulableScript(namespace: string): CompletionResult[] {
+  const pod = UNSCHEDULABLE_POD;
+  return [
+    step("call-0", "get_pods", { namespace }),
+    step("call-1", "describe_pod", { namespace, pod }),
+    step("call-2", "get_events", { namespace }),
+    submitStep("call-3", {
+      failureClass: "PodUnschedulable",
+      rootCause:
+        "The aggregator pod requests more memory than any node in the cluster can provide, so the scheduler cannot place it. The pod stays Pending and no container ever starts.",
+      evidence: [
+        {
+          tool: "get_pods",
+          args: { namespace },
+          excerpt:
+            "pod aggregator is Pending with 0/1 containers ready and no node assigned",
+        },
+        {
+          tool: "describe_pod",
+          args: { namespace, pod },
+          excerpt:
+            "pod phase Pending, PodScheduled condition is False, no node assigned",
+        },
+        {
+          tool: "get_events",
+          args: { namespace },
+          excerpt:
+            "Warning FailedScheduling: 0/1 nodes are available: 1 Insufficient memory.",
+        },
+      ],
+      suggestedFix:
+        "Lower the pod's memory request to fit an available node, or add a node with enough memory, then let the deployment reschedule. This is advice only; the tool applies nothing.",
+      confidence: 0.9,
+    }),
+  ];
+}
+
+// The backing pod for the service-no-endpoints scenario. The Deployment is named
+// "web"; this is the pod it creates. Align to the captured pod name after a real
+// capture.
+const NOENDPOINTS_POD = "web-5b4c7d9f8a-qr7tp";
+
+// A plausible investigation for service-no-endpoints: list pods (healthy),
+// describe a pod to see its labels, read the service endpoints (empty), then
+// diagnose the selector/label mismatch. No crashing pod, so no logs. Cited
+// excerpts carry the "web-api" (selector) and "web-backend" (pod label) markers.
+export function buildServiceNoEndpointsScript(
+  namespace: string,
+): CompletionResult[] {
+  const pod = NOENDPOINTS_POD;
+  const service = "web";
+  return [
+    step("call-0", "get_pods", { namespace }),
+    step("call-1", "describe_pod", { namespace, pod }),
+    step("call-2", "get_service_endpoints", { namespace, service }),
+    submitStep("call-3", {
+      failureClass: "ServiceNoEndpoints",
+      rootCause:
+        "The web Service selects pods with label app=web-api, but the running pods are labeled app=web-backend. The selector matches no pods, so the Service has no endpoints and cannot route traffic.",
+      evidence: [
+        {
+          tool: "get_pods",
+          args: { namespace },
+          excerpt: "pod web-5b4c7d9f8a-qr7tp is Running and Ready (1/1)",
+        },
+        {
+          tool: "describe_pod",
+          args: { namespace, pod },
+          excerpt: "pod labels include app=web-backend",
+        },
+        {
+          tool: "get_service_endpoints",
+          args: { namespace, service },
+          excerpt:
+            "Service web selector app=web-api resolves to zero endpoint addresses",
+        },
+      ],
+      suggestedFix:
+        "Align the Service selector with the pod labels (set the selector to app=web-backend) or relabel the pods so the selector matches. This is advice only; the tool applies nothing.",
+      confidence: 0.9,
+    }),
+  ];
+}
+
+// The Running pod for the rbac-denied scenario. The Deployment is named
+// "log-shipper"; this is the pod it creates. Align to the captured pod name
+// after a real capture.
+const RBAC_POD = "log-shipper-6d8b9c7f5e-zk4wm";
+
+// A plausible investigation for rbac-denied: list pods (Running), describe the
+// pod to see its ServiceAccount, check_rbac for the permission it needs, then
+// diagnose the denial. The pod is healthy; the fault is the RBAC denial. Cited
+// excerpts carry the "log-shipper" (SA), "list" (verb), and "secrets" (resource)
+// markers as check_rbac reports them.
+export function buildRbacDeniedScript(namespace: string): CompletionResult[] {
+  const pod = RBAC_POD;
+  const serviceAccount = "log-shipper";
+  return [
+    step("call-0", "get_pods", { namespace }),
+    step("call-1", "describe_pod", { namespace, pod }),
+    step("call-2", "check_rbac", {
+      namespace,
+      serviceAccount,
+      verb: "list",
+      resource: "secrets",
+    }),
+    submitStep("call-3", {
+      failureClass: "RbacDenied",
+      rootCause:
+        "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its requests to list secrets are denied, so the workload cannot do its job even though the pod runs.",
+      evidence: [
+        {
+          tool: "get_pods",
+          args: { namespace },
+          excerpt: "pod log-shipper-6d8b9c7f5e-zk4wm is Running (1/1)",
+        },
+        {
+          tool: "describe_pod",
+          args: { namespace, pod },
+          excerpt: "pod runs under serviceAccount log-shipper",
+        },
+        {
+          tool: "check_rbac",
+          args: { namespace, serviceAccount, verb: "list", resource: "secrets" },
+          excerpt:
+            "check_rbac reports serviceAccount log-shipper is not allowed to list secrets (allowed: false)",
+        },
+      ],
+      suggestedFix:
+        "Grant the log-shipper ServiceAccount a Role with list on secrets and bind it with a RoleBinding, if the workload truly needs that access. This is advice only; the tool applies nothing.",
+      confidence: 0.9,
+    }),
   ];
 }
 

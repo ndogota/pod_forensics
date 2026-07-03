@@ -1,0 +1,8 @@
+{
+  "failureClass": "PodUnschedulable",
+  "rootCause": "The aggregator pod requests more memory than any node in the cluster can provide, so the scheduler cannot place it. The pod stays Pending and no container ever starts.",
+  "expectedEvidence": [
+    "FailedScheduling",
+    "Insufficient memory"
+  ]
+}
