@@ -46,6 +46,14 @@ export interface RunAgentOptions {
 // turns on an invalid submit_diagnosis payload.
 export class AgentRunError extends Error {}
 
+// A distinct failure: the model turn was cut off by max_tokens before it could
+// emit the full tool payload, so trailing required fields never arrived. This is
+// not a malformed diagnosis the model can be coached to fix; every retry would be
+// truncated identically. It extends AgentRunError so the runner records it as a
+// failed run and counts it against the completion rate, but the reason is
+// unambiguous. The remedy is a larger max_tokens, not a correction turn.
+export class TruncatedOutputError extends AgentRunError {}
+
 export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
   const config = options.config ?? DEFAULT_AGENT_CONFIG;
   const { provider, client, namespace, scenarioId } = options;
@@ -64,6 +72,9 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
   let totalLatencyMs = 0;
   let costUsd = 0;
   let invalidSubmitCount = 0;
+  // Track the most recent turn's stop reason so budget exhaustion can tell a
+  // genuinely stuck agent from one whose last turn was simply truncated.
+  let lastStopReason = "";
 
   for (let turn = 0; turn < config.maxSteps; turn++) {
     const startedAt = Date.now();
@@ -74,6 +85,7 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
       maxTokens: config.maxTokens,
     });
     const latencyMs = result.latencyMs ?? Date.now() - startedAt;
+    lastStopReason = result.stopReason;
 
     // Accounting spans every model turn, including the submit turn, so totals
     // reflect the real cost of the run.
@@ -102,14 +114,42 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
 
     for (const block of toolUses) {
       if (block.name === SUBMIT_DIAGNOSIS_TOOL) {
+        // Instrumentation: every submit attempt records the turn's stop reason,
+        // so a truncated turn is visible in the run output without a rerun.
+        console.error(
+          `[loop] submit_diagnosis attempt for "${scenarioId}": stop_reason=${result.stopReason}`,
+        );
         const parsed = diagnosisSchema.safeParse(block.input);
         if (parsed.success) {
           concluded = parsed.data as Diagnosis;
           break;
         }
-        // Invalid diagnosis. Do not retry with identical context. Return the
-        // specific validation issues (each failing field path and message) as an
-        // error tool_result so the model can resubmit a corrected diagnosis on
+        // Invalid payload. Instrument it before deciding how to react: log the
+        // raw input received and its top-level keys, so a truncated payload
+        // (missing the trailing required fields) is distinguishable in the trace
+        // from a genuinely malformed one.
+        const topLevelKeys = Object.keys(block.input ?? {});
+        console.error(
+          `[loop] invalid submit_diagnosis for "${scenarioId}": ` +
+            `stop_reason=${result.stopReason}; ` +
+            `topLevelKeys=[${topLevelKeys.join(", ")}]; ` +
+            `rawInput=${JSON.stringify(block.input)}`,
+        );
+        // Distinguish truncation from a bad submit. If this turn was cut off by
+        // max_tokens, the trailing required fields never arrived. A correction
+        // turn cannot help, since every retry truncates identically. Fail the run
+        // with an unambiguous truncation reason instead of burning a correction.
+        if (result.stopReason === "max_tokens") {
+          throw new TruncatedOutputError(
+            `model output truncated by max_tokens before completing the diagnosis ` +
+              `for scenario "${scenarioId}"; the submit_diagnosis payload arrived with ` +
+              `only [${topLevelKeys.join(", ")}]. Raise the model client max_tokens so ` +
+              `the full tool payload fits.`,
+          );
+        }
+        // Genuine validation failure. Do not retry with identical context. Return
+        // the specific validation issues (each failing field path and message) as
+        // an error tool_result so the model can resubmit a corrected diagnosis on
         // its next turn. Allow up to MAX_DIAGNOSIS_CORRECTIONS such turns; if it
         // still fails, fail the run cleanly so it is recorded, never looped.
         invalidSubmitCount++;
@@ -176,6 +216,17 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
 
     // Feed the tool results back and continue the loop.
     messages.push({ role: "user", content: toolResults });
+  }
+
+  // Ran out of the step budget. If the final turn was truncated by max_tokens,
+  // the agent was likely mid-diagnosis rather than genuinely stuck, so report it
+  // as truncation, not a plain failure to converge.
+  if (lastStopReason === "max_tokens") {
+    throw new TruncatedOutputError(
+      `model output truncated by max_tokens before completing the diagnosis for ` +
+        `scenario "${scenarioId}" within ${config.maxSteps} steps. Raise the model ` +
+        `client max_tokens so the full tool payload fits.`,
+    );
   }
 
   throw new AgentRunError(

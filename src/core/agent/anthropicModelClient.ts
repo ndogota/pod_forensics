@@ -67,7 +67,12 @@ function toSdkMessages(messages: ModelMessage[]): Anthropic.MessageParam[] {
 export class AnthropicModelClient implements ModelClient {
   readonly model: string;
   private readonly client: Anthropic;
-  private readonly maxTokens: number;
+  // The per-response output token ceiling. Public and readonly so a run can
+  // report the value it is operating with. Defaults to DEFAULT_MAX_TOKENS (4096),
+  // large enough that the evidence array plus the trailing suggestedFix and
+  // confidence fields fit in one turn; a text preamble before the tool call still
+  // leaves room for the full payload. Configurable via the constructor.
+  readonly maxTokens: number;
 
   constructor(opts: { model?: string; apiKey?: string; maxTokens?: number } = {}) {
     this.model = opts.model ?? DEFAULT_MODEL;

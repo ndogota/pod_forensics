@@ -18,6 +18,7 @@ import {
   FakeModelClient,
   buildCrashloopScript,
 } from "../src/core/agent/fakeModelClient";
+import { submitDiagnosisDefinition } from "../src/core/agent/diagnosisSchema";
 import type { ModelClient } from "../src/core/agent/modelClient";
 import { runEval } from "../src/core/eval/runner";
 import {
@@ -69,6 +70,20 @@ async function main(): Promise<void> {
     throw new Error(`unknown scenario: ${args.scenario}`);
   }
 
+  // Once at startup: log the schema the model is actually shown for
+  // submit_diagnosis and its required array, so a run can confirm suggestedFix
+  // and confidence are advertised as required (they are the last two fields, the
+  // ones a truncated turn drops first).
+  const advertisedSchema = submitDiagnosisDefinition.inputSchema as {
+    required?: string[];
+  };
+  console.error(
+    `[eval] submit_diagnosis advertised schema: ${JSON.stringify(advertisedSchema)}`,
+  );
+  console.error(
+    `[eval] submit_diagnosis required fields: ${JSON.stringify(advertisedSchema.required ?? [])}`,
+  );
+
   let client: ModelClient;
   let judge: RootCauseJudge;
   if (args.client === "anthropic") {
@@ -78,6 +93,9 @@ async function main(): Promise<void> {
       );
     }
     const anthropic = new AnthropicModelClient();
+    // Report the output token ceiling this run operates under, so a truncation
+    // failure can be read against the budget that produced it.
+    console.error(`[eval] AnthropicModelClient max_tokens: ${anthropic.maxTokens}`);
     client = anthropic;
     // The judge shares the same seam. This makes the eval non-deterministic.
     judge = makeModelJudge(anthropic);
