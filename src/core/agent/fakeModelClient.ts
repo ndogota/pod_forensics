@@ -57,14 +57,17 @@ export class FakeModelClient implements ModelClient {
   }
 }
 
+// The failing pod for the crashloopbackoff-bad-command scenario. The Deployment
+// target is "checkout"; this is the pod it creates, as it appears in the
+// committed fixtures. It is a fixture detail, so it lives with the script.
+const CRASHLOOP_POD = "checkout-6fff987c78-27bm6";
+
 // A plausible investigation for the crashloopbackoff-bad-command scenario:
 // list pods, describe the failing pod, read events, read the previous logs,
 // then submit a grounded diagnosis. The cited excerpts match signals present in
 // the committed fixtures, so evidence recall is meaningful.
-export function buildCrashloopScript(
-  namespace: string,
-  pod: string,
-): CompletionResult[] {
+export function buildCrashloopScript(namespace: string): CompletionResult[] {
+  const pod = CRASHLOOP_POD;
   return [
     step("call-0", "get_pods", { namespace }),
     step("call-1", "describe_pod", { namespace, pod }),
@@ -85,13 +88,13 @@ export function buildCrashloopScript(
                 tool: "get_pods",
                 args: { namespace },
                 excerpt:
-                  "container checkout is waiting with reason CrashLoopBackOff and restartCount 6",
+                  "container checkout is waiting with reason CrashLoopBackOff and restartCount 10",
               },
               {
                 tool: "describe_pod",
                 args: { namespace, pod },
                 excerpt:
-                  "last state terminated with exit code 1 (reason Error)",
+                  "last state terminated with exitCode 1, reason Error",
               },
               {
                 tool: "get_logs",

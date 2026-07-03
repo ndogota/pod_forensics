@@ -23,7 +23,11 @@ spec:
     spec:
       containers:
         - name: checkout
-          image: ghcr.io/example/checkout:1.4.2
+          # A small, always-pullable image standing in for the checkout service.
+          # The failure under test is the start command, not the image, so the
+          # image must pull cleanly or the pod would land in ImagePullBackOff
+          # instead of CrashLoopBackOff.
+          image: busybox:1.36
           # Bad start command. The process prints a fatal message and exits 1
           # right away because the required --config flag is missing, which
           # drives the pod into CrashLoopBackOff.

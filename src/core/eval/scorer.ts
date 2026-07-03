@@ -22,6 +22,13 @@ import type {
 } from "../types";
 import type { ModelClient } from "../agent/modelClient";
 
+// The result of one attempted run. A failed run has no diagnosis, so it cannot
+// be a RunTrace. It is still counted, never dropped: it scores zero on every
+// dimension and lowers the completion rate.
+export type RunOutcome =
+  | { status: "ok"; trace: RunTrace }
+  | { status: "failed"; error: string };
+
 // A judge scores how well a predicted root cause matches the canonical one, in
 // the range 0..1.
 export type RootCauseJudge = (
@@ -110,24 +117,39 @@ function mean(values: number[]): number {
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-// Aggregate the scores for one scenario across N run traces.
+// Aggregate the scores for one scenario across N attempted runs. Failed runs
+// count as zero on every dimension, so averages divide by attempts, not by
+// successes. completionRate reports the fraction that produced a valid
+// diagnosis.
 export async function scoreScenario(
   scenario: Scenario,
-  traces: RunTrace[],
+  outcomes: RunOutcome[],
   judge: RootCauseJudge,
 ): Promise<ScenarioScore> {
   const gt = scenario.groundTruth;
-  const classScores = traces.map((t) => (classCorrect(t.diagnosis, gt) ? 1 : 0));
-  const recallScores = traces.map((t) => evidenceRecall(t.diagnosis, gt));
-  const judgeScores = await Promise.all(
-    traces.map((t) => judge(t.diagnosis.rootCause, gt.rootCause)),
+  const attempted = outcomes.length;
+
+  const classScores = outcomes.map((o) =>
+    o.status === "ok" && classCorrect(o.trace.diagnosis, gt) ? 1 : 0,
   );
+  const recallScores = outcomes.map((o) =>
+    o.status === "ok" ? evidenceRecall(o.trace.diagnosis, gt) : 0,
+  );
+  const judgeScores = await Promise.all(
+    outcomes.map((o) =>
+      o.status === "ok"
+        ? judge(o.trace.diagnosis.rootCause, gt.rootCause)
+        : Promise.resolve(0),
+    ),
+  );
+  const completed = outcomes.filter((o) => o.status === "ok").length;
 
   const tier: DifficultyTier = scenario.tier;
   return {
     scenarioId: scenario.id,
     tier,
-    runs: traces.length,
+    runs: attempted,
+    completionRate: attempted === 0 ? 0 : completed / attempted,
     classAccuracy: mean(classScores),
     evidenceRecall: mean(recallScores),
     rootCauseJudgeScore: mean(judgeScores),

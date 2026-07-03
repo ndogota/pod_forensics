@@ -12,8 +12,10 @@ A scenario is data. To add one:
 2. Make sure each `expectedEvidence` marker actually appears in the captured
    fixtures for that scenario, so evidence recall measures something real.
 
-3. Register it in `src/scenarios/index.ts` by adding a `ScenarioRuntime` entry
-   with the `Scenario` metadata plus the run's `namespace` and failing `pod`.
+3. Register it in `src/scenarios/index.ts` by adding a `Scenario` entry with the
+   metadata, including `namespace` and `target` (the workload kind and name).
+   The failing pod name, when it differs from the target, is a fixture detail
+   that lives with that scenario's FakeModelClient script.
 
 4. Capture fixtures under `src/fixtures/<scenario-id>/` named
    `<tool>-<argshash>.json`, where the hash comes from the shared

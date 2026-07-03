@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-07-03T13:56:05.540Z",
+  "output": {
+    "namespace": "shop",
+    "pod": "checkout-6fff987c78-27bm6",
+    "previous": true,
+    "lines": [
+      "FATAL: missing required flag --config"
+    ],
+    "truncated": false
+  }
+}

@@ -1,19 +1,21 @@
 // The eval runner.
 //
-// Runs one scenario N times against a chosen ModelClient and fixtures, scores
-// the diagnoses against ground truth, and aggregates into a RunReport. Each run
-// gets a fresh FixtureProvider, so runs are independent and reproducible.
+// Runs one scenario N times against a chosen ModelClient and fixtures, records
+// the outcome of every run, scores against ground truth, and aggregates into a
+// RunReport. Each run gets a fresh FixtureProvider, so runs are independent and
+// reproducible. No run is ever silently dropped: a failed run is recorded and
+// counts as zero in the scores, and the per-scenario completionRate reports how
+// many runs produced a valid diagnosis.
 
 import { runAgent, AgentRunError } from "../agent/loop";
 import type { ModelClient } from "../agent/modelClient";
 import type { AgentConfig } from "../agent/config";
 import { FixtureProvider } from "../providers/fixtureProvider";
-import type { RunReport, RunTrace } from "../types";
-import type { ScenarioRuntime } from "../../scenarios";
-import { scoreScenario, type RootCauseJudge } from "./scorer";
+import type { RunReport, RunTrace, Scenario } from "../types";
+import { scoreScenario, type RootCauseJudge, type RunOutcome } from "./scorer";
 
 export interface RunEvalOptions {
-  runtime: ScenarioRuntime;
+  scenario: Scenario;
   client: ModelClient;
   judge: RootCauseJudge;
   runs: number;
@@ -23,13 +25,13 @@ export interface RunEvalOptions {
   config?: AgentConfig;
 }
 
-// Build the confusion matrix over failure classes from the run traces. With one
-// scenario this is the trivial single-class case.
+// Build the confusion matrix over failure classes from the successful traces.
+// With one scenario this is the trivial single-class case.
 function buildConfusionMatrix(
-  runtime: ScenarioRuntime,
+  scenario: Scenario,
   traces: RunTrace[],
 ): Record<string, Record<string, number>> {
-  const actual = runtime.scenario.groundTruth.failureClass;
+  const actual = scenario.groundTruth.failureClass;
   const matrix: Record<string, Record<string, number>> = {};
   for (const trace of traces) {
     const predicted = trace.diagnosis.failureClass;
@@ -40,46 +42,43 @@ function buildConfusionMatrix(
 }
 
 export async function runEval(options: RunEvalOptions): Promise<RunReport> {
-  const { runtime, client, judge, runs, createdAt, config } = options;
-  const { scenario, namespace } = runtime;
+  const { scenario, client, judge, runs, createdAt, config } = options;
 
-  const traces: RunTrace[] = [];
+  const outcomes: RunOutcome[] = [];
   for (let i = 0; i < runs; i++) {
     const provider = new FixtureProvider(scenario.id);
     try {
       const trace = await runAgent({
         scenarioId: scenario.id,
-        namespace,
+        namespace: scenario.namespace,
         provider,
         client,
         config,
       });
-      traces.push(trace);
+      outcomes.push({ status: "ok", trace });
     } catch (err) {
-      // A failed run does not produce a diagnosis. Log it and continue so one
-      // bad run does not sink the report.
-      // TODO: represent failed runs in the report rather than dropping them.
       if (err instanceof AgentRunError) {
-        console.error(`run ${i} failed: ${err.message}`);
+        // Record the failure; do not drop it. It counts as zero in scoring and
+        // lowers the completion rate.
+        console.error(`run ${i} failed and was recorded: ${err.message}`);
+        outcomes.push({ status: "failed", error: err.message });
       } else {
         throw err;
       }
     }
   }
 
-  if (traces.length === 0) {
-    throw new Error(
-      `no successful runs for scenario "${scenario.id}"; cannot write a report`,
-    );
-  }
+  const traces = outcomes
+    .filter((o): o is Extract<RunOutcome, { status: "ok" }> => o.status === "ok")
+    .map((o) => o.trace);
 
-  const scenarioScore = await scoreScenario(scenario, traces, judge);
+  const scenarioScore = await scoreScenario(scenario, outcomes, judge);
 
   return {
     createdAt,
     model: client.model,
     scenarioScores: [scenarioScore],
-    confusionMatrix: buildConfusionMatrix(runtime, traces),
+    confusionMatrix: buildConfusionMatrix(scenario, traces),
     traces,
   };
 }

@@ -50,6 +50,10 @@ export type DifficultyTier = "obvious" | "misleading";
 export interface Scenario {
   id: string;
   description: string;
+  // namespace and target were added because scenario identity includes the
+  // namespace under diagnosis and the workload that fails.
+  namespace: string;
+  target: { kind: "Deployment" | "Pod" | "Service"; name: string };
   manifestsPath: string;      // broken k8s YAML
   groundTruth: GroundTruth;
   tier: DifficultyTier;
@@ -90,7 +94,8 @@ export interface RunTrace {
 export interface ScenarioScore {
   scenarioId: string;
   tier: DifficultyTier;
-  runs: number;
+  runs: number;                // runs attempted
+  completionRate: number;      // fraction of attempted runs that produced a valid diagnosis
   classAccuracy: number;       // fraction of runs with correct failureClass
   evidenceRecall: number;      // fraction of expectedEvidence cited
   rootCauseJudgeScore: number; // 0..1 from the LLM-as-judge rubric

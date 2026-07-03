@@ -64,8 +64,8 @@ function parseArgs(argv: string[]): CliArgs {
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
 
-  const runtime = findScenario(args.scenario);
-  if (!runtime) {
+  const scenario = findScenario(args.scenario);
+  if (!scenario) {
     throw new Error(`unknown scenario: ${args.scenario}`);
   }
 
@@ -82,15 +82,13 @@ async function main(): Promise<void> {
     // The judge shares the same seam. This makes the eval non-deterministic.
     judge = makeModelJudge(anthropic);
   } else {
-    client = new FakeModelClient(
-      buildCrashloopScript(runtime.namespace, runtime.pod),
-    );
+    client = new FakeModelClient(buildCrashloopScript(scenario.namespace));
     judge = stringOverlapJudge;
   }
 
   const createdAt = new Date().toISOString();
   const report = await runEval({
-    runtime,
+    scenario,
     client,
     judge,
     runs: args.runs,
@@ -107,6 +105,7 @@ async function main(): Promise<void> {
   console.log(`model: ${report.model}`);
   console.log(
     `scenario ${score.scenarioId} (${score.tier}): ${score.runs} runs, ` +
+      `completionRate ${score.completionRate.toFixed(2)}, ` +
       `classAccuracy ${score.classAccuracy.toFixed(2)}, ` +
       `evidenceRecall ${score.evidenceRecall.toFixed(2)}, ` +
       `rootCauseJudge ${score.rootCauseJudgeScore.toFixed(2)}`,

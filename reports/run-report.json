@@ -1,11 +1,12 @@
 {
-  "createdAt": "2026-07-01T16:47:04.535Z",
+  "createdAt": "2026-07-03T14:04:51.815Z",
   "model": "fake-model",
   "scenarioScores": [
     {
       "scenarioId": "crashloopbackoff-bad-command",
       "tier": "obvious",
       "runs": 3,
+      "completionRate": 1,
       "classAccuracy": 1,
       "evidenceRecall": 1,
       "rootCauseJudgeScore": 0.8636363636363636
@@ -38,7 +39,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p"
+              "pod": "checkout-6fff987c78-27bm6"
             }
           },
           "latencyMs": 5,
@@ -63,7 +64,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "pod": "checkout-6fff987c78-27bm6",
               "previous": "true"
             }
           },
@@ -81,21 +82,21 @@
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 6"
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
           },
           {
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p"
+              "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "last state terminated with exit code 1 (reason Error)"
+            "excerpt": "last state terminated with exitCode 1, reason Error"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "pod": "checkout-6fff987c78-27bm6",
               "previous": "true"
             },
             "excerpt": "previous logs show: FATAL: missing required flag --config"
@@ -137,7 +138,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p"
+              "pod": "checkout-6fff987c78-27bm6"
             }
           },
           "latencyMs": 5,
@@ -162,7 +163,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "pod": "checkout-6fff987c78-27bm6",
               "previous": "true"
             }
           },
@@ -180,21 +181,21 @@
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 6"
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
           },
           {
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p"
+              "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "last state terminated with exit code 1 (reason Error)"
+            "excerpt": "last state terminated with exitCode 1, reason Error"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "pod": "checkout-6fff987c78-27bm6",
               "previous": "true"
             },
             "excerpt": "previous logs show: FATAL: missing required flag --config"
@@ -236,7 +237,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p"
+              "pod": "checkout-6fff987c78-27bm6"
             }
           },
           "latencyMs": 5,
@@ -261,7 +262,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "pod": "checkout-6fff987c78-27bm6",
               "previous": "true"
             }
           },
@@ -279,21 +280,21 @@
             "args": {
               "namespace": "shop"
             },
-            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 6"
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
           },
           {
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p"
+              "pod": "checkout-6fff987c78-27bm6"
             },
-            "excerpt": "last state terminated with exit code 1 (reason Error)"
+            "excerpt": "last state terminated with exitCode 1, reason Error"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-6f9c8b7d54-q4m2p",
+              "pod": "checkout-6fff987c78-27bm6",
               "previous": "true"
             },
             "excerpt": "previous logs show: FATAL: missing required flag --config"

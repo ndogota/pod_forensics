@@ -10,6 +10,7 @@
 // whether the model is real or scripted.
 
 import type { ToolProvider } from "../providers/toolProvider";
+import { normalizeArgs } from "../tools/argsHash";
 import type { Diagnosis, RunTrace, ToolCall, TraceStep } from "../types";
 import { DEFAULT_AGENT_CONFIG, type AgentConfig } from "./config";
 import {
@@ -36,18 +37,6 @@ export interface RunAgentOptions {
 // Thrown when the agent fails to produce a valid diagnosis within the step
 // budget, including after one retry on an invalid submit_diagnosis payload.
 export class AgentRunError extends Error {}
-
-// Coerce a model tool input into the stringly-typed args a ToolCall carries.
-// ToolCall.args is Record<string, string>, so booleans and numbers become
-// strings here. This is also what the fixture argshash is computed over.
-function toArgs(input: Record<string, unknown>): Record<string, string> {
-  const args: Record<string, string> = {};
-  for (const [k, v] of Object.entries(input)) {
-    if (v === undefined || v === null) continue;
-    args[k] = String(v);
-  }
-  return args;
-}
 
 export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
   const config = options.config ?? DEFAULT_AGENT_CONFIG;
@@ -127,8 +116,13 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
         break;
       }
 
-      // A read-only tool call. Resolve it through the provider.
-      const call: ToolCall = { tool: block.name, args: toArgs(block.input) };
+      // A read-only tool call. Resolve it through the provider. The same
+      // normalized args object is hashed to the fixture key and passed to
+      // resolve, so there is no place for the two to diverge.
+      const call: ToolCall = {
+        tool: block.name,
+        args: normalizeArgs(block.input),
+      };
       let output: string;
       let isError = false;
       try {

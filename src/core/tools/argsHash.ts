@@ -10,6 +10,23 @@
 
 import { createHash } from "node:crypto";
 
+// Convert a model tool call's raw arguments into the canonical
+// Record<string, string> that a ToolCall carries. Values (booleans, numbers)
+// are stringified and keys are sorted. This is the ONE place args are
+// normalized: the same normalized object is what argsHash hashes and what
+// ToolProvider.resolve receives. No tool-specific coercion lives anywhere else.
+export function normalizeArgs(
+  input: Record<string, unknown>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(input).sort()) {
+    const value = input[key];
+    if (value === undefined || value === null) continue;
+    out[key] = String(value);
+  }
+  return out;
+}
+
 export function argsHash(args: Record<string, string>): string {
   const canonical = JSON.stringify(
     Object.keys(args)

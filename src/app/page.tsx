@@ -62,6 +62,7 @@ export default async function HomePage() {
               <th>scenario</th>
               <th>tier</th>
               <th>runs</th>
+              <th>completion rate</th>
               <th>class accuracy</th>
               <th>evidence recall</th>
               <th>root cause judge</th>
@@ -73,6 +74,7 @@ export default async function HomePage() {
                 <td>{s.scenarioId}</td>
                 <td>{s.tier}</td>
                 <td>{s.runs}</td>
+                <td>{s.completionRate.toFixed(2)}</td>
                 <td>{s.classAccuracy.toFixed(2)}</td>
                 <td>{s.evidenceRecall.toFixed(2)}</td>
                 <td>{s.rootCauseJudgeScore.toFixed(2)}</td>
