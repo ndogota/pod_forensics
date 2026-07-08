@@ -1,14 +1,14 @@
 {
-  "capturedAt": "2026-07-08T18:30:16.156Z",
+  "capturedAt": "2026-07-08T18:54:17.394Z",
   "output": {
     "namespace": "storefront",
     "pods": [
       {
-        "name": "web-6d79859664-gvglb",
+        "name": "web-6d79859664-hx7k4",
         "phase": "Running",
         "ready": "1/1",
         "restarts": 0,
-        "age": "6s",
+        "age": "2s",
         "node": "pod-forensics-control-plane",
         "containerStatuses": [
           {

@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-08T18:30:16.233Z",
+  "capturedAt": "2026-07-08T18:54:17.455Z",
   "output": {
     "namespace": "storefront",
     "name": "web",
@@ -28,8 +28,8 @@
         "reason": "ScalingReplicaSet",
         "message": "Scaled up replica set web-6d79859664 from 0 to 1",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:10.000Z",
-        "lastSeen": "2026-07-08T18:30:10.000Z",
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
         "involvedObject": "Deployment/web"
       }
     ]

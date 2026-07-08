@@ -1,60 +1,51 @@
 {
-  "capturedAt": "2026-07-08T18:30:16.171Z",
+  "capturedAt": "2026-07-08T18:54:17.405Z",
   "output": {
     "namespace": "storefront",
     "events": [
       {
         "type": "Normal",
         "reason": "Scheduled",
-        "message": "Successfully assigned storefront/web-6d79859664-gvglb to pod-forensics-control-plane",
+        "message": "Successfully assigned storefront/web-6d79859664-hx7k4 to pod-forensics-control-plane",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:10.000Z",
-        "lastSeen": "2026-07-08T18:30:10.000Z",
-        "involvedObject": "Pod/web-6d79859664-gvglb"
-      },
-      {
-        "type": "Normal",
-        "reason": "Pulling",
-        "message": "Pulling image \"registry.k8s.io/pause:3.9\"",
-        "count": 1,
-        "firstSeen": "2026-07-08T18:30:11.000Z",
-        "lastSeen": "2026-07-08T18:30:11.000Z",
-        "involvedObject": "Pod/web-6d79859664-gvglb"
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
+        "involvedObject": "Pod/web-6d79859664-hx7k4"
       },
       {
         "type": "Normal",
         "reason": "Pulled",
-        "message": "Successfully pulled image \"registry.k8s.io/pause:3.9\" in 3.221s (3.221s including waiting). Image size: 268051 bytes.",
+        "message": "Container image \"registry.k8s.io/pause:3.9\" already present on machine and can be accessed by the pod",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:14.000Z",
-        "lastSeen": "2026-07-08T18:30:14.000Z",
-        "involvedObject": "Pod/web-6d79859664-gvglb"
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
+        "involvedObject": "Pod/web-6d79859664-hx7k4"
       },
       {
         "type": "Normal",
         "reason": "Created",
         "message": "Container created",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:14.000Z",
-        "lastSeen": "2026-07-08T18:30:14.000Z",
-        "involvedObject": "Pod/web-6d79859664-gvglb"
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
+        "involvedObject": "Pod/web-6d79859664-hx7k4"
       },
       {
         "type": "Normal",
         "reason": "Started",
         "message": "Container started",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:14.000Z",
-        "lastSeen": "2026-07-08T18:30:14.000Z",
-        "involvedObject": "Pod/web-6d79859664-gvglb"
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
+        "involvedObject": "Pod/web-6d79859664-hx7k4"
       },
       {
         "type": "Normal",
         "reason": "SuccessfulCreate",
-        "message": "Created pod: web-6d79859664-gvglb",
+        "message": "Created pod: web-6d79859664-hx7k4",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:10.000Z",
-        "lastSeen": "2026-07-08T18:30:10.000Z",
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
         "involvedObject": "ReplicaSet/web-6d79859664"
       },
       {
@@ -62,8 +53,8 @@
         "reason": "ScalingReplicaSet",
         "message": "Scaled up replica set web-6d79859664 from 0 to 1",
         "count": 1,
-        "firstSeen": "2026-07-08T18:30:10.000Z",
-        "lastSeen": "2026-07-08T18:30:10.000Z",
+        "firstSeen": "2026-07-08T18:54:15.000Z",
+        "lastSeen": "2026-07-08T18:54:15.000Z",
         "involvedObject": "Deployment/web"
       }
     ]

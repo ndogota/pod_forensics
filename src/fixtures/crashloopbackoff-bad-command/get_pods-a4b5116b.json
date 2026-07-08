@@ -1,28 +1,28 @@
 {
-  "capturedAt": "2026-07-08T18:29:52.224Z",
+  "capturedAt": "2026-07-08T18:53:37.117Z",
   "output": {
     "namespace": "shop",
     "pods": [
       {
-        "name": "checkout-5b676c6c8f-lx5xb",
+        "name": "checkout-5b676c6c8f-dxfkk",
         "phase": "Running",
         "ready": "0/1",
-        "restarts": 1,
-        "age": "10s",
+        "restarts": 3,
+        "age": "47s",
         "node": "pod-forensics-control-plane",
         "containerStatuses": [
           {
             "name": "checkout",
             "ready": false,
-            "restartCount": 1,
-            "state": "waiting",
-            "reason": "CrashLoopBackOff",
-            "message": "back-off 10s restarting failed container=checkout pod=checkout-5b676c6c8f-lx5xb_shop(9f23960a-fd11-445a-a979-e65184816b30)",
+            "restartCount": 3,
+            "state": "terminated",
+            "reason": "Error",
+            "exitCode": 1,
             "lastTerminated": {
               "exitCode": 1,
               "reason": "Error",
-              "startedAt": "2026-07-08T18:29:46.000Z",
-              "finishedAt": "2026-07-08T18:29:46.000Z"
+              "startedAt": "2026-07-08T18:53:05.000Z",
+              "finishedAt": "2026-07-08T18:53:05.000Z"
             }
           }
         ]

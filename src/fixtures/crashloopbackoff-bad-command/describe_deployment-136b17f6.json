@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-08T18:29:52.295Z",
+  "capturedAt": "2026-07-08T18:53:37.200Z",
   "output": {
     "namespace": "shop",
     "name": "checkout",
@@ -28,8 +28,8 @@
         "reason": "ScalingReplicaSet",
         "message": "Scaled up replica set checkout-5b676c6c8f from 0 to 1",
         "count": 1,
-        "firstSeen": "2026-07-08T18:29:42.000Z",
-        "lastSeen": "2026-07-08T18:29:42.000Z",
+        "firstSeen": "2026-07-08T18:52:50.000Z",
+        "lastSeen": "2026-07-08T18:52:50.000Z",
         "involvedObject": "Deployment/checkout"
       }
     ]

@@ -1,7 +1,56 @@
 {
-  "capturedAt": "2026-07-08T18:53:37.131Z",
+  "capturedAt": "2026-07-08T18:53:37.155Z",
   "output": {
     "namespace": "shop",
+    "name": "checkout-5b676c6c8f-dxfkk",
+    "phase": "Running",
+    "node": "pod-forensics-control-plane",
+    "labels": {
+      "app": "checkout",
+      "pod-template-hash": "5b676c6c8f"
+    },
+    "containers": [
+      {
+        "name": "checkout",
+        "ready": false,
+        "restartCount": 3,
+        "state": "terminated",
+        "reason": "Error",
+        "exitCode": 1,
+        "lastTerminated": {
+          "exitCode": 1,
+          "reason": "Error",
+          "startedAt": "2026-07-08T18:53:05.000Z",
+          "finishedAt": "2026-07-08T18:53:05.000Z"
+        }
+      }
+    ],
+    "conditions": [
+      {
+        "type": "PodReadyToStartContainers",
+        "status": "True"
+      },
+      {
+        "type": "Initialized",
+        "status": "True"
+      },
+      {
+        "type": "Ready",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [checkout]"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [checkout]"
+      },
+      {
+        "type": "PodScheduled",
+        "status": "True"
+      }
+    ],
     "events": [
       {
         "type": "Normal",
@@ -47,24 +96,6 @@
         "firstSeen": "2026-07-08T18:52:52.000Z",
         "lastSeen": "2026-07-08T18:53:30.000Z",
         "involvedObject": "Pod/checkout-5b676c6c8f-dxfkk"
-      },
-      {
-        "type": "Normal",
-        "reason": "SuccessfulCreate",
-        "message": "Created pod: checkout-5b676c6c8f-dxfkk",
-        "count": 1,
-        "firstSeen": "2026-07-08T18:52:50.000Z",
-        "lastSeen": "2026-07-08T18:52:50.000Z",
-        "involvedObject": "ReplicaSet/checkout-5b676c6c8f"
-      },
-      {
-        "type": "Normal",
-        "reason": "ScalingReplicaSet",
-        "message": "Scaled up replica set checkout-5b676c6c8f from 0 to 1",
-        "count": 1,
-        "firstSeen": "2026-07-08T18:52:50.000Z",
-        "lastSeen": "2026-07-08T18:52:50.000Z",
-        "involvedObject": "Deployment/checkout"
       }
     ]
   }
