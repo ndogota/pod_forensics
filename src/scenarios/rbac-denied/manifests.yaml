@@ -2,9 +2,15 @@
 #
 # A workload whose ServiceAccount lacks a required permission. The log-shipper
 # Deployment runs under the log-shipper ServiceAccount, which is bound to no Role.
-# The pod runs fine, but the ServiceAccount cannot list secrets, so the
-# workload's API calls are denied. This manifest is data for the capture step. It
-# is never applied by the agent or the eval, which are read only.
+# The container actually tries the denied action on a loop: it runs
+# `kubectl get secrets`, which in-cluster uses the pod's ServiceAccount token, so
+# the API server rejects it and kubectl prints the canonical Kubernetes Forbidden
+# error to stdout. That error names the verb (list), the resource (secrets), and
+# the subject (system:serviceaccount:telemetry:log-shipper). The loop sleeps and
+# retries forever, so the container never exits and the pod stays Running (not
+# CrashLoopBackOff); the only fault is the missing RBAC permission. This manifest
+# is data for the capture step. It is never applied by the agent or the eval,
+# which are read only.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -34,7 +40,14 @@ spec:
       serviceAccountName: log-shipper
       containers:
         - name: log-shipper
-          # A real, always-pullable image that just sleeps, so the pod is Running
-          # and the only fault is the missing RBAC permission.
-          image: busybox:1.36
-          command: ["/bin/sh", "-c", "sleep 3600"]
+          # A real, always-pullable image with kubectl on PATH. In-cluster,
+          # kubectl authenticates as the pod's ServiceAccount, so `kubectl get
+          # secrets` is denied by RBAC and the Forbidden error is written to
+          # stdout. The `|| true` keeps the shell loop alive past the non-zero
+          # exit, and the sleep paces the retries, so the container never exits
+          # and the pod stays Running. Any pullable kubectl image works here.
+          image: bitnami/kubectl:1.30
+          command:
+            - /bin/sh
+            - -c
+            - "while true; do kubectl get secrets || true; sleep 20; done"

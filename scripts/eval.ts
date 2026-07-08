@@ -47,7 +47,7 @@ import type { RunReport, Scenario } from "../src/core/types";
 // The scripted fake client per scenario. A scenario must appear here to run
 // under the fake (deterministic) client. Adding a scenario means adding its
 // builder here alongside its captureSet and registry entry.
-const FAKE_SCRIPTS: Record<string, (ns: string) => CompletionResult[]> = {
+const FAKE_SCRIPTS: Record<string, (scenario: Scenario) => CompletionResult[]> = {
   "crashloopbackoff-bad-command": buildCrashloopScript,
   "pod-unschedulable": buildUnschedulableScript,
   "service-no-endpoints": buildServiceNoEndpointsScript,
@@ -198,7 +198,7 @@ async function main(): Promise<void> {
             `scenario with --client anthropic.`,
         );
       }
-      client = new FakeModelClient(buildScript(scenario.namespace));
+      client = new FakeModelClient(buildScript(scenario));
       judge = stringOverlapJudge;
     }
 

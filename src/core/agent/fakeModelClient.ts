@@ -14,7 +14,20 @@
 // TODO: add a script per scenario, or switch to AnthropicModelClient, as the
 // remaining scenarios (four obvious classes and the two misleading tier) are
 // seeded.
+//
+// Recapture resilience: a Deployment names its pod with a random template-hash
+// suffix that capture cannot know ahead of time and that changes on every
+// recapture. The scripts therefore never hardcode a pod name; each resolves it
+// at run time from the scenario's committed get_pods fixture (resolvePodName),
+// so the scripted describe_pod and get_logs calls always hash to the same
+// fixtures the capture wrote, no matter what suffix the latest capture assigned.
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+import { argsHash, normalizeArgs } from "../tools/argsHash";
+import type { GetPodsOutput } from "../tools";
+import type { Scenario } from "../types";
 import { SUBMIT_DIAGNOSIS_TOOL } from "./diagnosisSchema";
 import type {
   CompletionRequest,
@@ -42,6 +55,37 @@ function step(
   };
 }
 
+// Resolve the pod name a scenario's fixtures were captured with, by reading its
+// committed get_pods fixture and matching the workload-name prefix. This is the
+// one place a script learns a pod name; nothing is hardcoded. Because the hash
+// is derived from the same normalizeArgs/argsHash the FixtureProvider uses, and
+// the pod name comes from the very get_pods fixture the agent replays, the
+// scripted describe_pod and get_logs calls resolve to the committed fixtures
+// even after a recapture assigns a fresh random suffix. Throws loudly if the
+// fixture is missing or holds no matching pod, so a broken capture fails fast
+// rather than silently missing fixtures.
+function resolvePodName(scenario: Scenario): string {
+  const hash = argsHash(normalizeArgs({ namespace: scenario.namespace }));
+  const fixturePath = path.resolve(
+    process.cwd(),
+    "src/fixtures",
+    scenario.id,
+    `get_pods-${hash}.json`,
+  );
+  const raw = readFileSync(fixturePath, "utf8");
+  const parsed = JSON.parse(raw) as { output: GetPodsOutput };
+  const pod = parsed.output.pods.find((p) =>
+    p.name.startsWith(`${scenario.target.name}-`),
+  );
+  if (!pod) {
+    throw new Error(
+      `fakeModelClient: no pod matching workload "${scenario.target.name}" in ` +
+        `${fixturePath}. Recapture the "${scenario.id}" fixtures.`,
+    );
+  }
+  return pod.name;
+}
+
 export class FakeModelClient implements ModelClient {
   readonly model = "fake-model";
   private readonly script: CompletionResult[];
@@ -61,17 +105,14 @@ export class FakeModelClient implements ModelClient {
   }
 }
 
-// The failing pod for the crashloopbackoff-bad-command scenario. The Deployment
-// target is "checkout"; this is the pod it creates, as it appears in the
-// committed fixtures. It is a fixture detail, so it lives with the script.
-const CRASHLOOP_POD = "checkout-6fff987c78-27bm6";
-
 // A plausible investigation for the crashloopbackoff-bad-command scenario:
 // list pods, describe the failing pod, read events, read the previous logs,
 // then submit a grounded diagnosis. The cited excerpts match signals present in
-// the committed fixtures, so evidence recall is meaningful.
-export function buildCrashloopScript(namespace: string): CompletionResult[] {
-  const pod = CRASHLOOP_POD;
+// the committed fixtures, so evidence recall is meaningful. The failing pod name
+// is resolved from the committed get_pods fixture, never hardcoded.
+export function buildCrashloopScript(scenario: Scenario): CompletionResult[] {
+  const namespace = scenario.namespace;
+  const pod = resolvePodName(scenario);
   return [
     step("call-0", "get_pods", { namespace }),
     step("call-1", "describe_pod", { namespace, pod }),
@@ -144,18 +185,15 @@ function submitStep(
   };
 }
 
-// The Pending pod for the pod-unschedulable scenario. The Deployment target is
-// "aggregator"; this is the pod it creates. It is a fixture detail, so it lives
-// with the script. After a real capture, align this to the captured pod name.
-const UNSCHEDULABLE_POD = "aggregator-7c9d8f6b54-mn2xk";
-
 // A plausible investigation for pod-unschedulable: list pods, describe the
 // Pending pod, read events, then diagnose from the FailedScheduling event. The
 // pod never runs a container, so this path never reads logs, matching the
 // captureSet. Cited excerpts carry the "FailedScheduling" and "Insufficient
-// memory" markers.
-export function buildUnschedulableScript(namespace: string): CompletionResult[] {
-  const pod = UNSCHEDULABLE_POD;
+// memory" markers. The Pending pod name is resolved from the committed get_pods
+// fixture, never hardcoded.
+export function buildUnschedulableScript(scenario: Scenario): CompletionResult[] {
+  const namespace = scenario.namespace;
+  const pod = resolvePodName(scenario);
   return [
     step("call-0", "get_pods", { namespace }),
     step("call-1", "describe_pod", { namespace, pod }),
@@ -191,20 +229,18 @@ export function buildUnschedulableScript(namespace: string): CompletionResult[] 
   ];
 }
 
-// The backing pod for the service-no-endpoints scenario. The Deployment is named
-// "web"; this is the pod it creates. Align to the captured pod name after a real
-// capture.
-const NOENDPOINTS_POD = "web-5b4c7d9f8a-qr7tp";
-
 // A plausible investigation for service-no-endpoints: list pods (healthy),
 // describe a pod to see its labels, read the service endpoints (empty), then
 // diagnose the selector/label mismatch. No crashing pod, so no logs. Cited
 // excerpts carry the "web-api" (selector) and "web-backend" (pod label) markers.
+// The backing pod name is resolved from the committed get_pods fixture, never
+// hardcoded.
 export function buildServiceNoEndpointsScript(
-  namespace: string,
+  scenario: Scenario,
 ): CompletionResult[] {
-  const pod = NOENDPOINTS_POD;
-  const service = "web";
+  const namespace = scenario.namespace;
+  const pod = resolvePodName(scenario);
+  const service = scenario.target.name;
   return [
     step("call-0", "get_pods", { namespace }),
     step("call-1", "describe_pod", { namespace, pod }),
@@ -217,7 +253,7 @@ export function buildServiceNoEndpointsScript(
         {
           tool: "get_pods",
           args: { namespace },
-          excerpt: "pod web-5b4c7d9f8a-qr7tp is Running and Ready (1/1)",
+          excerpt: `pod ${pod} is Running and Ready (1/1)`,
         },
         {
           tool: "describe_pod",
@@ -238,42 +274,46 @@ export function buildServiceNoEndpointsScript(
   ];
 }
 
-// The Running pod for the rbac-denied scenario. The Deployment is named
-// "log-shipper"; this is the pod it creates. Align to the captured pod name
-// after a real capture.
-const RBAC_POD = "log-shipper-6d8b9c7f5e-zk4wm";
-
 // A plausible investigation for rbac-denied: list pods (Running), describe the
-// pod to see its ServiceAccount, check_rbac for the permission it needs, then
-// diagnose the denial. The pod is healthy; the fault is the RBAC denial. Cited
-// excerpts carry the "log-shipper" (SA), "list" (verb), and "secrets" (resource)
-// markers as check_rbac reports them.
-export function buildRbacDeniedScript(namespace: string): CompletionResult[] {
-  const pod = RBAC_POD;
-  const serviceAccount = "log-shipper";
+// pod to see its ServiceAccount, read the current logs to find the Kubernetes
+// Forbidden error the container prints, then check_rbac using the exact verb,
+// resource, and service account that error names, and diagnose the denial. The
+// pod is healthy; the fault is the RBAC denial. The Running pod name is resolved
+// from the committed get_pods fixture, never hardcoded. Cited excerpts carry the
+// "log-shipper" (SA), "list" (verb), and "secrets" (resource) markers, both from
+// the forbidden log line and as check_rbac reports them, so evidence recall stays
+// meaningful once groundtruth.json is set from the real capture.
+export function buildRbacDeniedScript(scenario: Scenario): CompletionResult[] {
+  const namespace = scenario.namespace;
+  const pod = resolvePodName(scenario);
+  const serviceAccount = scenario.target.name;
   return [
     step("call-0", "get_pods", { namespace }),
     step("call-1", "describe_pod", { namespace, pod }),
-    step("call-2", "check_rbac", {
+    step("call-2", "get_logs", { namespace, pod, previous: false }),
+    step("call-3", "check_rbac", {
       namespace,
       serviceAccount,
       verb: "list",
       resource: "secrets",
     }),
-    submitStep("call-3", {
+    submitStep("call-4", {
       failureClass: "RbacDenied",
       rootCause:
-        "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its requests to list secrets are denied, so the workload cannot do its job even though the pod runs.",
+        "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its attempts to list secrets are denied by RBAC, which the container logs as a Kubernetes Forbidden error, so the workload cannot do its job even though the pod runs.",
       evidence: [
         {
           tool: "get_pods",
           args: { namespace },
-          excerpt: "pod log-shipper-6d8b9c7f5e-zk4wm is Running (1/1)",
+          excerpt: `pod ${pod} is Running (1/1); the container is healthy, not crashing`,
         },
         {
-          tool: "describe_pod",
-          args: { namespace, pod },
-          excerpt: "pod runs under serviceAccount log-shipper",
+          tool: "get_logs",
+          args: { namespace, pod, previous: "false" },
+          excerpt:
+            `container stdout shows a Kubernetes Forbidden error: secrets is forbidden: ` +
+            `User "system:serviceaccount:${namespace}:${serviceAccount}" cannot list ` +
+            `resource "secrets" in API group "" in the namespace "${namespace}"`,
         },
         {
           tool: "check_rbac",
@@ -297,9 +337,9 @@ export function buildRbacDeniedScript(namespace: string): CompletionResult[] {
 // This lets an offline test assert that an invalid submit is surfaced and then
 // self-corrected, deterministically and with no API key.
 export function buildCrashloopSelfCorrectionScript(
-  namespace: string,
+  scenario: Scenario,
 ): CompletionResult[] {
-  const base = buildCrashloopScript(namespace);
+  const base = buildCrashloopScript(scenario);
   const validSubmit = base[base.length - 1];
   const investigative = base.slice(0, base.length - 1);
 

@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   assert(scenario, "the crashloop scenario must exist");
 
   const client = new RecordingFakeClient(
-    buildCrashloopSelfCorrectionScript(scenario.namespace),
+    buildCrashloopSelfCorrectionScript(scenario),
   );
 
   const { report } = await runEval({

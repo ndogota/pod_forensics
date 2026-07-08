@@ -1,12 +1,21 @@
 // captureSpec for rbac-denied.
 //
 // The workload runs fine (the pod is Running), but its ServiceAccount is bound
-// to no Role granting the permission it needs, so its API calls are denied. The
-// discriminating signal is the check_rbac denial for that ServiceAccount on the
-// specific verb and resource, not a crash. The read surface centers on check_rbac
-// (declared in the surface), with the per-pod describe_pod and get_logs reads to
-// show the pod is Running under the named ServiceAccount; the logs come back with
-// content or empty for the sleeping container and are recorded either way.
+// to no Role granting the permission it needs. The container actively attempts
+// the denied action: it runs `kubectl get secrets` on a loop, which in-cluster
+// authenticates as the pod ServiceAccount, so the API server forbids it and the
+// container writes the canonical Kubernetes Forbidden error to stdout. That log
+// line names the verb (list), the resource (secrets), and the subject
+// system:serviceaccount:<ns>:<serviceAccount>, giving the agent a surface signal
+// that tells it exactly which permission to test rather than guessing. The
+// discriminating signals are therefore that forbidden log line plus the
+// check_rbac denial for that same ServiceAccount/verb/resource, not a crash.
+//
+// The read surface centers on check_rbac (declared in the surface), with the
+// per-pod describe_pod and get_logs reads to show the pod is Running under the
+// named ServiceAccount and to capture the forbidden line in the current logs
+// (previous=false). previous=true is recorded too and comes back as an apiError
+// (the container never restarted).
 //
 // The surface also declares describe_deployment for the log-shipper workload and
 // a ConfigMap and Secret probe named after the workload. Neither exists, so the
@@ -17,18 +26,32 @@
 // system:serviceaccount:<namespace>:<serviceAccount> (see LiveProvider), so it
 // reports the workload's access, not the caller's.
 //
-// Wait predicate: the pod is Running and check_rbac reports allowed=false for
-// the ServiceAccount on list/secrets. The denial is deterministic (an unbound
-// ServiceAccount cannot list secrets), so this does not depend on the workload
-// actually attempting the call at runtime.
+// Wait predicate: the pod is Running AND the current logs (get_logs
+// previous=false) contain the Forbidden signal for secrets AND check_rbac reports
+// allowed=false for the ServiceAccount on list/secrets. Requiring the log signal
+// (not just the deterministic RBAC denial) is what makes the captured fixtures
+// realistic: the forbidden line is present before fixtures are taken.
+//
+// GROUNDTRUTH NOTE (marker rule, see TEMPLATE.md step 2): after a real recapture,
+// groundtruth.json expectedEvidence for this scenario is set from the real
+// captured signals, namely the forbidden log line (the `cannot list resource
+// "secrets"` phrasing get_logs records) and the check_rbac denial. Those markers
+// are set from the actual capture, not fabricated here. The current markers
+// ("log-shipper", "list", "secrets") are discriminating substrings that appear in
+// both those real signals.
 
 import { normalizeArgs } from "../../core/tools/argsHash";
-import type { CheckRbacOutput, GetPodsOutput } from "../../core/tools";
+import type {
+  CheckRbacOutput,
+  GetLogsOutput,
+  GetPodsOutput,
+} from "../../core/tools";
 import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
 // The permission the log-shipper workload needs and is denied. Echoed verbatim
-// in the check_rbac fixture, so the expectedEvidence markers (the ServiceAccount,
-// verb, and resource) literally appear.
+// in the check_rbac fixture and named in the container's forbidden log line, so
+// the expectedEvidence markers (the ServiceAccount, verb, and resource) literally
+// appear.
 const SERVICE_ACCOUNT = "log-shipper";
 const VERB = "list";
 const RESOURCE = "secrets";
@@ -54,6 +77,26 @@ export const captureSpec: CaptureSpec = {
     }
     const running = pod.phase === "Running";
 
+    // The container prints the Forbidden error to stdout, so read the current
+    // logs (previous=false: it never crashes) and look for the denial signal for
+    // secrets. A healthy workload, or one failing a different way, would not emit
+    // it, so it discriminates. Match on both "forbidden" and "secrets" in one
+    // line to stay robust to minor kubectl formatting.
+    const logsResult = await provider.resolve({
+      tool: "get_logs",
+      args: normalizeArgs({
+        namespace: scenario.namespace,
+        pod: pod.name,
+        previous: false,
+      }),
+    });
+    const logsOutput = logsResult.output as GetLogsOutput;
+    const lines = Array.isArray(logsOutput.lines) ? logsOutput.lines : [];
+    const forbiddenInLogs = lines.some(
+      (line) =>
+        line.toLowerCase().includes("forbidden") && line.includes(RESOURCE),
+    );
+
     const rbacResult = await provider.resolve({
       tool: "check_rbac",
       args: normalizeArgs({
@@ -65,12 +108,12 @@ export const captureSpec: CaptureSpec = {
     });
     const denied = (rbacResult.output as CheckRbacOutput).allowed === false;
 
-    const done = running && denied;
+    const done = running && forbiddenInLogs && denied;
     return {
       done,
       pod: pod.name,
       detail:
-        `pod ${pod.name} phase=${pod.phase} ` +
+        `pod ${pod.name} phase=${pod.phase} forbiddenInLogs=${forbiddenInLogs} ` +
         `${SERVICE_ACCOUNT} allowed(${VERB} ${RESOURCE})=${!denied}`,
     };
   },

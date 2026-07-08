@@ -278,7 +278,13 @@ const SPECS: ToolSpec[] = [
   {
     name: "check_rbac",
     description:
-      "Check whether a service account is allowed to perform a verb on a resource, in the style of kubectl auth can-i. Read only.",
+      "Check whether a service account is allowed to perform a verb on a resource, " +
+      "in the style of kubectl auth can-i. When a log line or event shows a " +
+      'Kubernetes Forbidden error (for example: secrets is forbidden: User ' +
+      '"system:serviceaccount:telemetry:log-shipper" cannot list resource "secrets"), ' +
+      "call this using the exact verb, resource, and service account that error " +
+      "names (there, verb=list, resource=secrets, serviceAccount=log-shipper) rather " +
+      "than guessing combinations. Read only.",
     inputSchema: checkRbacInput,
   },
 ];
