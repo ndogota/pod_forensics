@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-07-08T20:16:29.771Z",
+  "output": {
+    "namespace": "telemetry",
+    "pod": "log-shipper-97956dbdb-q7qv5",
+    "previous": false,
+    "lines": [
+      "Error from server (Forbidden): secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
+    ],
+    "truncated": false
+  }
+}
