@@ -24,13 +24,16 @@ export const evidenceSchema = z.object({
   excerpt: z
     .string()
     .describe(
-      "The specific excerpt from that tool's output that supports the claim.",
+      "A short excerpt (a line or two) from that tool's output that supports the claim. Quote the specific signal, not a full dump.",
     ),
 });
 
-// The exported single source of truth. suggestedFix and confidence are required:
-// no .optional() and no .default(), so an omitted field is a validation error,
-// not a silently filled blank.
+// The exported single source of truth. Field order is deliberate: the scalar
+// required fields come first and the large evidence array comes last. suggestedFix
+// and confidence are required (no .optional(), no .default(), so an omitted field
+// is a validation error, not a silently filled blank), and because they precede
+// the array, a turn truncated by max_tokens drops the bulky evidence first while
+// these small trailing scalars still arrive intact.
 export const diagnosisSchema = z.object({
   failureClass: z
     .enum(FAILURE_CLASSES)
@@ -39,24 +42,28 @@ export const diagnosisSchema = z.object({
     .string()
     .min(1)
     .describe("A clear, plain-language description of the underlying cause."),
-  // Every claim must be grounded, so at least one cited signal is required.
-  evidence: z
-    .array(evidenceSchema)
-    .min(1)
-    .describe(
-      "At least one cited signal. Every claim must cite tool output; each entry quotes the excerpt that supports it.",
-    ),
   suggestedFix: z
     .string()
     .min(1)
     .describe(
-      "A short remediation suggestion. Required. Advice only; nothing is applied.",
+      "A short remediation suggestion. Required: always include this field. Advice only; nothing is applied.",
     ),
   confidence: z
     .number()
     .min(0)
     .max(1)
-    .describe("A number between 0 and 1 expressing confidence in this diagnosis."),
+    .describe(
+      "A number between 0 and 1 expressing confidence in this diagnosis. Required: always include this field.",
+    ),
+  // Every claim must be grounded, so at least one cited signal is required, and
+  // at most four keeps the payload the model juggles small.
+  evidence: z
+    .array(evidenceSchema)
+    .min(1)
+    .max(4)
+    .describe(
+      "One to four cited signals, most discriminating first. Every claim must cite tool output; each entry quotes a short excerpt (a line or two, not a full dump) that supports it.",
+    ),
 });
 
 // Render a zod validation failure as a compact, model-readable list of the

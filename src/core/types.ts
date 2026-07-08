@@ -87,6 +87,13 @@ export interface RunTrace {
   diagnosis: Diagnosis;
   stepCount: number;
   totalTokens: number;
+  // Usage split, summed across turns. tokensIn is the uncached input remainder,
+  // tokensOut the generated output, and cacheReadTokens the tokens served from
+  // the prompt cache. Kept separate from totalTokens so the eval can price a run
+  // (input, output, and cache reads bill at different rates).
+  tokensIn: number;
+  tokensOut: number;
+  cacheReadTokens: number;
   costUsd: number;
   totalLatencyMs: number;
 }

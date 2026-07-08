@@ -8,9 +8,17 @@
 // Usage:
 //   pnpm eval                         fake client, 3 runs, all seeded scenarios
 //   pnpm eval --runs 5                fake client, 5 runs
+//   pnpm eval --runs 1                single run, for cheap debugging
 //   pnpm eval --client anthropic      real model, needs ANTHROPIC_API_KEY and
 //                                     captured fixtures for every scenario
+//   pnpm eval --client anthropic --model claude-opus-4-8   Opus showcase run
 //   pnpm eval --scenario <id>         restrict to one scenario by id
+//
+// Model selection (anthropic client only): the agent model comes from --model,
+// then the AGENT_MODEL env var, then the client default (claude-sonnet-4-6, kept
+// cheap on purpose). The LLM-as-judge always uses the cheapest model
+// (claude-haiku-4-5-20251001) on its own client, independent of the agent model,
+// so scoring never calls Opus.
 
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -25,6 +33,7 @@ import {
 } from "../src/core/agent/fakeModelClient";
 import type { CompletionResult } from "../src/core/agent/modelClient";
 import { submitDiagnosisDefinition } from "../src/core/agent/diagnosisSchema";
+import { estimateCostUsd } from "../src/core/agent/pricing";
 import type { ModelClient } from "../src/core/agent/modelClient";
 import { runEval } from "../src/core/eval/runner";
 import {
@@ -45,10 +54,14 @@ const FAKE_SCRIPTS: Record<string, (ns: string) => CompletionResult[]> = {
   "rbac-denied": buildRbacDeniedScript,
 };
 
+// The judge always runs on the cheapest model, independent of the agent model.
+const JUDGE_MODEL = "claude-haiku-4-5-20251001";
+
 interface CliArgs {
   client: "fake" | "anthropic";
   runs: number;
   scenario?: string; // when set, restrict to one scenario; otherwise run all
+  model?: string; // agent model override (anthropic client only)
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -71,6 +84,11 @@ function parseArgs(argv: string[]): CliArgs {
       }
     } else if (flag === "--scenario") {
       args.scenario = argv[++i];
+    } else if (flag === "--model") {
+      args.model = argv[++i];
+      if (!args.model) {
+        throw new Error("--model requires a model id");
+      }
     } else {
       throw new Error(`unknown argument: ${flag}`);
     }
@@ -109,9 +127,10 @@ async function main(): Promise<void> {
   }
 
   // Once at startup: log the schema the model is actually shown for
-  // submit_diagnosis and its required array, so a run can confirm suggestedFix
-  // and confidence are advertised as required (they are the last two fields, the
-  // ones a truncated turn drops first).
+  // submit_diagnosis and its required array, so a run can confirm the field order
+  // (scalar required fields first, the large evidence array last) and that
+  // suggestedFix and confidence are advertised as required. With evidence last, a
+  // truncated turn drops the bulky array first and these scalars still arrive.
   const advertisedSchema = submitDiagnosisDefinition.inputSchema as {
     required?: string[];
   };
@@ -122,8 +141,10 @@ async function main(): Promise<void> {
     `[eval] submit_diagnosis required fields: ${JSON.stringify(advertisedSchema.required ?? [])}`,
   );
 
-  // One Anthropic client and judge are shared across scenarios so a single
-  // model seam drives the whole non-deterministic run. The fake client is per
+  // One Anthropic client for the agent and a separate one for the judge are
+  // shared across scenarios. The agent client's model is configurable and kept
+  // cheap by default; the judge client is pinned to the cheapest model so scoring
+  // never rides on the (possibly Opus) agent model. The fake client is per
   // scenario, since each scenario has its own scripted investigation.
   let anthropic: AnthropicModelClient | undefined;
   let modelJudge: RootCauseJudge | undefined;
@@ -133,12 +154,18 @@ async function main(): Promise<void> {
         "ANTHROPIC_API_KEY is not set; the anthropic client needs it",
       );
     }
-    anthropic = new AnthropicModelClient();
-    // Report the output token ceiling this run operates under, so a truncation
-    // failure can be read against the budget that produced it.
+    // Agent model: --model, then AGENT_MODEL, then the client default.
+    const agentModel = args.model ?? process.env.AGENT_MODEL;
+    anthropic = new AnthropicModelClient(agentModel ? { model: agentModel } : {});
+    // Report the model and output token ceiling this run operates under, so a
+    // truncation failure can be read against the budget that produced it.
+    console.error(`[eval] agent model: ${anthropic.model}`);
     console.error(`[eval] AnthropicModelClient max_tokens: ${anthropic.maxTokens}`);
-    // The judge shares the same seam. This makes the eval non-deterministic.
-    modelJudge = makeModelJudge(anthropic);
+    // The judge runs on its own client at the cheapest model, independent of the
+    // agent model. Using a model inside scoring makes the eval non-deterministic.
+    const judgeClient = new AnthropicModelClient({ model: JUDGE_MODEL });
+    console.error(`[eval] judge model: ${judgeClient.model}`);
+    modelJudge = makeModelJudge(judgeClient);
   }
 
   const createdAt = new Date().toISOString();
@@ -200,6 +227,57 @@ async function main(): Promise<void> {
         `rootCauseJudge ${score.rootCauseJudgeScore.toFixed(2)}`,
     );
   }
+
+  printCostSummary(combined);
+}
+
+// Per-scenario and total token usage and estimated USD, computed purely from the
+// usage already recorded in the traces. No network call: it is arithmetic over a
+// small pricing table keyed by the agent model. Failed runs produce no trace, so
+// they contribute no tokens here. For the fake client the model is unpriced, so
+// every cost is $0.0000.
+function printCostSummary(report: RunReport): void {
+  interface Usage {
+    tokensIn: number;
+    tokensOut: number;
+    cacheReadTokens: number;
+  }
+  const byScenario = new Map<string, Usage>();
+  const total: Usage = { tokensIn: 0, tokensOut: 0, cacheReadTokens: 0 };
+  for (const trace of report.traces) {
+    const u = byScenario.get(trace.scenarioId) ?? {
+      tokensIn: 0,
+      tokensOut: 0,
+      cacheReadTokens: 0,
+    };
+    u.tokensIn += trace.tokensIn;
+    u.tokensOut += trace.tokensOut;
+    u.cacheReadTokens += trace.cacheReadTokens;
+    byScenario.set(trace.scenarioId, u);
+    total.tokensIn += trace.tokensIn;
+    total.tokensOut += trace.tokensOut;
+    total.cacheReadTokens += trace.cacheReadTokens;
+  }
+
+  const usd = (u: Usage): string =>
+    "$" +
+    estimateCostUsd(report.model, {
+      inputTokens: u.tokensIn,
+      outputTokens: u.tokensOut,
+      cacheReadTokens: u.cacheReadTokens,
+    }).toFixed(4);
+
+  console.log(`\ncost summary (${report.model}; arithmetic on returned usage, no network):`);
+  for (const [scenarioId, u] of byScenario) {
+    console.log(
+      `  ${scenarioId}: in ${u.tokensIn}, out ${u.tokensOut}, ` +
+        `cacheRead ${u.cacheReadTokens}, est ${usd(u)}`,
+    );
+  }
+  console.log(
+    `  TOTAL: in ${total.tokensIn}, out ${total.tokensOut}, ` +
+      `cacheRead ${total.cacheReadTokens}, est ${usd(total)}`,
+  );
 }
 
 main().catch((err) => {

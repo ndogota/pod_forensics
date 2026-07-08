@@ -4,6 +4,18 @@
 // deterministic and free. This client is here so the same agent loop can run
 // against a real model when ANTHROPIC_API_KEY is set.
 //
+// It defaults to claude-sonnet-4-6 to keep real runs cheap; Opus is available by
+// passing the model explicitly (via `pnpm eval --model claude-opus-4-8`) for a
+// final showcase run.
+//
+// Prompt caching: the system prompt and the tool definitions block are static
+// across the whole loop, so each carries an ephemeral cache breakpoint. The
+// growing message history is cached incrementally by marking the last content
+// block of the most recent turn, so every step after the first reads the earlier
+// turns from cache instead of reprocessing them. Render order is tools, then
+// system, then messages, and there are at most three breakpoints, within the
+// four-breakpoint limit.
+//
 // Note on thinking: this client runs without extended thinking to keep the
 // manual tool-use loop simple. Adaptive thinking would require echoing thinking
 // blocks back unchanged across turns, which the minimal ModelClient message
@@ -12,6 +24,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
+import { estimateCostUsd } from "./pricing";
 import type {
   CompletionRequest,
   CompletionResult,
@@ -20,25 +33,14 @@ import type {
   ModelMessage,
 } from "./modelClient";
 
-// Price per million tokens, input and output. Used to fill RunTrace.costUsd.
-// Keep in sync with published model pricing.
-const PRICING: Record<string, { inPerM: number; outPerM: number }> = {
-  "claude-opus-4-8": { inPerM: 5, outPerM: 25 },
-  "claude-sonnet-4-6": { inPerM: 3, outPerM: 15 },
-  "claude-haiku-4-5": { inPerM: 1, outPerM: 5 },
-};
-
-const DEFAULT_MODEL = "claude-opus-4-8";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 4096;
 
-function costUsd(model: string, tokensIn: number, tokensOut: number): number {
-  const p = PRICING[model];
-  if (!p) return 0;
-  return (tokensIn * p.inPerM + tokensOut * p.outPerM) / 1_000_000;
-}
+// A single ephemeral cache breakpoint, reused at every placement.
+const EPHEMERAL = { type: "ephemeral" } as const;
 
 function toSdkMessages(messages: ModelMessage[]): Anthropic.MessageParam[] {
-  return messages.map((m) => {
+  const sdk: Anthropic.MessageParam[] = messages.map((m) => {
     if (m.role === "user") {
       if (typeof m.content === "string") {
         return { role: "user", content: m.content };
@@ -62,6 +64,26 @@ function toSdkMessages(messages: ModelMessage[]): Anthropic.MessageParam[] {
       ),
     };
   });
+  // Cache the conversation prefix incrementally: marking the last content block
+  // of the most recent turn makes the whole prefix up to here a cache entry, so
+  // the next step reads all earlier turns from cache.
+  markLastBlockCached(sdk);
+  return sdk;
+}
+
+function markLastBlockCached(messages: Anthropic.MessageParam[]): void {
+  const last = messages[messages.length - 1];
+  if (!last) return;
+  if (typeof last.content === "string") {
+    last.content = [
+      { type: "text", text: last.content, cache_control: EPHEMERAL },
+    ];
+    return;
+  }
+  const block = last.content[last.content.length - 1];
+  if (block) {
+    (block as { cache_control?: typeof EPHEMERAL }).cache_control = EPHEMERAL;
+  }
 }
 
 export class AnthropicModelClient implements ModelClient {
@@ -82,15 +104,23 @@ export class AnthropicModelClient implements ModelClient {
   }
 
   async complete(req: CompletionRequest): Promise<CompletionResult> {
+    // The tool definitions are static across the loop; cache them with one
+    // breakpoint on the last tool, which covers the whole block.
+    const tools: Anthropic.Tool[] = req.tools.map((t) => ({
+      name: t.name,
+      description: t.description,
+      input_schema: t.inputSchema as Anthropic.Tool.InputSchema,
+    }));
+    if (tools.length > 0) {
+      tools[tools.length - 1].cache_control = EPHEMERAL;
+    }
+
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: req.maxTokens ?? this.maxTokens,
-      system: req.system,
-      tools: req.tools.map((t) => ({
-        name: t.name,
-        description: t.description,
-        input_schema: t.inputSchema as Anthropic.Tool.InputSchema,
-      })),
+      // The system prompt is static across the loop, so cache it too.
+      system: [{ type: "text", text: req.system, cache_control: EPHEMERAL }],
+      tools,
       messages: toSdkMessages(req.messages),
     });
 
@@ -110,13 +140,22 @@ export class AnthropicModelClient implements ModelClient {
 
     const tokensIn = response.usage.input_tokens;
     const tokensOut = response.usage.output_tokens;
+    const cacheReadTokens = response.usage.cache_read_input_tokens ?? 0;
+    const cacheCreationTokens = response.usage.cache_creation_input_tokens ?? 0;
 
     return {
       content,
       stopReason: response.stop_reason ?? "end_turn",
       tokensIn,
       tokensOut,
-      costUsd: costUsd(this.model, tokensIn, tokensOut),
+      cacheReadTokens,
+      cacheCreationTokens,
+      costUsd: estimateCostUsd(this.model, {
+        inputTokens: tokensIn,
+        outputTokens: tokensOut,
+        cacheReadTokens,
+        cacheCreationTokens,
+      }),
     };
   }
 }

@@ -64,6 +64,11 @@ export interface CompletionResult {
   tokensIn: number;
   tokensOut: number;
   costUsd: number;
+  // Prompt-cache usage for this turn, when the client supports caching. tokensIn
+  // is the uncached input remainder, so these are separate counts, not a subset
+  // of it. The fake client leaves them undefined (treated as zero).
+  cacheReadTokens?: number;
+  cacheCreationTokens?: number;
   // When set, the loop uses this instead of a measured wall-clock time. The
   // fake client sets it so committed reports are deterministic; the real client
   // leaves it undefined and the loop measures.

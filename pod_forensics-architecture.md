@@ -134,6 +134,9 @@ export interface RunTrace {
   diagnosis: Diagnosis;
   stepCount: number;
   totalTokens: number;
+  tokensIn: number;         // uncached input tokens, summed across turns
+  tokensOut: number;        // output tokens, summed across turns
+  cacheReadTokens: number;  // tokens served from the prompt cache
   costUsd: number;
   totalLatencyMs: number;
 }

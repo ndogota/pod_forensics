@@ -69,9 +69,17 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
 
   const steps: TraceStep[] = [];
   let totalTokens = 0;
+  let totalTokensIn = 0;
+  let totalTokensOut = 0;
   let totalLatencyMs = 0;
   let costUsd = 0;
   let invalidSubmitCount = 0;
+  // Prompt-cache accounting. cacheReadAfterFirstTurn isolates reads on turns past
+  // the first, which is exactly where caching is supposed to pay off: the first
+  // turn writes the cache, later turns read the earlier context back from it.
+  let totalCacheReadTokens = 0;
+  let totalCacheCreationTokens = 0;
+  let cacheReadAfterFirstTurn = 0;
   // Track the most recent turn's stop reason so budget exhaustion can tell a
   // genuinely stuck agent from one whose last turn was simply truncated.
   let lastStopReason = "";
@@ -90,8 +98,14 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
     // Accounting spans every model turn, including the submit turn, so totals
     // reflect the real cost of the run.
     totalTokens += result.tokensIn + result.tokensOut;
+    totalTokensIn += result.tokensIn;
+    totalTokensOut += result.tokensOut;
     totalLatencyMs += latencyMs;
     costUsd += result.costUsd;
+    const cacheRead = result.cacheReadTokens ?? 0;
+    totalCacheReadTokens += cacheRead;
+    totalCacheCreationTokens += result.cacheCreationTokens ?? 0;
+    if (turn > 0) cacheReadAfterFirstTurn += cacheRead;
 
     // Record the assistant turn verbatim so the next request has full history.
     messages.push({ role: "assistant", content: result.content });
@@ -203,12 +217,24 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
     }
 
     if (concluded) {
+      // One-line cache summary per run. cacheReadAfterFirstTurn confirms that
+      // later steps read earlier turns back from cache rather than reprocessing
+      // them; it is zero for the fake client, which does no caching.
+      console.error(
+        `[loop] cache summary for "${scenarioId}": turns=${turn + 1}, ` +
+          `uncachedIn=${totalTokensIn}, out=${totalTokensOut}, ` +
+          `cacheRead=${totalCacheReadTokens} (afterFirstTurn=${cacheReadAfterFirstTurn}), ` +
+          `cacheWrite=${totalCacheCreationTokens}`,
+      );
       return {
         scenarioId,
         steps,
         diagnosis: concluded,
         stepCount: steps.length,
         totalTokens,
+        tokensIn: totalTokensIn,
+        tokensOut: totalTokensOut,
+        cacheReadTokens: totalCacheReadTokens,
         costUsd,
         totalLatencyMs,
       };
