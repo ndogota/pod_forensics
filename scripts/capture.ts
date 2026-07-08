@@ -95,6 +95,51 @@ function deleteNamespace(namespace: string): void {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+// A container that cannot be pulled never runs, so no wait predicate can ever
+// pass. These are the two terminal image-pull waiting reasons the kubelet
+// surfaces: ErrImagePull on the first failure, ImagePullBackOff once it backs
+// off. Either means the pod is stuck and polling should stop immediately rather
+// than burn the full timeout.
+const IMAGE_PULL_FAILURE_REASONS = new Set(["ImagePullBackOff", "ErrImagePull"]);
+
+// A pod container stuck waiting on an image pull, with the naming detail needed
+// for a clear failure message.
+interface ImagePullFailure {
+  pod: string;
+  container: string;
+  reason: string;
+  message: string;
+}
+
+// Scan the namespace's pods for any container waiting with a terminal image-pull
+// reason. Returns the first such container, or null if none. Shared across all
+// scenarios: an unpullable image is never the failure under test, so it should
+// fail capture fast regardless of scenario.
+async function findImagePullFailure(
+  provider: LiveProvider,
+  namespace: string,
+): Promise<ImagePullFailure | null> {
+  const podsResult = await provider.resolve({
+    tool: "get_pods",
+    args: normalizeArgs({ namespace }),
+  });
+  for (const pod of (podsResult.output as GetPodsOutput).pods) {
+    for (const cs of pod.containerStatuses) {
+      if (cs.state === "waiting" && cs.reason && IMAGE_PULL_FAILURE_REASONS.has(cs.reason)) {
+        return {
+          pod: pod.name,
+          container: cs.name,
+          reason: cs.reason,
+          // The kubelet's waiting message names the image, e.g.
+          // `Back-off pulling image "rancher/kubectl:v1.30.0"`.
+          message: cs.message ?? "",
+        };
+      }
+    }
+  }
+  return null;
+}
+
 // Poll the scenario's own wait predicate through the live provider until its
 // failure has manifested, or fail loudly on timeout. The polling loop, the
 // bounded timeout, the exponential backoff, and the progress logging are shared
@@ -115,6 +160,24 @@ async function waitForFailure(
     attempt++;
     const elapsedMs = Date.now() - start;
     const elapsed = Math.round(elapsedMs / 1000);
+
+    // Fail fast on an unpullable image. A container stuck in ImagePullBackOff or
+    // ErrImagePull never starts, so the scenario's failure can never manifest and
+    // waiting out the timeout would only delay a certain failure. Naming the pod,
+    // image, and reason makes the misconfiguration obvious.
+    const pullFailure = await findImagePullFailure(provider, scenario.namespace);
+    if (pullFailure) {
+      throw new Error(
+        `image pull failed for "${scenario.id}": pod ${pullFailure.pod} ` +
+          `container ${pullFailure.container} is stuck with reason ` +
+          `${pullFailure.reason}` +
+          (pullFailure.message ? ` (${pullFailure.message})` : "") +
+          `. The image cannot be pulled, so the pod will never run. Fix the ` +
+          `image in the scenario manifests. Namespace ${scenario.namespace} ` +
+          `left in place for inspection.`,
+      );
+    }
+
     const result = await spec.poll({ provider, scenario, elapsedMs });
     console.log(`poll ${attempt} (${elapsed}s): ${result.detail}`);
     if (result.done) {

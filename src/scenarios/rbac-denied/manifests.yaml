@@ -46,7 +46,12 @@ spec:
           # stdout. The `|| true` keeps the shell loop alive past the non-zero
           # exit, and the sleep paces the retries, so the container never exits
           # and the pod stays Running. Any pullable kubectl image works here.
-          image: bitnami/kubectl:1.30
+          # bitnami/kubectl was retired from the public Docker Hub catalog, so it
+          # can no longer be pulled; rancher/kubectl is a stable public image that
+          # ships kubectl. imagePullPolicy IfNotPresent reuses a cached layer when
+          # present and avoids a needless registry round trip on recapture.
+          image: rancher/kubectl:v1.30.0
+          imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
             - -c
