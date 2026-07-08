@@ -17,7 +17,7 @@
 // to zero endpoint addresses. Both the Deployment and the Service share the
 // scenario target name, so the pod prefix matches the target name.
 
-import { normalizeArgs } from "../../core/tools/argsHash";
+import { canonicalizeToolArgs } from "../../core/tools/canonicalizeToolArgs";
 import type {
   GetPodsOutput,
   GetServiceEndpointsOutput,
@@ -34,7 +34,7 @@ export const captureSpec: CaptureSpec = {
   async poll({ provider, scenario }) {
     const podsResult = await provider.resolve({
       tool: "get_pods",
-      args: normalizeArgs({ namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_pods", { namespace: scenario.namespace }),
     });
     const pod = findPodByPrefix(
       (podsResult.output as GetPodsOutput).pods,
@@ -50,7 +50,10 @@ export const captureSpec: CaptureSpec = {
 
     const epResult = await provider.resolve({
       tool: "get_service_endpoints",
-      args: normalizeArgs({ namespace: scenario.namespace, service: "web" }),
+      args: canonicalizeToolArgs("get_service_endpoints", {
+        namespace: scenario.namespace,
+        service: "web",
+      }),
     });
     const addresses = (epResult.output as GetServiceEndpointsOutput).addresses;
     const noEndpoints = addresses.length === 0;

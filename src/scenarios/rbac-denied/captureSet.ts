@@ -40,7 +40,7 @@
 // ("log-shipper", "list", "secrets") are discriminating substrings that appear in
 // both those real signals.
 
-import { normalizeArgs } from "../../core/tools/argsHash";
+import { canonicalizeToolArgs } from "../../core/tools/canonicalizeToolArgs";
 import type {
   CheckRbacOutput,
   GetLogsOutput,
@@ -66,7 +66,7 @@ export const captureSpec: CaptureSpec = {
   async poll({ provider, scenario }) {
     const podsResult = await provider.resolve({
       tool: "get_pods",
-      args: normalizeArgs({ namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_pods", { namespace: scenario.namespace }),
     });
     const pod = findPodByPrefix(
       (podsResult.output as GetPodsOutput).pods,
@@ -84,7 +84,7 @@ export const captureSpec: CaptureSpec = {
     // line to stay robust to minor kubectl formatting.
     const logsResult = await provider.resolve({
       tool: "get_logs",
-      args: normalizeArgs({
+      args: canonicalizeToolArgs("get_logs", {
         namespace: scenario.namespace,
         pod: pod.name,
         previous: false,
@@ -99,7 +99,7 @@ export const captureSpec: CaptureSpec = {
 
     const rbacResult = await provider.resolve({
       tool: "check_rbac",
-      args: normalizeArgs({
+      args: canonicalizeToolArgs("check_rbac", {
         namespace: scenario.namespace,
         serviceAccount: SERVICE_ACCOUNT,
         verb: VERB,

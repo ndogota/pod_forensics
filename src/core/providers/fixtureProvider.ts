@@ -13,7 +13,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { argsHash } from "../tools/argsHash";
+import { fixtureKey } from "../tools/canonicalizeToolArgs";
 import { toolDefinitions } from "../tools";
 import type {
   ToolCall,
@@ -51,7 +51,7 @@ export class FixtureProvider implements ToolProvider {
 
   // Resolve the on-disk path for a tool call without reading it.
   fixturePath(call: ToolCall): string {
-    const fileName = `${call.tool}-${argsHash(call.args)}.json`;
+    const fileName = `${call.tool}-${fixtureKey(call)}.json`;
     return path.join(this.fixturesRoot, this.scenarioId, fileName);
   }
 
@@ -71,7 +71,7 @@ export class FixtureProvider implements ToolProvider {
       }
       // Non-strict: surface the gap loudly, then hand the agent an empty,
       // clearly-marked result so it keeps going instead of derailing.
-      const hash = argsHash(call.args);
+      const hash = fixtureKey(call);
       console.error(
         `[fixture] MISS scenarioId=${this.scenarioId} tool=${call.tool} ` +
           `argshash=${hash} (looked for ${filePath}; ${reason})`,

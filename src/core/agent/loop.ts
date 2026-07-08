@@ -10,7 +10,7 @@
 // whether the model is real or scripted.
 
 import type { ToolProvider } from "../providers/toolProvider";
-import { normalizeArgs } from "../tools/argsHash";
+import { canonicalizeToolArgs } from "../tools/canonicalizeToolArgs";
 import type { Diagnosis, RunTrace, ToolCall, TraceStep } from "../types";
 import { DEFAULT_AGENT_CONFIG, type AgentConfig } from "./config";
 import {
@@ -212,12 +212,13 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
         break;
       }
 
-      // A read-only tool call. Resolve it through the provider. The same
-      // normalized args object is hashed to the fixture key and passed to
-      // resolve, so there is no place for the two to diverge.
+      // A read-only tool call. Resolve it through the provider. The args are
+      // canonicalized here (optional defaults filled, non-varying options
+      // dropped) so a freely-exploring agent's call converges on the same fixture
+      // key capture wrote, and the same canonical args are what resolve receives.
       const call: ToolCall = {
         tool: block.name,
-        args: normalizeArgs(block.input),
+        args: canonicalizeToolArgs(block.name, block.input),
       };
       let output: string;
       let isError = false;

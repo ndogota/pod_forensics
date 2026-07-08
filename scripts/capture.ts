@@ -31,7 +31,7 @@ import { execFileSync } from "node:child_process";
 import { rm } from "node:fs/promises";
 import path from "node:path";
 
-import { normalizeArgs } from "../src/core/tools/argsHash";
+import { canonicalizeToolArgs } from "../src/core/tools/canonicalizeToolArgs";
 import type { GetPodsOutput } from "../src/core/tools";
 import { LiveProvider } from "../src/core/providers/liveProvider";
 import { RecordingProvider } from "../src/core/providers/recordingProvider";
@@ -140,7 +140,7 @@ async function findTerminalContainerFailure(
 ): Promise<TerminalContainerFailure | null> {
   const podsResult = await provider.resolve({
     tool: "get_pods",
-    args: normalizeArgs({ namespace }),
+    args: canonicalizeToolArgs("get_pods", { namespace }),
   });
   for (const pod of (podsResult.output as GetPodsOutput).pods) {
     for (const cs of pod.containerStatuses) {
@@ -266,7 +266,7 @@ async function main(): Promise<void> {
   // here from get_pods, never hardcoded.
   const podsResult = await live.resolve({
     tool: "get_pods",
-    args: normalizeArgs({ namespace: scenario.namespace }),
+    args: canonicalizeToolArgs("get_pods", { namespace: scenario.namespace }),
   });
   const podNames = (podsResult.output as GetPodsOutput).pods.map((p) => p.name);
   console.log(

@@ -25,7 +25,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { argsHash, normalizeArgs } from "../tools/argsHash";
+import { argsHash } from "../tools/argsHash";
+import { canonicalizeToolArgs } from "../tools/canonicalizeToolArgs";
 import type { GetPodsOutput } from "../tools";
 import type { Scenario } from "../types";
 import { SUBMIT_DIAGNOSIS_TOOL } from "./diagnosisSchema";
@@ -58,14 +59,16 @@ function step(
 // Resolve the pod name a scenario's fixtures were captured with, by reading its
 // committed get_pods fixture and matching the workload-name prefix. This is the
 // one place a script learns a pod name; nothing is hardcoded. Because the hash
-// is derived from the same normalizeArgs/argsHash the FixtureProvider uses, and
+// is derived from the same canonicalizeToolArgs/argsHash the FixtureProvider uses, and
 // the pod name comes from the very get_pods fixture the agent replays, the
 // scripted describe_pod and get_logs calls resolve to the committed fixtures
 // even after a recapture assigns a fresh random suffix. Throws loudly if the
 // fixture is missing or holds no matching pod, so a broken capture fails fast
 // rather than silently missing fixtures.
 function resolvePodName(scenario: Scenario): string {
-  const hash = argsHash(normalizeArgs({ namespace: scenario.namespace }));
+  const hash = argsHash(
+    canonicalizeToolArgs("get_pods", { namespace: scenario.namespace }),
+  );
   const fixturePath = path.resolve(
     process.cwd(),
     "src/fixtures",

@@ -10,11 +10,13 @@
 
 import { createHash } from "node:crypto";
 
-// Convert a model tool call's raw arguments into the canonical
-// Record<string, string> that a ToolCall carries. Values (booleans, numbers)
-// are stringified and keys are sorted. This is the ONE place args are
-// normalized: the same normalized object is what argsHash hashes and what
-// ToolProvider.resolve receives. No tool-specific coercion lives anywhere else.
+// Stringify and sort a call's arguments into a stable Record<string, string>.
+// Values (booleans, numbers) are stringified and keys are sorted, so the result
+// is independent of insertion order. This is a low-level primitive: it does no
+// tool-specific shaping. canonicalizeToolArgs (see ./canonicalizeToolArgs) is the
+// single place that shapes a tool call's args (fills optional defaults, drops
+// non-varying options) and finishes by calling this. Callers that build a
+// ToolCall go through canonicalizeToolArgs, not this directly.
 export function normalizeArgs(
   input: Record<string, unknown>,
 ): Record<string, string> {

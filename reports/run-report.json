@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-07-08T20:15:25.409Z",
+  "createdAt": "2026-07-08T20:44:58.851Z",
   "model": "fake-model",
   "scenarioScores": [
     {
@@ -861,7 +861,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw"
+              "pod": "log-shipper-97956dbdb-q7qv5"
             }
           },
           "latencyMs": 5,
@@ -874,7 +874,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "pod": "log-shipper-97956dbdb-q7qv5",
               "previous": "false"
             }
           },
@@ -909,13 +909,13 @@
             "args": {
               "namespace": "telemetry"
             },
-            "excerpt": "pod log-shipper-7dcb8ffd45-k2zdw is Running (1/1); the container is healthy, not crashing"
+            "excerpt": "pod log-shipper-97956dbdb-q7qv5 is Running (1/1); the container is healthy, not crashing"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "pod": "log-shipper-97956dbdb-q7qv5",
               "previous": "false"
             },
             "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
@@ -961,7 +961,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw"
+              "pod": "log-shipper-97956dbdb-q7qv5"
             }
           },
           "latencyMs": 5,
@@ -974,7 +974,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "pod": "log-shipper-97956dbdb-q7qv5",
               "previous": "false"
             }
           },
@@ -1009,13 +1009,13 @@
             "args": {
               "namespace": "telemetry"
             },
-            "excerpt": "pod log-shipper-7dcb8ffd45-k2zdw is Running (1/1); the container is healthy, not crashing"
+            "excerpt": "pod log-shipper-97956dbdb-q7qv5 is Running (1/1); the container is healthy, not crashing"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "pod": "log-shipper-97956dbdb-q7qv5",
               "previous": "false"
             },
             "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
@@ -1061,7 +1061,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw"
+              "pod": "log-shipper-97956dbdb-q7qv5"
             }
           },
           "latencyMs": 5,
@@ -1074,7 +1074,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "pod": "log-shipper-97956dbdb-q7qv5",
               "previous": "false"
             }
           },
@@ -1109,13 +1109,13 @@
             "args": {
               "namespace": "telemetry"
             },
-            "excerpt": "pod log-shipper-7dcb8ffd45-k2zdw is Running (1/1); the container is healthy, not crashing"
+            "excerpt": "pod log-shipper-97956dbdb-q7qv5 is Running (1/1); the container is healthy, not crashing"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "pod": "log-shipper-97956dbdb-q7qv5",
               "previous": "false"
             },
             "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""

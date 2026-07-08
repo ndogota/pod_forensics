@@ -18,7 +18,7 @@
 // in the fixtures (expectedEvidence cites FailedScheduling and Insufficient
 // memory), so preferring it guarantees the marker is present when captured.
 
-import { normalizeArgs } from "../../core/tools/argsHash";
+import { canonicalizeToolArgs } from "../../core/tools/canonicalizeToolArgs";
 import type { GetEventsOutput, GetPodsOutput } from "../../core/tools";
 import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
@@ -36,7 +36,7 @@ export const captureSpec: CaptureSpec = {
   async poll({ provider, scenario, elapsedMs }) {
     const podsResult = await provider.resolve({
       tool: "get_pods",
-      args: normalizeArgs({ namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_pods", { namespace: scenario.namespace }),
     });
     const pod = findPodByPrefix(
       (podsResult.output as GetPodsOutput).pods,
@@ -48,7 +48,7 @@ export const captureSpec: CaptureSpec = {
 
     const eventsResult = await provider.resolve({
       tool: "get_events",
-      args: normalizeArgs({ namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_events", { namespace: scenario.namespace }),
     });
     const hasFailedScheduling = (
       eventsResult.output as GetEventsOutput

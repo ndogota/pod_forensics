@@ -21,7 +21,7 @@
 // to the same pod name (see fakeModelClient.ts) so its scripted calls hash to
 // these same fixtures.
 
-import { normalizeArgs } from "../../core/tools/argsHash";
+import { canonicalizeToolArgs } from "../../core/tools/canonicalizeToolArgs";
 import type { GetPodsOutput } from "../../core/tools";
 import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
@@ -38,7 +38,7 @@ export const captureSpec: CaptureSpec = {
   async poll({ provider, scenario }) {
     const result = await provider.resolve({
       tool: "get_pods",
-      args: normalizeArgs({ namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_pods", { namespace: scenario.namespace }),
     });
     const pods = (result.output as GetPodsOutput).pods;
     const pod = findPodByPrefix(pods, scenario.target.name);

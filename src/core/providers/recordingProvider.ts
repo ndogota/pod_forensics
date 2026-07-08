@@ -2,9 +2,10 @@
 //
 // It wraps any ToolProvider. On resolve it delegates to the inner provider,
 // writes the ToolResult to src/fixtures/<scenarioId>/<tool>-<argshash>.json
-// using the shared argsHash, then returns the result. It is the only writer of
-// fixtures: capture is the sole path that creates them, so the read side
-// (FixtureProvider) and the write side agree on the filename by construction.
+// using the shared fixtureKey (canonicalize + argsHash), then returns the result.
+// It is the only writer of fixtures: capture is the sole path that creates them,
+// so the read side (FixtureProvider) and the write side agree on the filename by
+// construction.
 //
 // The written file is { capturedAt, output }, the exact shape FixtureProvider
 // reads back. capturedAt is stamped here, at write time.
@@ -12,7 +13,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { argsHash } from "../tools/argsHash";
+import { fixtureKey } from "../tools/canonicalizeToolArgs";
 import type {
   ToolCall,
   ToolDefinition,
@@ -42,7 +43,7 @@ export class RecordingProvider implements ToolProvider {
   }
 
   fixturePath(call: ToolCall): string {
-    const fileName = `${call.tool}-${argsHash(call.args)}.json`;
+    const fileName = `${call.tool}-${fixtureKey(call)}.json`;
     return path.join(this.fixturesRoot, this.scenarioId, fileName);
   }
 

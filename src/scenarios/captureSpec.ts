@@ -20,7 +20,7 @@
 // manifested yet. This keeps capture read-only and model-free: `poll` may only
 // call ToolProvider.resolve, which resolves to reads.
 
-import { normalizeArgs } from "../core/tools/argsHash";
+import { canonicalizeToolArgs } from "../core/tools/canonicalizeToolArgs";
 import type { Scenario, ToolCall, ToolProvider } from "../core/types";
 
 // Everything a scenario's wait predicate needs for one poll attempt. elapsedMs
@@ -83,16 +83,19 @@ export interface CaptureSpec {
 // by design so replay is robust to the agent's free tool choice, and it records
 // negative and empty reads too (per-pod logs that may be empty, a probed
 // ConfigMap or Secret that does not exist), not only the smoking gun. Every
-// call's args go through the shared normalizeArgs, so a recorded fixture key
-// matches exactly what the agent hashes at replay.
+// call's args go through the shared canonicalizeToolArgs, so a recorded fixture
+// key matches exactly what the agent hashes at replay.
 export function buildReadSurface(
   namespace: string,
   surface: CaptureSurface,
   pods: string[],
 ): ToolCall[] {
   const calls: ToolCall[] = [
-    { tool: "get_pods", args: normalizeArgs({ namespace }) },
-    { tool: "get_events", args: normalizeArgs({ namespace }) },
+    { tool: "get_pods", args: canonicalizeToolArgs("get_pods", { namespace }) },
+    {
+      tool: "get_events",
+      args: canonicalizeToolArgs("get_events", { namespace }),
+    },
   ];
 
   // Per pod: describe it, and read both log streams. A crash loop leaves its
@@ -102,47 +105,62 @@ export function buildReadSurface(
   for (const pod of pods) {
     calls.push({
       tool: "describe_pod",
-      args: normalizeArgs({ namespace, pod }),
+      args: canonicalizeToolArgs("describe_pod", { namespace, pod }),
     });
     calls.push({
       tool: "get_logs",
-      args: normalizeArgs({ namespace, pod, previous: true }),
+      args: canonicalizeToolArgs("get_logs", { namespace, pod, previous: true }),
     });
     calls.push({
       tool: "get_logs",
-      args: normalizeArgs({ namespace, pod, previous: false }),
+      args: canonicalizeToolArgs("get_logs", {
+        namespace,
+        pod,
+        previous: false,
+      }),
     });
   }
 
   if (surface.deployment) {
     calls.push({
       tool: "describe_deployment",
-      args: normalizeArgs({ namespace, deployment: surface.deployment }),
+      args: canonicalizeToolArgs("describe_deployment", {
+        namespace,
+        deployment: surface.deployment,
+      }),
     });
   }
   if (surface.service) {
     calls.push({
       tool: "get_service_endpoints",
-      args: normalizeArgs({ namespace, service: surface.service }),
+      args: canonicalizeToolArgs("get_service_endpoints", {
+        namespace,
+        service: surface.service,
+      }),
     });
   }
   for (const name of surface.configmaps ?? []) {
     calls.push({
       tool: "get_configmap",
-      args: normalizeArgs({ namespace, name }),
+      args: canonicalizeToolArgs("get_configmap", { namespace, name }),
     });
   }
   for (const name of surface.secrets ?? []) {
     calls.push({
       tool: "get_secret_meta",
-      args: normalizeArgs({ namespace, name }),
+      args: canonicalizeToolArgs("get_secret_meta", { namespace, name }),
     });
   }
   if (surface.rbac) {
     const { serviceAccount, verb, resource } = surface.rbac;
     calls.push({
       tool: "check_rbac",
-      args: normalizeArgs({ namespace, serviceAccount, verb, resource }),
+      args: canonicalizeToolArgs("check_rbac", {
+        namespace,
+        serviceAccount,
+        verb,
+        resource,
+      }),
     });
   }
 
