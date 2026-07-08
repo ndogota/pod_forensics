@@ -1,10 +1,17 @@
 // captureSpec for pod-unschedulable.
 //
 // The pod never schedules (its memory request exceeds every node), so no
-// container ever runs. The captureSet therefore does NOT read container logs:
-// there is no running or previously-terminated container to read, and get_logs
-// would be empty or error. The discriminating signal lives in the scheduler's
-// FailedScheduling event, not in logs.
+// container ever runs. The discriminating signal lives in the scheduler's
+// FailedScheduling event, not in logs. The shared read surface still records both
+// get_logs variants per pod for uniformity: the Pending pod has no container, so
+// those reads come back empty (or the harness logs and skips a read the cluster
+// rejects for a never-started container). Empty logs are a legitimate captured
+// signal, consistent with recording negatives, and they keep replay robust to an
+// agent that reads logs before it realizes the pod never ran.
+//
+// The surface adds describe_deployment for the aggregator workload and a probe of
+// a ConfigMap and Secret named after the workload; neither exists, so the
+// not-found result is recorded and lets an agent rule MissingConfigOrSecret out.
 //
 // Wait predicate: a FailedScheduling event for the pod, or the pod sitting in
 // phase Pending past a short grace period. The event is the signal we also want
@@ -13,7 +20,6 @@
 
 import { normalizeArgs } from "../../core/tools/argsHash";
 import type { GetEventsOutput, GetPodsOutput } from "../../core/tools";
-import type { ToolCall } from "../../core/types";
 import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
 // A Pending pod that has not yet drawn a FailedScheduling event is only accepted
@@ -21,15 +27,12 @@ import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 // attempt.
 const PENDING_GRACE_MS = 20_000;
 
-export function buildCaptureSet(namespace: string, pod: string): ToolCall[] {
-  return [
-    { tool: "get_pods", args: normalizeArgs({ namespace }) },
-    { tool: "describe_pod", args: normalizeArgs({ namespace, pod }) },
-    { tool: "get_events", args: normalizeArgs({ namespace }) },
-  ];
-}
-
 export const captureSpec: CaptureSpec = {
+  surface: {
+    deployment: "aggregator",
+    configmaps: ["aggregator"],
+    secrets: ["aggregator"],
+  },
   async poll({ provider, scenario, elapsedMs }) {
     const podsResult = await provider.resolve({
       tool: "get_pods",
@@ -66,5 +69,4 @@ export const captureSpec: CaptureSpec = {
         `failedScheduling=${hasFailedScheduling}`,
     };
   },
-  buildCaptureSet,
 };

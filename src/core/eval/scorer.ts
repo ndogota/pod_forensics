@@ -21,13 +21,16 @@ import type {
   ScenarioScore,
 } from "../types";
 import type { ModelClient } from "../agent/modelClient";
+import type { RunUsage } from "../agent/loop";
 
 // The result of one attempted run. A failed run has no diagnosis, so it cannot
 // be a RunTrace. It is still counted, never dropped: it scores zero on every
-// dimension and lowers the completion rate.
+// dimension and lowers the completion rate. A failed run still carries the token
+// usage it spent before failing (when known), so the cost summary can price it;
+// scoring ignores usage entirely, so completionRate is unaffected.
 export type RunOutcome =
   | { status: "ok"; trace: RunTrace }
-  | { status: "failed"; error: string };
+  | { status: "failed"; error: string; usage?: RunUsage };
 
 // A judge scores how well a predicted root cause matches the canonical one, in
 // the range 0..1.

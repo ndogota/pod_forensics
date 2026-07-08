@@ -35,7 +35,7 @@ import type { CompletionResult } from "../src/core/agent/modelClient";
 import { submitDiagnosisDefinition } from "../src/core/agent/diagnosisSchema";
 import { estimateCostUsd } from "../src/core/agent/pricing";
 import type { ModelClient } from "../src/core/agent/modelClient";
-import { runEval } from "../src/core/eval/runner";
+import { runEval, type FailedRunUsage } from "../src/core/eval/runner";
 import {
   makeModelJudge,
   stringOverlapJudge,
@@ -178,6 +178,10 @@ async function main(): Promise<void> {
     confusionMatrix: {},
     traces: [],
   };
+  // Failed runs produce no trace, so their token usage cannot live in the frozen
+  // RunReport. It is collected here so the cost summary prices failed runs too and
+  // does not understate the true cost.
+  const combinedFailedRuns: FailedRunUsage[] = [];
 
   for (const scenario of scenarios) {
     let client: ModelClient;
@@ -198,7 +202,7 @@ async function main(): Promise<void> {
       judge = stringOverlapJudge;
     }
 
-    const report = await runEval({
+    const { report, failedRuns } = await runEval({
       scenario,
       client,
       judge,
@@ -208,6 +212,7 @@ async function main(): Promise<void> {
 
     combined.scenarioScores.push(...report.scenarioScores);
     combined.traces.push(...report.traces);
+    combinedFailedRuns.push(...failedRuns);
     mergeConfusion(combined.confusionMatrix, report.confusionMatrix);
   }
 
@@ -228,15 +233,19 @@ async function main(): Promise<void> {
     );
   }
 
-  printCostSummary(combined);
+  printCostSummary(combined, combinedFailedRuns);
 }
 
 // Per-scenario and total token usage and estimated USD, computed purely from the
-// usage already recorded in the traces. No network call: it is arithmetic over a
-// small pricing table keyed by the agent model. Failed runs produce no trace, so
-// they contribute no tokens here. For the fake client the model is unpriced, so
-// every cost is $0.0000.
-function printCostSummary(report: RunReport): void {
+// usage already recorded. No network call: it is arithmetic over a small pricing
+// table keyed by the agent model. Failed runs produce no trace, so their usage is
+// passed in separately (failedRuns) and folded into the same buckets, so the
+// reported cost reflects failed runs too and does not understate the true cost.
+// For the fake client the model is unpriced, so every cost is $0.0000.
+function printCostSummary(
+  report: RunReport,
+  failedRuns: FailedRunUsage[],
+): void {
   interface Usage {
     tokensIn: number;
     tokensOut: number;
@@ -244,19 +253,42 @@ function printCostSummary(report: RunReport): void {
   }
   const byScenario = new Map<string, Usage>();
   const total: Usage = { tokensIn: 0, tokensOut: 0, cacheReadTokens: 0 };
-  for (const trace of report.traces) {
-    const u = byScenario.get(trace.scenarioId) ?? {
+  // Count failed runs per scenario, purely to annotate the summary so their
+  // contribution is visible rather than silently blended in.
+  const failedCount = new Map<string, number>();
+
+  const bucket = (scenarioId: string): Usage => {
+    const u = byScenario.get(scenarioId) ?? {
       tokensIn: 0,
       tokensOut: 0,
       cacheReadTokens: 0,
     };
+    byScenario.set(scenarioId, u);
+    return u;
+  };
+
+  for (const trace of report.traces) {
+    const u = bucket(trace.scenarioId);
     u.tokensIn += trace.tokensIn;
     u.tokensOut += trace.tokensOut;
     u.cacheReadTokens += trace.cacheReadTokens;
-    byScenario.set(trace.scenarioId, u);
     total.tokensIn += trace.tokensIn;
     total.tokensOut += trace.tokensOut;
     total.cacheReadTokens += trace.cacheReadTokens;
+  }
+
+  for (const failed of failedRuns) {
+    const u = bucket(failed.scenarioId);
+    u.tokensIn += failed.usage.tokensIn;
+    u.tokensOut += failed.usage.tokensOut;
+    u.cacheReadTokens += failed.usage.cacheReadTokens;
+    total.tokensIn += failed.usage.tokensIn;
+    total.tokensOut += failed.usage.tokensOut;
+    total.cacheReadTokens += failed.usage.cacheReadTokens;
+    failedCount.set(
+      failed.scenarioId,
+      (failedCount.get(failed.scenarioId) ?? 0) + 1,
+    );
   }
 
   const usd = (u: Usage): string =>
@@ -269,14 +301,19 @@ function printCostSummary(report: RunReport): void {
 
   console.log(`\ncost summary (${report.model}; arithmetic on returned usage, no network):`);
   for (const [scenarioId, u] of byScenario) {
+    const failed = failedCount.get(scenarioId) ?? 0;
+    const note = failed > 0 ? ` (includes ${failed} failed run(s))` : "";
     console.log(
       `  ${scenarioId}: in ${u.tokensIn}, out ${u.tokensOut}, ` +
-        `cacheRead ${u.cacheReadTokens}, est ${usd(u)}`,
+        `cacheRead ${u.cacheReadTokens}, est ${usd(u)}${note}`,
     );
   }
+  const totalFailed = failedRuns.length;
+  const totalNote =
+    totalFailed > 0 ? ` (includes ${totalFailed} failed run(s))` : "";
   console.log(
     `  TOTAL: in ${total.tokensIn}, out ${total.tokensOut}, ` +
-      `cacheRead ${total.cacheReadTokens}, est ${usd(total)}`,
+      `cacheRead ${total.cacheReadTokens}, est ${usd(total)}${totalNote}`,
   );
 }
 

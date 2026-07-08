@@ -1,9 +1,17 @@
 // The per-scenario capture contract.
 //
 // Each scenario declares HOW its failure manifests (the wait predicate) and
-// WHICH read-only tool calls become fixtures (the captureSet). This lives beside
-// the scenario data, not on the frozen Scenario type in core/types, so scenario
-// identity stays untouched.
+// WHAT named objects live in its read surface (the CaptureSurface metadata). This
+// lives beside the scenario data, not on the frozen Scenario type in core/types,
+// so scenario identity stays untouched.
+//
+// A scenario no longer hand-authors a minimal list of ToolCalls. Instead it
+// declares its read surface as metadata, and the shared buildReadSurface routine
+// expands that into the full set of read-only calls an exploring agent may touch.
+// The agent chooses tools freely and diagnoses by ruling causes out, so replay
+// must be robust to more than the smoking gun: negative and empty reads (a
+// ConfigMap that does not exist, a Service that has endpoints, no RBAC denial)
+// are recorded too.
 //
 // The capture harness (scripts/capture.ts) owns the polling loop: the timeout,
 // the exponential backoff, and the progress logging are shared across all
@@ -12,6 +20,7 @@
 // manifested yet. This keeps capture read-only and model-free: `poll` may only
 // call ToolProvider.resolve, which resolves to reads.
 
+import { normalizeArgs } from "../core/tools/argsHash";
 import type { Scenario, ToolCall, ToolProvider } from "../core/types";
 
 // Everything a scenario's wait predicate needs for one poll attempt. elapsedMs
@@ -35,14 +44,109 @@ export interface PollResult {
   detail: string;
 }
 
+// The named objects that make up a scenario's read surface beyond the calls the
+// harness derives on its own (get_pods, get_events, and per-pod reads). The
+// shared buildReadSurface routine turns this metadata into ToolCalls. Every field
+// is optional: a scenario declares only what it has.
+export interface CaptureSurface {
+  // The workload Deployment, for describe_deployment. Typically the scenario
+  // target name when the target is a Deployment.
+  deployment?: string;
+  // A Service the scenario defines, for get_service_endpoints. Omit when the
+  // scenario has no Service.
+  service?: string;
+  // ConfigMap names to probe with get_configmap. A name that does not exist is
+  // recorded as a real not-found result on purpose: an exploring agent probes for
+  // a ConfigMap to rule MissingConfigOrSecret in or out, and the negative is the
+  // signal that lets it. Usually the workload name, the most likely guess.
+  configmaps?: string[];
+  // Secret names to probe with get_secret_meta (existence and key names only,
+  // never values). Same not-found-is-wanted rationale as configmaps.
+  secrets?: string[];
+  // An RBAC permission to check for the scenario's ServiceAccount, for
+  // check_rbac. Omit when the scenario has no RBAC dimension.
+  rbac?: { serviceAccount: string; verb: string; resource: string };
+}
+
 export interface CaptureSpec {
   // Wait predicate. Called once per poll attempt by the harness. It may only
   // issue read-only tool calls through ctx.provider.
   poll(ctx: PollContext): Promise<PollResult>;
-  // The read-only tool calls to record as fixtures once poll reports done. The
-  // resolved pod name is threaded in so calls that take a pod hash to the same
-  // fixture key the FixtureProvider computes on replay.
-  buildCaptureSet(namespace: string, pod: string): ToolCall[];
+  // Declarative read surface. The harness resolves pod names live from get_pods
+  // and expands this metadata into the full ToolCall set via buildReadSurface.
+  surface: CaptureSurface;
+}
+
+// Build the full read-only surface to record as fixtures for a scenario. Given
+// the namespace, the scenario's declared surface, and the pod names resolved live
+// from get_pods, it returns every ToolCall the harness records. It is exhaustive
+// by design so replay is robust to the agent's free tool choice, and it records
+// negative and empty reads too (per-pod logs that may be empty, a probed
+// ConfigMap or Secret that does not exist), not only the smoking gun. Every
+// call's args go through the shared normalizeArgs, so a recorded fixture key
+// matches exactly what the agent hashes at replay.
+export function buildReadSurface(
+  namespace: string,
+  surface: CaptureSurface,
+  pods: string[],
+): ToolCall[] {
+  const calls: ToolCall[] = [
+    { tool: "get_pods", args: normalizeArgs({ namespace }) },
+    { tool: "get_events", args: normalizeArgs({ namespace }) },
+  ];
+
+  // Per pod: describe it, and read both log streams. A crash loop leaves its
+  // evidence in the previous (terminated) instance; the current stream is read
+  // too because an agent that does not yet know a pod crashed calls get_logs
+  // without previous, and both variants must resolve on replay.
+  for (const pod of pods) {
+    calls.push({
+      tool: "describe_pod",
+      args: normalizeArgs({ namespace, pod }),
+    });
+    calls.push({
+      tool: "get_logs",
+      args: normalizeArgs({ namespace, pod, previous: true }),
+    });
+    calls.push({
+      tool: "get_logs",
+      args: normalizeArgs({ namespace, pod, previous: false }),
+    });
+  }
+
+  if (surface.deployment) {
+    calls.push({
+      tool: "describe_deployment",
+      args: normalizeArgs({ namespace, deployment: surface.deployment }),
+    });
+  }
+  if (surface.service) {
+    calls.push({
+      tool: "get_service_endpoints",
+      args: normalizeArgs({ namespace, service: surface.service }),
+    });
+  }
+  for (const name of surface.configmaps ?? []) {
+    calls.push({
+      tool: "get_configmap",
+      args: normalizeArgs({ namespace, name }),
+    });
+  }
+  for (const name of surface.secrets ?? []) {
+    calls.push({
+      tool: "get_secret_meta",
+      args: normalizeArgs({ namespace, name }),
+    });
+  }
+  if (surface.rbac) {
+    const { serviceAccount, verb, resource } = surface.rbac;
+    calls.push({
+      tool: "check_rbac",
+      args: normalizeArgs({ namespace, serviceAccount, verb, resource }),
+    });
+  }
+
+  return calls;
 }
 
 // Find the pod created by a workload. A Deployment names its pods with a

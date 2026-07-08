@@ -2,10 +2,16 @@
 //
 // The pods are healthy and Running, but the Service selector matches none of
 // their labels, so the Service has no endpoints. There is no crashing pod; the
-// failure is purely a label/selector mismatch. The captureSet centers on
-// get_service_endpoints (which exposes the selector and the empty address list)
-// and get_pods, plus describe_pod so the pod's actual labels are visible next to
-// the selector that fails to match them.
+// failure is purely a label/selector mismatch. The read surface centers on
+// get_service_endpoints (which exposes the selector and the empty address list),
+// plus the per-pod describe_pod so the pod's actual labels are visible next to
+// the selector that fails to match them. The per-pod get_logs reads come back
+// with content or empty depending on the image; recording them keeps replay
+// robust to an agent that reads logs while ruling a crash out.
+//
+// The surface declares the web Service (the empty endpoints are the smoking gun),
+// describe_deployment for the web workload, and a ConfigMap and Secret probe
+// named after the workload so the not-found negatives are captured.
 //
 // Wait predicate: the target pod is Running and Ready, and the Service resolves
 // to zero endpoint addresses. Both the Deployment and the Service share the
@@ -16,22 +22,15 @@ import type {
   GetPodsOutput,
   GetServiceEndpointsOutput,
 } from "../../core/tools";
-import type { ToolCall } from "../../core/types";
 import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
-export function buildCaptureSet(namespace: string, pod: string): ToolCall[] {
-  const service = "web";
-  return [
-    { tool: "get_pods", args: normalizeArgs({ namespace }) },
-    { tool: "describe_pod", args: normalizeArgs({ namespace, pod }) },
-    {
-      tool: "get_service_endpoints",
-      args: normalizeArgs({ namespace, service }),
-    },
-  ];
-}
-
 export const captureSpec: CaptureSpec = {
+  surface: {
+    deployment: "web",
+    service: "web",
+    configmaps: ["web"],
+    secrets: ["web"],
+  },
   async poll({ provider, scenario }) {
     const podsResult = await provider.resolve({
       tool: "get_pods",
@@ -65,5 +64,4 @@ export const captureSpec: CaptureSpec = {
         `endpoints=${addresses.length}`,
     };
   },
-  buildCaptureSet,
 };

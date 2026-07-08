@@ -7,7 +7,7 @@
 // counts as zero in the scores, and the per-scenario completionRate reports how
 // many runs produced a valid diagnosis.
 
-import { runAgent, AgentRunError } from "../agent/loop";
+import { runAgent, AgentRunError, type RunUsage } from "../agent/loop";
 import type { ModelClient } from "../agent/modelClient";
 import type { AgentConfig } from "../agent/config";
 import { FixtureProvider } from "../providers/fixtureProvider";
@@ -23,6 +23,22 @@ export interface RunEvalOptions {
   // reads; the CLI stamps it.
   createdAt: string;
   config?: AgentConfig;
+}
+
+// Token usage from one failed run, tagged with its scenario. The frozen
+// RunReport holds only successful RunTraces, so failed-run tokens cannot live
+// there. They ride alongside the report instead, purely so the cost summary can
+// price them; nothing here feeds scoring.
+export interface FailedRunUsage {
+  scenarioId: string;
+  usage: RunUsage;
+}
+
+// What runEval returns: the RunReport plus the usage of any runs that failed and
+// produced no trace. Kept separate so the frozen RunReport shape is untouched.
+export interface RunEvalResult {
+  report: RunReport;
+  failedRuns: FailedRunUsage[];
 }
 
 // Build the confusion matrix over failure classes from the successful traces.
@@ -41,7 +57,7 @@ function buildConfusionMatrix(
   return matrix;
 }
 
-export async function runEval(options: RunEvalOptions): Promise<RunReport> {
+export async function runEval(options: RunEvalOptions): Promise<RunEvalResult> {
   const { scenario, client, judge, runs, createdAt, config } = options;
 
   const outcomes: RunOutcome[] = [];
@@ -59,9 +75,10 @@ export async function runEval(options: RunEvalOptions): Promise<RunReport> {
     } catch (err) {
       if (err instanceof AgentRunError) {
         // Record the failure; do not drop it. It counts as zero in scoring and
-        // lowers the completion rate.
+        // lowers the completion rate. Carry the usage it spent before failing so
+        // the cost summary can still price it.
         console.error(`run ${i} failed and was recorded: ${err.message}`);
-        outcomes.push({ status: "failed", error: err.message });
+        outcomes.push({ status: "failed", error: err.message, usage: err.usage });
       } else {
         throw err;
       }
@@ -72,13 +89,24 @@ export async function runEval(options: RunEvalOptions): Promise<RunReport> {
     .filter((o): o is Extract<RunOutcome, { status: "ok" }> => o.status === "ok")
     .map((o) => o.trace);
 
+  const failedRuns: FailedRunUsage[] = outcomes
+    .filter(
+      (o): o is Extract<RunOutcome, { status: "failed" }> =>
+        o.status === "failed",
+    )
+    .filter((o) => o.usage !== undefined)
+    .map((o) => ({ scenarioId: scenario.id, usage: o.usage! }));
+
   const scenarioScore = await scoreScenario(scenario, outcomes, judge);
 
   return {
-    createdAt,
-    model: client.model,
-    scenarioScores: [scenarioScore],
-    confusionMatrix: buildConfusionMatrix(scenario, traces),
-    traces,
+    report: {
+      createdAt,
+      model: client.model,
+      scenarioScores: [scenarioScore],
+      confusionMatrix: buildConfusionMatrix(scenario, traces),
+      traces,
+    },
+    failedRuns,
   };
 }

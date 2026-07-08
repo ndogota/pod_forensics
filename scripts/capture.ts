@@ -4,9 +4,17 @@
 //   1. ensures the scenario namespace exists,
 //   2. applies the scenario manifests,
 //   3. polls the target pod until the failure manifests,
-//   4. runs the scenario captureSet through a RecordingProvider wrapping a
-//      LiveProvider, materializing one fixture per read, and
+//   4. resolves the full pod list live from get_pods, expands the scenario's
+//      declared read surface into the full set of read-only calls, and runs them
+//      through a RecordingProvider wrapping a LiveProvider, materializing one
+//      fixture per read, and
 //   5. tears the namespace down (unless --keep).
+//
+// The read surface is exhaustive on purpose. The agent chooses tools freely and
+// diagnoses by ruling causes out, so replay must be robust to more than the
+// smoking gun: per-pod logs (which may be empty), a probed ConfigMap or Secret
+// that does not exist, a Service that has endpoints, and a non-denied RBAC check
+// are all recorded, not only the discriminating signal.
 //
 // It assumes the current kubeconfig context points at a reachable local cluster
 // (a kind cluster) and that kubectl is on PATH for the same context. The reads
@@ -23,10 +31,12 @@ import { execFileSync } from "node:child_process";
 import { rm } from "node:fs/promises";
 import path from "node:path";
 
+import { normalizeArgs } from "../src/core/tools/argsHash";
+import type { GetPodsOutput } from "../src/core/tools";
 import { LiveProvider } from "../src/core/providers/liveProvider";
 import { RecordingProvider } from "../src/core/providers/recordingProvider";
 import { findCaptureSpec } from "../src/scenarios/captureRegistry";
-import type { CaptureSpec } from "../src/scenarios/captureSpec";
+import { buildReadSurface, type CaptureSpec } from "../src/scenarios/captureSpec";
 import { findScenario } from "../src/scenarios";
 import type { Scenario } from "../src/core/types";
 
@@ -157,14 +167,48 @@ async function main(): Promise<void> {
   );
   await rm(scenarioFixtures, { recursive: true, force: true });
 
+  // Enumerate every pod in the namespace live, so the read surface covers all of
+  // them (describe_pod and both get_logs variants per pod), not just the target.
+  // Pod names carry a Deployment's random template suffix, so they are resolved
+  // here from get_pods, never hardcoded.
+  const podsResult = await live.resolve({
+    tool: "get_pods",
+    args: normalizeArgs({ namespace: scenario.namespace }),
+  });
+  const podNames = (podsResult.output as GetPodsOutput).pods.map((p) => p.name);
+  console.log(
+    `namespace ${scenario.namespace} has ${podNames.length} pod(s): ` +
+      (podNames.join(", ") || "(none)"),
+  );
+
   const recorder = new RecordingProvider(live, scenario.id);
-  const captureSet = spec.buildCaptureSet(scenario.namespace, podName);
-  console.log(`recording ${captureSet.length} fixtures for ${scenario.id}`);
-  for (const call of captureSet) {
-    const result = await recorder.resolve(call);
-    console.log(`  wrote ${call.tool} (${JSON.stringify(call.args)})`);
-    void result;
+  const readSurface = buildReadSurface(
+    scenario.namespace,
+    spec.surface,
+    podNames,
+  );
+  console.log(`recording ${readSurface.length} fixtures for ${scenario.id}`);
+  let recorded = 0;
+  for (const call of readSurface) {
+    try {
+      await recorder.resolve(call);
+      recorded++;
+      console.log(`  wrote ${call.tool} (${JSON.stringify(call.args)})`);
+    } catch (err) {
+      // One failing read must not abort the exhaustive capture. The common case
+      // is get_logs for a pod whose container never started (an unschedulable
+      // pod), which the cluster rejects rather than returning empty. Log it and
+      // continue; the agent sees an uncaptured empty result for that one call at
+      // replay, which is the right signal (there are no logs).
+      console.warn(
+        `  skipped ${call.tool} (${JSON.stringify(call.args)}): ` +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    }
   }
+  console.log(
+    `recorded ${recorded}/${readSurface.length} fixtures for ${scenario.id}`,
+  );
 
   if (podName) {
     console.log(`captured pod name: ${podName}`);

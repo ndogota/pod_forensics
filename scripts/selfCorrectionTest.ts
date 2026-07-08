@@ -75,7 +75,7 @@ async function main(): Promise<void> {
     buildCrashloopSelfCorrectionScript(scenario.namespace),
   );
 
-  const report = await runEval({
+  const { report } = await runEval({
     scenario,
     client,
     judge: stringOverlapJudge,

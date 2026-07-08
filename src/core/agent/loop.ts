@@ -41,10 +41,27 @@ export interface RunAgentOptions {
   config?: AgentConfig;
 }
 
+// The token usage a run had accumulated at the moment it ended. A successful run
+// carries this on its RunTrace; a failed run carries it on the AgentRunError, so
+// the eval cost summary can price failed runs too instead of understating the
+// true cost by ignoring them. Only the fields the pricing table needs.
+export interface RunUsage {
+  tokensIn: number;
+  tokensOut: number;
+  cacheReadTokens: number;
+}
+
 // Thrown when the agent fails to produce a valid diagnosis within the step
 // budget, including after up to MAX_DIAGNOSIS_CORRECTIONS informed correction
-// turns on an invalid submit_diagnosis payload.
-export class AgentRunError extends Error {}
+// turns on an invalid submit_diagnosis payload. It carries the usage accumulated
+// up to the failure, so the eval can account for the tokens a failed run spent.
+export class AgentRunError extends Error {
+  readonly usage?: RunUsage;
+  constructor(message: string, usage?: RunUsage) {
+    super(message);
+    this.usage = usage;
+  }
+}
 
 // A distinct failure: the model turn was cut off by max_tokens before it could
 // emit the full tool payload, so trailing required fields never arrived. This is
@@ -83,6 +100,14 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
   // Track the most recent turn's stop reason so budget exhaustion can tell a
   // genuinely stuck agent from one whose last turn was simply truncated.
   let lastStopReason = "";
+
+  // Snapshot the usage accumulated so far, for attaching to a failure. Closes
+  // over the running totals, so it reflects everything spent up to the throw.
+  const usageSoFar = (): RunUsage => ({
+    tokensIn: totalTokensIn,
+    tokensOut: totalTokensOut,
+    cacheReadTokens: totalCacheReadTokens,
+  });
 
   for (let turn = 0; turn < config.maxSteps; turn++) {
     const startedAt = Date.now();
@@ -159,6 +184,7 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
               `for scenario "${scenarioId}"; the submit_diagnosis payload arrived with ` +
               `only [${topLevelKeys.join(", ")}]. Raise the model client max_tokens so ` +
               `the full tool payload fits.`,
+            usageSoFar(),
           );
         }
         // Genuine validation failure. Do not retry with identical context. Return
@@ -170,6 +196,7 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
         if (invalidSubmitCount > MAX_DIAGNOSIS_CORRECTIONS) {
           throw new AgentRunError(
             `agent submitted an invalid diagnosis ${invalidSubmitCount} times for scenario "${scenarioId}"; last validation issues:\n${formatDiagnosisIssues(parsed.error)}`,
+            usageSoFar(),
           );
         }
         toolResults.push({
@@ -252,10 +279,12 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
       `model output truncated by max_tokens before completing the diagnosis for ` +
         `scenario "${scenarioId}" within ${config.maxSteps} steps. Raise the model ` +
         `client max_tokens so the full tool payload fits.`,
+      usageSoFar(),
     );
   }
 
   throw new AgentRunError(
     `agent did not reach a diagnosis within ${config.maxSteps} steps for scenario "${scenarioId}"`,
+    usageSoFar(),
   );
 }
