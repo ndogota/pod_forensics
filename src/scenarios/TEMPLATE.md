@@ -5,9 +5,15 @@ A scenario is data. To add one:
 1. Create a directory `src/scenarios/<scenario-id>/` with:
    - `manifests.yaml` — the broken Kubernetes manifests. This is data for the
      offline capture step. It is never applied by the agent or the eval.
-   - `groundtruth.json` — a `GroundTruth` object: the `failureClass` from the
-     closed set, a canonical `rootCause` in plain language, and an
-     `expectedEvidence` list of short signal strings.
+   - `groundtruth.json` — a `GroundTruth` object with two orthogonal, separately
+     scored labels: `symptom` (the observable pod or service state, from the
+     `Symptom` set) and `rootCauseClass` (the underlying cause, from the
+     `RootCauseClass` set, which may differ from the symptom). Set each to the
+     real mechanism, not to what a log message suggests: if a crash prints a
+     "missing --config" line but the true cause is a bad command, the
+     `rootCauseClass` is `BadCommand`, not `MissingConfigOrSecret`. Also include a
+     canonical `rootCause` in plain language and an `expectedEvidence` list of
+     short signal strings.
 
 2. Make sure each `expectedEvidence` marker actually appears in the captured
    fixtures for that scenario, so evidence recall measures something real.
@@ -34,13 +40,18 @@ A scenario is data. To add one:
 
 ## Seeded so far
 
-Four obvious-tier scenarios are seeded, one per failure class:
+Four obvious-tier scenarios are seeded. Each is labelled with a symptom and a
+root-cause class (symptom / rootCauseClass):
 
-- CrashLoopBackOff from a bad container command
-- PodUnschedulable from a memory request no node can satisfy
-- ServiceNoEndpoints from a selector that does not match pod labels
-- RbacDenied from a ServiceAccount bound to no Role (checked with a
-  SubjectAccessReview against the workload identity)
+- CrashLoopBackOff / BadCommand — a bad container command that exits non-zero.
+  The container's log mentions a missing --config flag, which is a misleading
+  signal; the cause is still the bad command, not a missing config.
+- Pending / InsufficientResources — a memory request no node can satisfy
+- ServiceNoEndpoints / SelectorLabelMismatch — a selector that does not match
+  pod labels
+- RunningDegraded / RbacDenied — a ServiceAccount bound to no Role (checked with
+  a SubjectAccessReview against the workload identity); the pod runs but is
+  degraded because its API calls are forbidden
 
 Each has a directory (manifests, groundtruth, captureSet+captureSpec), an entry
 in `index.ts`, a `CaptureSpec` in `captureRegistry.ts`, and a FakeModelClient

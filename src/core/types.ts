@@ -5,7 +5,36 @@
 // of the architecture document. Do not change a shape here without changing the
 // document first.
 
-// The closed failure set that makes evals possible.
+// The taxonomy has two orthogonal axes, scored independently: the observable
+// symptom (what the pod or service looks like) and the root-cause class (why).
+// One symptom can arise from several causes and one cause can surface as several
+// symptoms, so a diagnosis names both and each is graded on its own.
+
+// The observable pod or service state.
+export type Symptom =
+  | "CrashLoopBackOff"
+  | "ImagePullBackOff"
+  | "OOMKilled"
+  | "Pending"
+  | "RunningDegraded"
+  | "ServiceNoEndpoints";
+
+// The underlying cause. May differ from the symptom.
+export type RootCauseClass =
+  | "BadCommand"
+  | "MissingConfigOrSecret"
+  | "ImageUnavailable"
+  | "InsufficientResources"
+  | "MemoryLimitExceeded"
+  | "ProbeMisconfigured"
+  | "SelectorLabelMismatch"
+  | "RbacDenied";
+
+/**
+ * @deprecated The single-axis failure taxonomy was split into the orthogonal
+ * {@link Symptom} and {@link RootCauseClass}. Kept only as an alias for any
+ * straggling importer; all first-party usages have migrated.
+ */
 export type FailureClass =
   | "CrashLoopBackOff"
   | "ImagePullBackOff"
@@ -40,9 +69,10 @@ export interface ToolProvider {
 }
 
 export interface GroundTruth {
-  failureClass: FailureClass;
-  rootCause: string;          // canonical human description
-  expectedEvidence: string[]; // signals the diagnosis should cite
+  symptom: Symptom;              // the observable pod or service state
+  rootCauseClass: RootCauseClass; // the underlying cause; may differ from the symptom
+  rootCause: string;            // canonical human description
+  expectedEvidence: string[];   // signals the diagnosis should cite
 }
 
 export type DifficultyTier = "obvious" | "misleading";
@@ -66,11 +96,15 @@ export interface Evidence {
 }
 
 export interface Diagnosis {
-  failureClass: FailureClass;
+  // Scalars first, evidence last: the two orthogonal axes are scored
+  // independently, and keeping the bulky evidence array trailing means a turn
+  // truncated by max_tokens drops evidence before these small scalars.
+  symptom: Symptom;              // the observable pod or service state
+  rootCauseClass: RootCauseClass; // the underlying cause; may differ from the symptom
   rootCause: string;
-  evidence: Evidence[];
   suggestedFix: string;
   confidence: number;         // 0..1
+  evidence: Evidence[];
 }
 
 export interface TraceStep {
@@ -103,7 +137,8 @@ export interface ScenarioScore {
   tier: DifficultyTier;
   runs: number;                // runs attempted
   completionRate: number;      // fraction of attempted runs that produced a valid diagnosis
-  classAccuracy: number;       // fraction of runs with correct failureClass
+  symptomAccuracy: number;     // fraction of runs with correct symptom
+  causeAccuracy: number;       // fraction of runs with correct rootCauseClass
   evidenceRecall: number;      // fraction of expectedEvidence cited
   rootCauseJudgeScore: number; // 0..1 from the LLM-as-judge rubric
 }
@@ -112,6 +147,9 @@ export interface RunReport {
   createdAt: string;
   model: string;
   scenarioScores: ScenarioScore[];
+  // Keyed on RootCauseClass (actual -> predicted -> count): the cause is the
+  // interesting axis, where an agent that pattern-matches a surface symptom goes
+  // wrong.
   confusionMatrix: Record<string, Record<string, number>>;
   traces: RunTrace[];
 }

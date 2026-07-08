@@ -19,6 +19,11 @@ export const SCENARIOS: Scenario[] = [
     target: { kind: "Deployment", name: "checkout" },
     manifestsPath: "src/scenarios/crashloopbackoff-bad-command/manifests.yaml",
     groundTruth: crashloopGroundTruth as GroundTruth,
+    // TODO: the container's log line mentions a missing "--config" flag, which is
+    // an accidental misleading signal: it invites a MissingConfigOrSecret cause,
+    // but the true rootCauseClass is BadCommand (the command exits non-zero) and
+    // creating a ConfigMap would not fix it. A real run already misclassified the
+    // cause on exactly this cue. Good candidate to promote to tier "misleading".
     tier: "obvious",
   },
   {

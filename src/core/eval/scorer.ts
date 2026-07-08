@@ -1,7 +1,8 @@
 // Hybrid scoring for a diagnosis against ground truth.
 //
-// Three signals, per the architecture:
-//   - failureClass: exact match.
+// Signals, per the architecture:
+//   - symptom and rootCauseClass: each an exact match, scored independently.
+//     They are orthogonal axes, so a run can nail the symptom and miss the cause.
 //   - evidenceRecall: key overlap between the cited excerpts and the expected
 //     evidence markers.
 //   - rootCauseJudgeScore: an LLM-as-judge rates the root-cause prose, with a
@@ -39,11 +40,18 @@ export type RootCauseJudge = (
   canonical: string,
 ) => Promise<number>;
 
-export function classCorrect(
+export function symptomCorrect(
   diagnosis: Diagnosis,
   groundTruth: GroundTruth,
 ): boolean {
-  return diagnosis.failureClass === groundTruth.failureClass;
+  return diagnosis.symptom === groundTruth.symptom;
+}
+
+export function causeCorrect(
+  diagnosis: Diagnosis,
+  groundTruth: GroundTruth,
+): boolean {
+  return diagnosis.rootCauseClass === groundTruth.rootCauseClass;
 }
 
 // Fraction of expected evidence markers that appear in the cited excerpts.
@@ -141,8 +149,11 @@ export async function scoreScenario(
   const gt = scenario.groundTruth;
   const attempted = outcomes.length;
 
-  const classScores = outcomes.map((o) =>
-    o.status === "ok" && classCorrect(o.trace.diagnosis, gt) ? 1 : 0,
+  const symptomScores = outcomes.map((o) =>
+    o.status === "ok" && symptomCorrect(o.trace.diagnosis, gt) ? 1 : 0,
+  );
+  const causeScores = outcomes.map((o) =>
+    o.status === "ok" && causeCorrect(o.trace.diagnosis, gt) ? 1 : 0,
   );
   const recallScores = outcomes.map((o) =>
     o.status === "ok" ? evidenceRecall(o.trace.diagnosis, gt) : 0,
@@ -162,7 +173,8 @@ export async function scoreScenario(
     tier,
     runs: attempted,
     completionRate: attempted === 0 ? 0 : completed / attempted,
-    classAccuracy: mean(classScores),
+    symptomAccuracy: mean(symptomScores),
+    causeAccuracy: mean(causeScores),
     evidenceRecall: mean(recallScores),
     rootCauseJudgeScore: mean(judgeScores),
   };

@@ -8,8 +8,8 @@
 //      tool_result naming the missing fields),
 //   2. the model self-corrects on the next turn,
 //   3. the run completes with a valid diagnosis, and
-//   4. the aggregate completionRate is 1.00 (with class accuracy and evidence
-//      recall intact).
+//   4. the aggregate completionRate is 1.00 (with symptom accuracy, cause
+//      accuracy, and evidence recall intact).
 //
 // It is deterministic and needs no ANTHROPIC_API_KEY. Run with:
 //   pnpm test:self-correction
@@ -103,8 +103,12 @@ async function main(): Promise<void> {
     `expected completionRate 1.00, got ${score.completionRate}`,
   );
   assert(
-    score.classAccuracy === 1,
-    `expected classAccuracy 1.00, got ${score.classAccuracy}`,
+    score.symptomAccuracy === 1,
+    `expected symptomAccuracy 1.00, got ${score.symptomAccuracy}`,
+  );
+  assert(
+    score.causeAccuracy === 1,
+    `expected causeAccuracy 1.00, got ${score.causeAccuracy}`,
   );
   assert(
     score.evidenceRecall === 1,
@@ -114,7 +118,8 @@ async function main(): Promise<void> {
   console.log(
     "PASS self-correction: invalid submit surfaced, model corrected, " +
       `run completed, completionRate ${score.completionRate.toFixed(2)}, ` +
-      `classAccuracy ${score.classAccuracy.toFixed(2)}, ` +
+      `symptomAccuracy ${score.symptomAccuracy.toFixed(2)}, ` +
+      `causeAccuracy ${score.causeAccuracy.toFixed(2)}, ` +
       `evidenceRecall ${score.evidenceRecall.toFixed(2)}`,
   );
 }

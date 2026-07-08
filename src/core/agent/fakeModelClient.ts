@@ -128,9 +128,10 @@ export function buildCrashloopScript(scenario: Scenario): CompletionResult[] {
           id: "call-4",
           name: SUBMIT_DIAGNOSIS_TOOL,
           input: {
-            failureClass: "CrashLoopBackOff",
+            symptom: "CrashLoopBackOff",
+            rootCauseClass: "BadCommand",
             rootCause:
-              "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
+              "The checkout container's start command exits with a non-zero status immediately on launch, so the kubelet keeps restarting the container and the pod settles into CrashLoopBackOff. The command as configured is bad. The log line mentions a missing --config flag, but that is a misleading signal: no ConfigMap or Secret is actually missing, so creating one would not fix the crash.",
             evidence: [
               {
                 tool: "get_pods",
@@ -202,7 +203,8 @@ export function buildUnschedulableScript(scenario: Scenario): CompletionResult[]
     step("call-1", "describe_pod", { namespace, pod }),
     step("call-2", "get_events", { namespace }),
     submitStep("call-3", {
-      failureClass: "PodUnschedulable",
+      symptom: "Pending",
+      rootCauseClass: "InsufficientResources",
       rootCause:
         "The aggregator pod requests more memory than any node in the cluster can provide, so the scheduler cannot place it. The pod stays Pending and no container ever starts.",
       evidence: [
@@ -249,7 +251,8 @@ export function buildServiceNoEndpointsScript(
     step("call-1", "describe_pod", { namespace, pod }),
     step("call-2", "get_service_endpoints", { namespace, service }),
     submitStep("call-3", {
-      failureClass: "ServiceNoEndpoints",
+      symptom: "ServiceNoEndpoints",
+      rootCauseClass: "SelectorLabelMismatch",
       rootCause:
         "The web Service selects pods with label app=web-api, but the running pods are labeled app=web-backend. The selector matches no pods, so the Service has no endpoints and cannot route traffic.",
       evidence: [
@@ -301,7 +304,8 @@ export function buildRbacDeniedScript(scenario: Scenario): CompletionResult[] {
       resource: "secrets",
     }),
     submitStep("call-4", {
-      failureClass: "RbacDenied",
+      symptom: "RunningDegraded",
+      rootCauseClass: "RbacDenied",
       rootCause:
         "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its attempts to list secrets are denied by RBAC, which the container logs as a Kubernetes Forbidden error, so the workload cannot do its job even though the pod runs.",
       evidence: [

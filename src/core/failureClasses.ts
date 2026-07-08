@@ -1,28 +1,47 @@
-// The closed failure set as a runtime value.
+// The closed taxonomy as runtime values.
 //
-// types.ts declares FailureClass as a frozen union type. A zod enum and a few
-// runtime checks need the same set as an array, so it lives here. The
-// compile-time assignment below keeps the two in sync: if the array and the
-// union ever drift, this file stops compiling.
+// types.ts declares Symptom and RootCauseClass as frozen union types. A zod enum
+// and a few runtime checks need the same sets as arrays, so they live here. The
+// compile-time assignments below keep each array in sync with its union: if an
+// array and its union ever drift, this file stops compiling.
 
-import type { FailureClass } from "./types";
+import type { RootCauseClass, Symptom } from "./types";
 
-export const FAILURE_CLASSES = [
+// The observable pod or service state.
+export const SYMPTOMS = [
   "CrashLoopBackOff",
   "ImagePullBackOff",
   "OOMKilled",
-  "ProbeMisconfigured",
-  "PodUnschedulable",
+  "Pending",
+  "RunningDegraded",
   "ServiceNoEndpoints",
+] as const;
+
+// The underlying cause; may differ from the symptom.
+export const ROOT_CAUSE_CLASSES = [
+  "BadCommand",
   "MissingConfigOrSecret",
+  "ImageUnavailable",
+  "InsufficientResources",
+  "MemoryLimitExceeded",
+  "ProbeMisconfigured",
+  "SelectorLabelMismatch",
   "RbacDenied",
 ] as const;
 
-// Compile-time guard: the array must cover exactly the FailureClass union.
-type ArrayMember = (typeof FAILURE_CLASSES)[number];
-const _sameType: FailureClass extends ArrayMember
-  ? ArrayMember extends FailureClass
+// Compile-time guards: each array must cover exactly its union.
+type SymptomMember = (typeof SYMPTOMS)[number];
+const _symptomsSame: Symptom extends SymptomMember
+  ? SymptomMember extends Symptom
     ? true
     : never
   : never = true;
-void _sameType;
+void _symptomsSame;
+
+type CauseMember = (typeof ROOT_CAUSE_CLASSES)[number];
+const _causesSame: RootCauseClass extends CauseMember
+  ? CauseMember extends RootCauseClass
+    ? true
+    : never
+  : never = true;
+void _causesSame;

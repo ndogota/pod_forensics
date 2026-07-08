@@ -41,16 +41,17 @@ export interface RunEvalResult {
   failedRuns: FailedRunUsage[];
 }
 
-// Build the confusion matrix over failure classes from the successful traces.
-// With one scenario this is the trivial single-class case.
+// Build the confusion matrix over root-cause classes from the successful traces.
+// The cause is the interesting axis; a symptom-only match is not enough. With
+// one scenario this is the trivial single-class case.
 function buildConfusionMatrix(
   scenario: Scenario,
   traces: RunTrace[],
 ): Record<string, Record<string, number>> {
-  const actual = scenario.groundTruth.failureClass;
+  const actual = scenario.groundTruth.rootCauseClass;
   const matrix: Record<string, Record<string, number>> = {};
   for (const trace of traces) {
-    const predicted = trace.diagnosis.failureClass;
+    const predicted = trace.diagnosis.rootCauseClass;
     matrix[actual] ??= {};
     matrix[actual][predicted] = (matrix[actual][predicted] ?? 0) + 1;
   }

@@ -63,7 +63,8 @@ export default async function HomePage() {
               <th>tier</th>
               <th>runs</th>
               <th>completion rate</th>
-              <th>class accuracy</th>
+              <th>symptom accuracy</th>
+              <th>cause accuracy</th>
               <th>evidence recall</th>
               <th>root cause judge</th>
             </tr>
@@ -75,7 +76,8 @@ export default async function HomePage() {
                 <td>{s.tier}</td>
                 <td>{s.runs}</td>
                 <td>{s.completionRate.toFixed(2)}</td>
-                <td>{s.classAccuracy.toFixed(2)}</td>
+                <td>{s.symptomAccuracy.toFixed(2)}</td>
+                <td>{s.causeAccuracy.toFixed(2)}</td>
                 <td>{s.evidenceRecall.toFixed(2)}</td>
                 <td>{s.rootCauseJudgeScore.toFixed(2)}</td>
               </tr>
@@ -94,9 +96,10 @@ export default async function HomePage() {
 
             <div className="diagnosis">
               <p>
-                <strong>{trace.diagnosis.failureClass}</strong>{" "}
+                <strong>{trace.diagnosis.rootCauseClass}</strong>{" "}
                 <span className="meta">
-                  confidence {trace.diagnosis.confidence.toFixed(2)}
+                  symptom {trace.diagnosis.symptom}, confidence{" "}
+                  {trace.diagnosis.confidence.toFixed(2)}
                 </span>
               </p>
               <p>{trace.diagnosis.rootCause}</p>

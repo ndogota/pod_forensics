@@ -1,5 +1,6 @@
 {
-  "failureClass": "RbacDenied",
+  "symptom": "RunningDegraded",
+  "rootCauseClass": "RbacDenied",
   "rootCause": "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its requests to list secrets are denied, so the workload cannot do its job even though the pod runs.",
   "expectedEvidence": [
     "log-shipper",

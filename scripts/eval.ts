@@ -227,7 +227,8 @@ async function main(): Promise<void> {
     console.log(
       `scenario ${score.scenarioId} (${score.tier}): ${score.runs} runs, ` +
         `completionRate ${score.completionRate.toFixed(2)}, ` +
-        `classAccuracy ${score.classAccuracy.toFixed(2)}, ` +
+        `symptomAccuracy ${score.symptomAccuracy.toFixed(2)}, ` +
+        `causeAccuracy ${score.causeAccuracy.toFixed(2)}, ` +
         `evidenceRecall ${score.evidenceRecall.toFixed(2)}, ` +
         `rootCauseJudge ${score.rootCauseJudgeScore.toFixed(2)}`,
     );

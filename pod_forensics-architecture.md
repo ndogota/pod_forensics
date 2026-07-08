@@ -55,16 +55,32 @@ Each module has one responsibility and knows nothing of another beyond its contr
 
 These types are the skeleton. They are graved first because everything binds to them. Implementation language is TypeScript.
 
+The taxonomy has two orthogonal axes, scored independently: the observable
+symptom and the underlying root cause. A single symptom can arise from several
+causes, so a diagnosis names both and each is graded on its own. (Amendment: the
+original design had a single `FailureClass` axis; a real run showed it conflated
+what is observed with why, so it was split. `FailureClass` remains exported only
+as a deprecated alias.)
+
 ```ts
-// The closed failure set that makes evals possible.
-export type FailureClass =
+// The observable pod or service state.
+export type Symptom =
   | "CrashLoopBackOff"
   | "ImagePullBackOff"
   | "OOMKilled"
-  | "ProbeMisconfigured"
-  | "PodUnschedulable"
-  | "ServiceNoEndpoints"
+  | "Pending"
+  | "RunningDegraded"
+  | "ServiceNoEndpoints";
+
+// The underlying cause; may differ from the symptom.
+export type RootCauseClass =
+  | "BadCommand"
   | "MissingConfigOrSecret"
+  | "ImageUnavailable"
+  | "InsufficientResources"
+  | "MemoryLimitExceeded"
+  | "ProbeMisconfigured"
+  | "SelectorLabelMismatch"
   | "RbacDenied";
 
 export interface ToolCall {
@@ -91,9 +107,10 @@ export interface ToolProvider {
 }
 
 export interface GroundTruth {
-  failureClass: FailureClass;
-  rootCause: string;          // canonical human description
-  expectedEvidence: string[]; // signals the diagnosis should cite
+  symptom: Symptom;               // the observable pod or service state
+  rootCauseClass: RootCauseClass; // the underlying cause; may differ from the symptom
+  rootCause: string;              // canonical human description
+  expectedEvidence: string[];     // signals the diagnosis should cite
 }
 
 export type DifficultyTier = "obvious" | "misleading";
@@ -113,11 +130,14 @@ export interface Evidence {
 }
 
 export interface Diagnosis {
-  failureClass: FailureClass;
+  // Scalars first, evidence last, so a max_tokens-truncated turn drops the bulky
+  // evidence array before these small trailing scalars.
+  symptom: Symptom;               // the observable pod or service state
+  rootCauseClass: RootCauseClass; // the underlying cause; may differ from the symptom
   rootCause: string;
-  evidence: Evidence[];
   suggestedFix: string;
   confidence: number;         // 0..1
+  evidence: Evidence[];
 }
 
 export interface TraceStep {
@@ -145,7 +165,9 @@ export interface ScenarioScore {
   scenarioId: string;
   tier: DifficultyTier;
   runs: number;
-  classAccuracy: number;       // fraction of runs with correct failureClass
+  completionRate: number;      // fraction of attempted runs that produced a valid diagnosis
+  symptomAccuracy: number;     // fraction of runs with correct symptom
+  causeAccuracy: number;       // fraction of runs with correct rootCauseClass
   evidenceRecall: number;      // fraction of expectedEvidence cited
   rootCauseJudgeScore: number; // 0..1 from the LLM-as-judge rubric
 }
@@ -154,7 +176,7 @@ export interface RunReport {
   createdAt: string;
   model: string;
   scenarioScores: ScenarioScore[];
-  confusionMatrix: Record<string, Record<string, number>>;
+  confusionMatrix: Record<string, Record<string, number>>; // keyed on RootCauseClass
   traces: RunTrace[];
 }
 ```
@@ -202,12 +224,12 @@ These were chosen deliberately and should each be defensible in an interview.
 - Agentic loop over a fixed script. An if-else tree could classify these failures, but then the project demonstrates no AI engineering. The point is to show an agent navigating evidence the way an SRE would, choosing the next tool, avoiding redundant calls, and converging.
 - Mandatory evidence citation. Every claim in a diagnosis must point at the tool output that supports it. This forces grounding, reduces hallucination, and makes the output auditable.
 - Ground-truth evals. A seeded failure has a known answer, so scoring is automated and regressions are detectable. This is exactly what a thin API wrapper lacks.
-- Hybrid scoring. Failure class is scored by exact match, evidence by key overlap, root-cause prose by an LLM-as-judge rubric. The use of a model inside scoring introduces non-determinism into the eval itself, which is a known soft spot and is stated as such in the README.
+- Hybrid scoring. Symptom and root-cause class are each scored by exact match on their own axis, evidence by key overlap, root-cause prose by an LLM-as-judge rubric. The use of a model inside scoring introduces non-determinism into the eval itself, which is a known soft spot and is stated as such in the README.
 - Free tool choice bounded by a max step count. The free choice is the skill on display. A fixed plan walks back toward the if-else tree.
 
 ## Observability
 
-Each run produces a `RunTrace` with the tool call sequence, tokens in and out, cost, latency, step count to diagnosis, and correctness against ground truth. The dashboard surfaces per-run traces, an eval summary with class accuracy and evidence recall per scenario and per tier, and a confusion matrix over failure classes.
+Each run produces a `RunTrace` with the tool call sequence, tokens in and out, cost, latency, step count to diagnosis, and correctness against ground truth. The dashboard surfaces per-run traces, an eval summary with symptom accuracy, cause accuracy, and evidence recall per scenario and per tier, and a confusion matrix over root-cause classes.
 
 ## Deployment model
 

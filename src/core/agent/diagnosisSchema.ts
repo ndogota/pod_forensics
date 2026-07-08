@@ -13,7 +13,7 @@
 
 import { z } from "zod";
 
-import { FAILURE_CLASSES } from "../failureClasses";
+import { ROOT_CAUSE_CLASSES, SYMPTOMS } from "../failureClasses";
 import type { ToolDefinition } from "../types";
 
 export const evidenceSchema = z.object({
@@ -35,9 +35,16 @@ export const evidenceSchema = z.object({
 // the array, a turn truncated by max_tokens drops the bulky evidence first while
 // these small trailing scalars still arrive intact.
 export const diagnosisSchema = z.object({
-  failureClass: z
-    .enum(FAILURE_CLASSES)
-    .describe("The single best-matching failure class from the closed set."),
+  symptom: z
+    .enum(SYMPTOMS)
+    .describe(
+      "The observable pod or service state. This is distinct from the root cause below: report what is observed here.",
+    ),
+  rootCauseClass: z
+    .enum(ROOT_CAUSE_CLASSES)
+    .describe(
+      "The underlying cause; may differ from the symptom. Do not just restate the symptom: a CrashLoopBackOff can be caused by a bad command, a missing config, and so on.",
+    ),
   rootCause: z
     .string()
     .min(1)
@@ -83,6 +90,6 @@ export const SUBMIT_DIAGNOSIS_TOOL = "submit_diagnosis";
 export const submitDiagnosisDefinition: ToolDefinition = {
   name: SUBMIT_DIAGNOSIS_TOOL,
   description:
-    "Submit the final diagnosis and end the run. Include the failure class, the root cause, a suggested fix, a confidence from 0 to 1, and an evidence entry citing the tool output for every claim. This tool does not change anything. It only records the conclusion.",
+    "Submit the final diagnosis and end the run. Include the observable symptom, the root-cause class (which may differ from the symptom), the root cause in prose, a suggested fix, a confidence from 0 to 1, and an evidence entry citing the tool output for every claim. This tool does not change anything. It only records the conclusion.",
   inputSchema: z.toJSONSchema(diagnosisSchema),
 };
