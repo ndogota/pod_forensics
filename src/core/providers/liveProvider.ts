@@ -54,6 +54,51 @@ function isNotFound(err: unknown): boolean {
   return (err as { code?: number })?.code === 404;
 }
 
+// A structured, stable encoding of a Kubernetes API error, carried as a read
+// tool's output. See asApiError for when a failure becomes one of these instead
+// of a throw.
+interface ApiErrorOutput {
+  apiError: {
+    code: number; // the HTTP status the API server returned (400, 403, 404, ...)
+    reason: string; // the Status.reason machine token, e.g. "BadRequest"; "" if absent
+    message: string; // the human-readable Status.message, or the error message
+  };
+}
+
+// Classify a caught failure as an *expected* Kubernetes API error, or not.
+//
+// The client throws an ApiException that carries a numeric HTTP status `code`
+// and, for a real API response, a Status body (kind: "Status") with a machine
+// `reason` and a human `message`. These are meaningful, read-only diagnostic
+// signals, not harness faults: a 400 for previous logs on a container that never
+// restarted (the container never crashed), a 403 for a read the workload's RBAC
+// forbids, a 404 for an object that is genuinely absent. A read tool encodes
+// these into its output so capture records them and replay reproduces them,
+// rather than throwing and being skipped.
+//
+// A failure with no numeric HTTP `code` is something else entirely: a network
+// error, an unreachable API server, a broken kubeconfig, cluster-level auth. Node
+// network errors carry a *string* code like "ECONNREFUSED", so requiring a number
+// here cleanly separates the two. Those still throw, because they are not a
+// property of the workload under diagnosis and must not be silently captured.
+function asApiError(err: unknown): ApiErrorOutput | undefined {
+  const code = (err as { code?: unknown })?.code;
+  if (typeof code !== "number") return undefined;
+  const body = (err as { body?: unknown }).body;
+  const status =
+    body && typeof body === "object"
+      ? (body as { reason?: unknown; message?: unknown })
+      : undefined;
+  const reason = typeof status?.reason === "string" ? status.reason : "";
+  const message =
+    typeof status?.message === "string"
+      ? status.message
+      : err instanceof Error
+        ? err.message
+        : String(err);
+  return { apiError: { code, reason, message } };
+}
+
 function isoOrUndefined(d: Date | undefined): string | undefined {
   return d ? new Date(d).toISOString() : undefined;
 }
@@ -185,8 +230,23 @@ export class LiveProvider implements ToolProvider {
     // get_logs previous arrive as "true"/"false". dispatch reads those strings
     // directly. Do not parse against the model-facing zod input schema here: it
     // types previous as a boolean and would reject the normalized string form.
-    const output = await this.dispatch(call.tool, call.args);
-    return { tool: call.tool, args: call.args, output };
+    //
+    // An expected Kubernetes API error (a Status with an HTTP code) is not a
+    // failure of the read: it is a captured diagnostic result. Encode it as a
+    // normal ToolResult with a structured { apiError } output, uniformly for every
+    // read tool, so capture writes a fixture and replay reproduces the signal
+    // rather than skipping the call. Genuine unexpected failures (no HTTP code:
+    // network, unreachable API server, cluster auth) fall through and still throw.
+    try {
+      const output = await this.dispatch(call.tool, call.args);
+      return { tool: call.tool, args: call.args, output };
+    } catch (err) {
+      const apiError = asApiError(err);
+      if (apiError) {
+        return { tool: call.tool, args: call.args, output: apiError };
+      }
+      throw err;
+    }
   }
 
   private async dispatch(
@@ -276,20 +336,18 @@ export class LiveProvider implements ToolProvider {
     container: string | undefined,
     previous: boolean,
   ): Promise<GetLogsOutput> {
-    let text = "";
-    try {
-      text = await this.core.readNamespacedPodLog({
-        name: pod,
-        namespace,
-        container,
-        previous,
-      });
-    } catch (err) {
-      // A pod that has not yet crashed has no previous instance to read. Treat a
-      // missing previous log as empty rather than an error, so capture does not
-      // depend on exact restart timing.
-      if (!isNotFound(err)) throw err;
-    }
+    // A read that the API server rejects (previous logs on a container that never
+    // restarted return a 400; the pod or container may 404) is not swallowed
+    // here. It propagates to resolve, which encodes it as a structured
+    // { apiError } result so the "there are no such logs" signal is captured and
+    // replayed rather than skipped or flattened to an empty stream. Only a clean
+    // 200 with no body yields empty lines.
+    const text = await this.core.readNamespacedPodLog({
+      name: pod,
+      namespace,
+      container,
+      previous,
+    });
     const lines = text.length > 0 ? text.replace(/\n$/, "").split("\n") : [];
     return {
       namespace,

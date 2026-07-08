@@ -195,11 +195,14 @@ async function main(): Promise<void> {
       recorded++;
       console.log(`  wrote ${call.tool} (${JSON.stringify(call.args)})`);
     } catch (err) {
-      // One failing read must not abort the exhaustive capture. The common case
-      // is get_logs for a pod whose container never started (an unschedulable
-      // pod), which the cluster rejects rather than returning empty. Log it and
-      // continue; the agent sees an uncaptured empty result for that one call at
-      // replay, which is the right signal (there are no logs).
+      // One failing read must not abort the exhaustive capture. Expected API
+      // errors no longer land here: the LiveProvider encodes a Status with an HTTP
+      // code (a 400 for previous logs on a container that never restarted, a 403
+      // for an RBAC-denied read) into a normal { apiError } ToolResult, which is
+      // recorded like any other fixture. Only a genuine unexpected failure
+      // (network, unreachable API server, cluster auth) reaches this catch. Log it
+      // and continue; the agent sees an uncaptured result for that one call at
+      // replay.
       console.warn(
         `  skipped ${call.tool} (${JSON.stringify(call.args)}): ` +
           (err instanceof Error ? err.message : String(err)),
