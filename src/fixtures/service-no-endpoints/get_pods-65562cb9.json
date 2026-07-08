@@ -1,10 +1,10 @@
 {
-  "capturedAt": "2026-07-08T18:54:17.394Z",
+  "capturedAt": "2026-07-08T21:21:36.894Z",
   "output": {
     "namespace": "storefront",
     "pods": [
       {
-        "name": "web-6d79859664-hx7k4",
+        "name": "web-6d79859664-bj7gf",
         "phase": "Running",
         "ready": "1/1",
         "restarts": 0,

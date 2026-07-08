@@ -1,8 +1,8 @@
 {
-  "capturedAt": "2026-07-08T18:54:01.923Z",
+  "capturedAt": "2026-07-08T21:21:28.064Z",
   "output": {
     "namespace": "analytics",
-    "name": "aggregator-65f4dd9986-wf4zr",
+    "name": "aggregator-65f4dd9986-cg79l",
     "phase": "Pending",
     "labels": {
       "app": "aggregator",
@@ -23,9 +23,9 @@
         "reason": "FailedScheduling",
         "message": "0/1 nodes are available: 1 Insufficient memory. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.",
         "count": 1,
-        "firstSeen": "2026-07-08T18:54:01.000Z",
-        "lastSeen": "2026-07-08T18:54:01.000Z",
-        "involvedObject": "Pod/aggregator-65f4dd9986-wf4zr"
+        "firstSeen": "2026-07-08T21:21:27.000Z",
+        "lastSeen": "2026-07-08T21:21:27.000Z",
+        "involvedObject": "Pod/aggregator-65f4dd9986-cg79l"
       }
     ]
   }

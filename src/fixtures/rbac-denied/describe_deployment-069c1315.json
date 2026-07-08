@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-08T20:16:29.786Z",
+  "capturedAt": "2026-07-08T21:21:41.683Z",
   "output": {
     "namespace": "telemetry",
     "name": "log-shipper",
@@ -28,8 +28,8 @@
         "reason": "ScalingReplicaSet",
         "message": "Scaled up replica set log-shipper-97956dbdb from 0 to 1",
         "count": 1,
-        "firstSeen": "2026-07-08T20:16:27.000Z",
-        "lastSeen": "2026-07-08T20:16:27.000Z",
+        "firstSeen": "2026-07-08T21:21:39.000Z",
+        "lastSeen": "2026-07-08T21:21:39.000Z",
         "involvedObject": "Deployment/log-shipper"
       }
     ]

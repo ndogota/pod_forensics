@@ -1,10 +1,10 @@
 {
-  "capturedAt": "2026-07-08T20:16:29.725Z",
+  "capturedAt": "2026-07-08T21:21:41.613Z",
   "output": {
     "namespace": "telemetry",
     "pods": [
       {
-        "name": "log-shipper-97956dbdb-q7qv5",
+        "name": "log-shipper-97956dbdb-g72bg",
         "phase": "Running",
         "ready": "1/1",
         "restarts": 0,

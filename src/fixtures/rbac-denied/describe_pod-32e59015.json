@@ -1,17 +1,17 @@
 {
-  "capturedAt": "2026-07-08T18:54:17.422Z",
+  "capturedAt": "2026-07-08T21:21:41.644Z",
   "output": {
-    "namespace": "storefront",
-    "name": "web-6d79859664-hx7k4",
+    "namespace": "telemetry",
+    "name": "log-shipper-97956dbdb-g72bg",
     "phase": "Running",
     "node": "pod-forensics-control-plane",
     "labels": {
-      "app": "web-backend",
-      "pod-template-hash": "6d79859664"
+      "app": "log-shipper",
+      "pod-template-hash": "97956dbdb"
     },
     "containers": [
       {
-        "name": "web",
+        "name": "log-shipper",
         "ready": true,
         "restartCount": 0,
         "state": "running"
@@ -43,38 +43,38 @@
       {
         "type": "Normal",
         "reason": "Scheduled",
-        "message": "Successfully assigned storefront/web-6d79859664-hx7k4 to pod-forensics-control-plane",
+        "message": "Successfully assigned telemetry/log-shipper-97956dbdb-g72bg to pod-forensics-control-plane",
         "count": 1,
-        "firstSeen": "2026-07-08T18:54:15.000Z",
-        "lastSeen": "2026-07-08T18:54:15.000Z",
-        "involvedObject": "Pod/web-6d79859664-hx7k4"
+        "firstSeen": "2026-07-08T21:21:39.000Z",
+        "lastSeen": "2026-07-08T21:21:39.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
       },
       {
         "type": "Normal",
         "reason": "Pulled",
-        "message": "Container image \"registry.k8s.io/pause:3.9\" already present on machine and can be accessed by the pod",
+        "message": "Container image \"alpine/k8s:1.30.0\" already present on machine and can be accessed by the pod",
         "count": 1,
-        "firstSeen": "2026-07-08T18:54:15.000Z",
-        "lastSeen": "2026-07-08T18:54:15.000Z",
-        "involvedObject": "Pod/web-6d79859664-hx7k4"
+        "firstSeen": "2026-07-08T21:21:39.000Z",
+        "lastSeen": "2026-07-08T21:21:39.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
       },
       {
         "type": "Normal",
         "reason": "Created",
         "message": "Container created",
         "count": 1,
-        "firstSeen": "2026-07-08T18:54:15.000Z",
-        "lastSeen": "2026-07-08T18:54:15.000Z",
-        "involvedObject": "Pod/web-6d79859664-hx7k4"
+        "firstSeen": "2026-07-08T21:21:39.000Z",
+        "lastSeen": "2026-07-08T21:21:39.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
       },
       {
         "type": "Normal",
         "reason": "Started",
         "message": "Container started",
         "count": 1,
-        "firstSeen": "2026-07-08T18:54:15.000Z",
-        "lastSeen": "2026-07-08T18:54:15.000Z",
-        "involvedObject": "Pod/web-6d79859664-hx7k4"
+        "firstSeen": "2026-07-08T21:21:39.000Z",
+        "lastSeen": "2026-07-08T21:21:39.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
       }
     ]
   }

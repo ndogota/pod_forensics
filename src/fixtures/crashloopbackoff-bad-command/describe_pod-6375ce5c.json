@@ -1,8 +1,8 @@
 {
-  "capturedAt": "2026-07-08T18:53:37.155Z",
+  "capturedAt": "2026-07-08T21:20:21.380Z",
   "output": {
     "namespace": "shop",
-    "name": "checkout-5b676c6c8f-dxfkk",
+    "name": "checkout-5b676c6c8f-hc7qw",
     "phase": "Running",
     "node": "pod-forensics-control-plane",
     "labels": {
@@ -20,8 +20,8 @@
         "lastTerminated": {
           "exitCode": 1,
           "reason": "Error",
-          "startedAt": "2026-07-08T18:53:05.000Z",
-          "finishedAt": "2026-07-08T18:53:05.000Z"
+          "startedAt": "2026-07-08T21:19:47.000Z",
+          "finishedAt": "2026-07-08T21:19:47.000Z"
         }
       }
     ],
@@ -55,47 +55,47 @@
       {
         "type": "Normal",
         "reason": "Scheduled",
-        "message": "Successfully assigned shop/checkout-5b676c6c8f-dxfkk to pod-forensics-control-plane",
+        "message": "Successfully assigned shop/checkout-5b676c6c8f-hc7qw to pod-forensics-control-plane",
         "count": 1,
-        "firstSeen": "2026-07-08T18:52:50.000Z",
-        "lastSeen": "2026-07-08T18:52:50.000Z",
-        "involvedObject": "Pod/checkout-5b676c6c8f-dxfkk"
+        "firstSeen": "2026-07-08T21:19:34.000Z",
+        "lastSeen": "2026-07-08T21:19:34.000Z",
+        "involvedObject": "Pod/checkout-5b676c6c8f-hc7qw"
       },
       {
         "type": "Normal",
         "reason": "Pulled",
         "message": "Container image \"busybox:1.36\" already present on machine and can be accessed by the pod",
         "count": 4,
-        "firstSeen": "2026-07-08T18:52:51.000Z",
-        "lastSeen": "2026-07-08T18:53:29.000Z",
-        "involvedObject": "Pod/checkout-5b676c6c8f-dxfkk"
+        "firstSeen": "2026-07-08T21:19:35.000Z",
+        "lastSeen": "2026-07-08T21:20:12.000Z",
+        "involvedObject": "Pod/checkout-5b676c6c8f-hc7qw"
       },
       {
         "type": "Normal",
         "reason": "Created",
         "message": "Container created",
         "count": 4,
-        "firstSeen": "2026-07-08T18:52:51.000Z",
-        "lastSeen": "2026-07-08T18:53:29.000Z",
-        "involvedObject": "Pod/checkout-5b676c6c8f-dxfkk"
+        "firstSeen": "2026-07-08T21:19:35.000Z",
+        "lastSeen": "2026-07-08T21:20:12.000Z",
+        "involvedObject": "Pod/checkout-5b676c6c8f-hc7qw"
       },
       {
         "type": "Normal",
         "reason": "Started",
         "message": "Container started",
         "count": 4,
-        "firstSeen": "2026-07-08T18:52:51.000Z",
-        "lastSeen": "2026-07-08T18:53:29.000Z",
-        "involvedObject": "Pod/checkout-5b676c6c8f-dxfkk"
+        "firstSeen": "2026-07-08T21:19:35.000Z",
+        "lastSeen": "2026-07-08T21:20:12.000Z",
+        "involvedObject": "Pod/checkout-5b676c6c8f-hc7qw"
       },
       {
         "type": "Warning",
         "reason": "BackOff",
-        "message": "Back-off restarting failed container checkout in pod checkout-5b676c6c8f-dxfkk_shop(9cdf5009-7fd9-425f-b686-afee3725c20b)",
+        "message": "Back-off restarting failed container checkout in pod checkout-5b676c6c8f-hc7qw_shop(47a46634-a304-443b-8e19-9a6c56911ed7)",
         "count": 3,
-        "firstSeen": "2026-07-08T18:52:52.000Z",
-        "lastSeen": "2026-07-08T18:53:30.000Z",
-        "involvedObject": "Pod/checkout-5b676c6c8f-dxfkk"
+        "firstSeen": "2026-07-08T21:19:36.000Z",
+        "lastSeen": "2026-07-08T21:20:13.000Z",
+        "involvedObject": "Pod/checkout-5b676c6c8f-hc7qw"
       }
     ]
   }

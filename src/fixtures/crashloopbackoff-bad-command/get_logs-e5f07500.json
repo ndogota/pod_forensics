@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-07-08T21:20:21.390Z",
+  "output": {
+    "namespace": "shop",
+    "pod": "checkout-5b676c6c8f-hc7qw",
+    "previous": true,
+    "lines": [
+      "unable to retrieve container logs for containerd://8c1aa179a842971a238578b575b2432673aa84f400f46075e4068b472b9731fc"
+    ],
+    "truncated": false
+  }
+}

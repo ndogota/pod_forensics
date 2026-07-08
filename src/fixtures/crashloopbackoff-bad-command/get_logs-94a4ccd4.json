@@ -1,8 +1,8 @@
 {
-  "capturedAt": "2026-07-08T18:53:37.181Z",
+  "capturedAt": "2026-07-08T21:20:21.398Z",
   "output": {
     "namespace": "shop",
-    "pod": "checkout-5b676c6c8f-dxfkk",
+    "pod": "checkout-5b676c6c8f-hc7qw",
     "previous": false,
     "lines": [
       "FATAL: missing required flag --config"
