@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-07-08T18:30:02.139Z",
+  "output": {
+    "namespace": "analytics",
+    "name": "aggregator",
+    "desiredReplicas": 1,
+    "availableReplicas": 0,
+    "selector": {
+      "app": "aggregator"
+    },
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "False",
+        "reason": "MinimumReplicasUnavailable",
+        "message": "Deployment does not have minimum availability."
+      },
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "ReplicaSetUpdated",
+        "message": "ReplicaSet \"aggregator-65f4dd9986\" is progressing."
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled up replica set aggregator-65f4dd9986 from 0 to 1",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:02.000Z",
+        "lastSeen": "2026-07-08T18:30:02.000Z",
+        "involvedObject": "Deployment/aggregator"
+      }
+    ]
+  }
+}

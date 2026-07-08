@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-07-08T18:30:20.972Z",
+  "output": {
+    "namespace": "telemetry",
+    "name": "log-shipper",
+    "desiredReplicas": 1,
+    "availableReplicas": 1,
+    "selector": {
+      "app": "log-shipper"
+    },
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "True",
+        "reason": "MinimumReplicasAvailable",
+        "message": "Deployment has minimum availability."
+      },
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "NewReplicaSetAvailable",
+        "message": "ReplicaSet \"log-shipper-7dcb8ffd45\" has successfully progressed."
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled up replica set log-shipper-7dcb8ffd45 from 0 to 1",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:18.000Z",
+        "lastSeen": "2026-07-08T18:30:18.000Z",
+        "involvedObject": "Deployment/log-shipper"
+      }
+    ]
+  }
+}

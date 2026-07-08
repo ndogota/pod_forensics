@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-08T18:30:16.215Z",
+  "output": {
+    "namespace": "storefront",
+    "pod": "web-6d79859664-gvglb",
+    "previous": false,
+    "lines": [],
+    "truncated": false
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-08T18:30:20.954Z",
+  "output": {
+    "namespace": "telemetry",
+    "pod": "log-shipper-7dcb8ffd45-dkn2q",
+    "previous": false,
+    "lines": [],
+    "truncated": false
+  }
+}

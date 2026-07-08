@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-07-08T18:30:16.233Z",
+  "output": {
+    "namespace": "storefront",
+    "name": "web",
+    "desiredReplicas": 1,
+    "availableReplicas": 1,
+    "selector": {
+      "app": "web-backend"
+    },
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "True",
+        "reason": "MinimumReplicasAvailable",
+        "message": "Deployment has minimum availability."
+      },
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "NewReplicaSetAvailable",
+        "message": "ReplicaSet \"web-6d79859664\" has successfully progressed."
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled up replica set web-6d79859664 from 0 to 1",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:10.000Z",
+        "lastSeen": "2026-07-08T18:30:10.000Z",
+        "involvedObject": "Deployment/web"
+      }
+    ]
+  }
+}

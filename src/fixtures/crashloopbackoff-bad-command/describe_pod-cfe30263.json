@@ -1,7 +1,56 @@
 {
-  "capturedAt": "2026-07-08T18:29:52.235Z",
+  "capturedAt": "2026-07-08T18:29:52.252Z",
   "output": {
     "namespace": "shop",
+    "name": "checkout-5b676c6c8f-lx5xb",
+    "phase": "Running",
+    "node": "pod-forensics-control-plane",
+    "labels": {
+      "app": "checkout",
+      "pod-template-hash": "5b676c6c8f"
+    },
+    "containers": [
+      {
+        "name": "checkout",
+        "ready": false,
+        "restartCount": 1,
+        "state": "waiting",
+        "reason": "CrashLoopBackOff",
+        "message": "back-off 10s restarting failed container=checkout pod=checkout-5b676c6c8f-lx5xb_shop(9f23960a-fd11-445a-a979-e65184816b30)",
+        "lastTerminated": {
+          "exitCode": 1,
+          "reason": "Error",
+          "startedAt": "2026-07-08T18:29:46.000Z",
+          "finishedAt": "2026-07-08T18:29:46.000Z"
+        }
+      }
+    ],
+    "conditions": [
+      {
+        "type": "PodReadyToStartContainers",
+        "status": "True"
+      },
+      {
+        "type": "Initialized",
+        "status": "True"
+      },
+      {
+        "type": "Ready",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [checkout]"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [checkout]"
+      },
+      {
+        "type": "PodScheduled",
+        "status": "True"
+      }
+    ],
     "events": [
       {
         "type": "Normal",
@@ -65,24 +114,6 @@
         "firstSeen": "2026-07-08T18:29:47.000Z",
         "lastSeen": "2026-07-08T18:29:48.000Z",
         "involvedObject": "Pod/checkout-5b676c6c8f-lx5xb"
-      },
-      {
-        "type": "Normal",
-        "reason": "SuccessfulCreate",
-        "message": "Created pod: checkout-5b676c6c8f-lx5xb",
-        "count": 1,
-        "firstSeen": "2026-07-08T18:29:42.000Z",
-        "lastSeen": "2026-07-08T18:29:42.000Z",
-        "involvedObject": "ReplicaSet/checkout-5b676c6c8f"
-      },
-      {
-        "type": "Normal",
-        "reason": "ScalingReplicaSet",
-        "message": "Scaled up replica set checkout-5b676c6c8f from 0 to 1",
-        "count": 1,
-        "firstSeen": "2026-07-08T18:29:42.000Z",
-        "lastSeen": "2026-07-08T18:29:42.000Z",
-        "involvedObject": "Deployment/checkout"
       }
     ]
   }

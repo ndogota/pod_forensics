@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-08T18:30:20.999Z",
+  "output": {
+    "namespace": "telemetry",
+    "serviceAccount": "log-shipper",
+    "verb": "list",
+    "resource": "secrets",
+    "allowed": false
+  }
+}

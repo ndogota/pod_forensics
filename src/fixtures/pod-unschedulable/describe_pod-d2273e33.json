@@ -1,0 +1,32 @@
+{
+  "capturedAt": "2026-07-08T18:30:02.108Z",
+  "output": {
+    "namespace": "analytics",
+    "name": "aggregator-65f4dd9986-k8rmf",
+    "phase": "Pending",
+    "labels": {
+      "app": "aggregator",
+      "pod-template-hash": "65f4dd9986"
+    },
+    "containers": [],
+    "conditions": [
+      {
+        "type": "PodScheduled",
+        "status": "False",
+        "reason": "Unschedulable",
+        "message": "0/1 nodes are available: 1 Insufficient memory. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling."
+      }
+    ],
+    "events": [
+      {
+        "type": "Warning",
+        "reason": "FailedScheduling",
+        "message": "0/1 nodes are available: 1 Insufficient memory. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:02.000Z",
+        "lastSeen": "2026-07-08T18:30:02.000Z",
+        "involvedObject": "Pod/aggregator-65f4dd9986-k8rmf"
+      }
+    ]
+  }
+}

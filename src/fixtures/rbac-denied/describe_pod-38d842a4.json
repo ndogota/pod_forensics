@@ -1,0 +1,81 @@
+{
+  "capturedAt": "2026-07-08T18:30:20.934Z",
+  "output": {
+    "namespace": "telemetry",
+    "name": "log-shipper-7dcb8ffd45-dkn2q",
+    "phase": "Running",
+    "node": "pod-forensics-control-plane",
+    "labels": {
+      "app": "log-shipper",
+      "pod-template-hash": "7dcb8ffd45"
+    },
+    "containers": [
+      {
+        "name": "log-shipper",
+        "ready": true,
+        "restartCount": 0,
+        "state": "running"
+      }
+    ],
+    "conditions": [
+      {
+        "type": "PodReadyToStartContainers",
+        "status": "True"
+      },
+      {
+        "type": "Initialized",
+        "status": "True"
+      },
+      {
+        "type": "Ready",
+        "status": "True"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "True"
+      },
+      {
+        "type": "PodScheduled",
+        "status": "True"
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "Scheduled",
+        "message": "Successfully assigned telemetry/log-shipper-7dcb8ffd45-dkn2q to pod-forensics-control-plane",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:18.000Z",
+        "lastSeen": "2026-07-08T18:30:18.000Z",
+        "involvedObject": "Pod/log-shipper-7dcb8ffd45-dkn2q"
+      },
+      {
+        "type": "Normal",
+        "reason": "Pulled",
+        "message": "Container image \"busybox:1.36\" already present on machine and can be accessed by the pod",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:19.000Z",
+        "lastSeen": "2026-07-08T18:30:19.000Z",
+        "involvedObject": "Pod/log-shipper-7dcb8ffd45-dkn2q"
+      },
+      {
+        "type": "Normal",
+        "reason": "Created",
+        "message": "Container created",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:19.000Z",
+        "lastSeen": "2026-07-08T18:30:19.000Z",
+        "involvedObject": "Pod/log-shipper-7dcb8ffd45-dkn2q"
+      },
+      {
+        "type": "Normal",
+        "reason": "Started",
+        "message": "Container started",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:30:19.000Z",
+        "lastSeen": "2026-07-08T18:30:19.000Z",
+        "involvedObject": "Pod/log-shipper-7dcb8ffd45-dkn2q"
+      }
+    ]
+  }
+}

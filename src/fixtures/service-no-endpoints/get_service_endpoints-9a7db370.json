@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-07-08T18:30:16.250Z",
+  "output": {
+    "namespace": "storefront",
+    "service": "web",
+    "selector": {
+      "app": "web-api"
+    },
+    "addresses": []
+  }
+}

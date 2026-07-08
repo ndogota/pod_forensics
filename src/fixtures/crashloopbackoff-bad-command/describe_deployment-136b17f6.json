@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-07-08T18:29:52.295Z",
+  "output": {
+    "namespace": "shop",
+    "name": "checkout",
+    "desiredReplicas": 1,
+    "availableReplicas": 0,
+    "selector": {
+      "app": "checkout"
+    },
+    "conditions": [
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "NewReplicaSetAvailable",
+        "message": "ReplicaSet \"checkout-5b676c6c8f\" has successfully progressed."
+      },
+      {
+        "type": "Available",
+        "status": "False",
+        "reason": "MinimumReplicasUnavailable",
+        "message": "Deployment does not have minimum availability."
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled up replica set checkout-5b676c6c8f from 0 to 1",
+        "count": 1,
+        "firstSeen": "2026-07-08T18:29:42.000Z",
+        "lastSeen": "2026-07-08T18:29:42.000Z",
+        "involvedObject": "Deployment/checkout"
+      }
+    ]
+  }
+}

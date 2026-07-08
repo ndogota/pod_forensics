@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-07-08T18:30:20.981Z",
+  "output": {
+    "namespace": "telemetry",
+    "name": "log-shipper",
+    "exists": false,
+    "data": {}
+  }
+}

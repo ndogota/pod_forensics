@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-07-08T18:30:02.147Z",
+  "output": {
+    "namespace": "analytics",
+    "name": "aggregator",
+    "exists": false,
+    "data": {}
+  }
+}
