@@ -1,11 +1,11 @@
 {
-  "createdAt": "2026-07-08T19:50:52.099Z",
+  "createdAt": "2026-07-08T20:15:25.409Z",
   "model": "fake-model",
   "scenarioScores": [
     {
       "scenarioId": "crashloopbackoff-bad-command",
       "tier": "obvious",
-      "runs": 1,
+      "runs": 3,
       "completionRate": 1,
       "classAccuracy": 1,
       "evidenceRecall": 1,
@@ -14,7 +14,7 @@
     {
       "scenarioId": "pod-unschedulable",
       "tier": "obvious",
-      "runs": 1,
+      "runs": 3,
       "completionRate": 1,
       "classAccuracy": 1,
       "evidenceRecall": 1,
@@ -23,7 +23,7 @@
     {
       "scenarioId": "service-no-endpoints",
       "tier": "obvious",
-      "runs": 1,
+      "runs": 3,
       "completionRate": 1,
       "classAccuracy": 1,
       "evidenceRecall": 1,
@@ -32,7 +32,7 @@
     {
       "scenarioId": "rbac-denied",
       "tier": "obvious",
-      "runs": 1,
+      "runs": 3,
       "completionRate": 1,
       "classAccuracy": 1,
       "evidenceRecall": 1,
@@ -41,19 +41,223 @@
   ],
   "confusionMatrix": {
     "CrashLoopBackOff": {
-      "CrashLoopBackOff": 1
+      "CrashLoopBackOff": 3
     },
     "PodUnschedulable": {
-      "PodUnschedulable": 1
+      "PodUnschedulable": 3
     },
     "ServiceNoEndpoints": {
-      "ServiceNoEndpoints": 1
+      "ServiceNoEndpoints": 3
     },
     "RbacDenied": {
-      "RbacDenied": 1
+      "RbacDenied": 3
     }
   },
   "traces": [
+    {
+      "scenarioId": "crashloopbackoff-bad-command",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "CrashLoopBackOff",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk"
+            },
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
+          }
+        ]
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "tokensIn": 3000,
+      "tokensOut": 520,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 25
+    },
+    {
+      "scenarioId": "crashloopbackoff-bad-command",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk",
+              "previous": "true"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "CrashLoopBackOff",
+        "rootCause": "The checkout container start command exits with a non-zero status immediately because the required --config flag is missing. The kubelet keeps restarting the container, so the pod settles into CrashLoopBackOff.",
+        "suggestedFix": "Provide the required configuration to the checkout container. Set the --config flag to a valid path and mount the configuration the service expects, then let the deployment roll out. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "container checkout is waiting with reason CrashLoopBackOff and restartCount 10"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk"
+            },
+            "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "shop",
+              "pod": "checkout-5b676c6c8f-dxfkk",
+              "previous": "true"
+            },
+            "excerpt": "previous logs show: FATAL: missing required flag --config"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "shop"
+            },
+            "excerpt": "Warning BackOff: Back-off restarting failed container checkout"
+          }
+        ]
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "tokensIn": 3000,
+      "tokensOut": 520,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 25
+    },
     {
       "scenarioId": "crashloopbackoff-bad-command",
       "steps": [
@@ -236,6 +440,164 @@
       "totalLatencyMs": 20
     },
     {
+      "scenarioId": "pod-unschedulable",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "analytics"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "analytics",
+              "pod": "aggregator-65f4dd9986-wf4zr"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "analytics"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "PodUnschedulable",
+        "rootCause": "The aggregator pod requests more memory than any node in the cluster can provide, so the scheduler cannot place it. The pod stays Pending and no container ever starts.",
+        "suggestedFix": "Lower the pod's memory request to fit an available node, or add a node with enough memory, then let the deployment reschedule. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "analytics"
+            },
+            "excerpt": "pod aggregator is Pending with 0/1 containers ready and no node assigned"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "analytics",
+              "pod": "aggregator-65f4dd9986-wf4zr"
+            },
+            "excerpt": "pod phase Pending, PodScheduled condition is False, no node assigned"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "analytics"
+            },
+            "excerpt": "Warning FailedScheduling: 0/1 nodes are available: 1 Insufficient memory."
+          }
+        ]
+      },
+      "stepCount": 3,
+      "totalTokens": 2830,
+      "tokensIn": 2400,
+      "tokensOut": 430,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 20
+    },
+    {
+      "scenarioId": "pod-unschedulable",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "analytics"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "analytics",
+              "pod": "aggregator-65f4dd9986-wf4zr"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_events",
+            "args": {
+              "namespace": "analytics"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "PodUnschedulable",
+        "rootCause": "The aggregator pod requests more memory than any node in the cluster can provide, so the scheduler cannot place it. The pod stays Pending and no container ever starts.",
+        "suggestedFix": "Lower the pod's memory request to fit an available node, or add a node with enough memory, then let the deployment reschedule. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "analytics"
+            },
+            "excerpt": "pod aggregator is Pending with 0/1 containers ready and no node assigned"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "analytics",
+              "pod": "aggregator-65f4dd9986-wf4zr"
+            },
+            "excerpt": "pod phase Pending, PodScheduled condition is False, no node assigned"
+          },
+          {
+            "tool": "get_events",
+            "args": {
+              "namespace": "analytics"
+            },
+            "excerpt": "Warning FailedScheduling: 0/1 nodes are available: 1 Insufficient memory."
+          }
+        ]
+      },
+      "stepCount": 3,
+      "totalTokens": 2830,
+      "tokensIn": 2400,
+      "tokensOut": 430,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 20
+    },
+    {
       "scenarioId": "service-no-endpoints",
       "steps": [
         {
@@ -315,6 +677,368 @@
       "cacheReadTokens": 0,
       "costUsd": 0,
       "totalLatencyMs": 20
+    },
+    {
+      "scenarioId": "service-no-endpoints",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "storefront"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "storefront",
+              "pod": "web-6d79859664-hx7k4"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_service_endpoints",
+            "args": {
+              "namespace": "storefront",
+              "service": "web"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "ServiceNoEndpoints",
+        "rootCause": "The web Service selects pods with label app=web-api, but the running pods are labeled app=web-backend. The selector matches no pods, so the Service has no endpoints and cannot route traffic.",
+        "suggestedFix": "Align the Service selector with the pod labels (set the selector to app=web-backend) or relabel the pods so the selector matches. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "storefront"
+            },
+            "excerpt": "pod web-6d79859664-hx7k4 is Running and Ready (1/1)"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "storefront",
+              "pod": "web-6d79859664-hx7k4"
+            },
+            "excerpt": "pod labels include app=web-backend"
+          },
+          {
+            "tool": "get_service_endpoints",
+            "args": {
+              "namespace": "storefront",
+              "service": "web"
+            },
+            "excerpt": "Service web selector app=web-api resolves to zero endpoint addresses"
+          }
+        ]
+      },
+      "stepCount": 3,
+      "totalTokens": 2830,
+      "tokensIn": 2400,
+      "tokensOut": 430,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 20
+    },
+    {
+      "scenarioId": "service-no-endpoints",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "storefront"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "storefront",
+              "pod": "web-6d79859664-hx7k4"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_service_endpoints",
+            "args": {
+              "namespace": "storefront",
+              "service": "web"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "ServiceNoEndpoints",
+        "rootCause": "The web Service selects pods with label app=web-api, but the running pods are labeled app=web-backend. The selector matches no pods, so the Service has no endpoints and cannot route traffic.",
+        "suggestedFix": "Align the Service selector with the pod labels (set the selector to app=web-backend) or relabel the pods so the selector matches. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "storefront"
+            },
+            "excerpt": "pod web-6d79859664-hx7k4 is Running and Ready (1/1)"
+          },
+          {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "storefront",
+              "pod": "web-6d79859664-hx7k4"
+            },
+            "excerpt": "pod labels include app=web-backend"
+          },
+          {
+            "tool": "get_service_endpoints",
+            "args": {
+              "namespace": "storefront",
+              "service": "web"
+            },
+            "excerpt": "Service web selector app=web-api resolves to zero endpoint addresses"
+          }
+        ]
+      },
+      "stepCount": 3,
+      "totalTokens": 2830,
+      "tokensIn": 2400,
+      "tokensOut": 430,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 20
+    },
+    {
+      "scenarioId": "rbac-denied",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "telemetry"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "telemetry",
+              "pod": "log-shipper-7dcb8ffd45-k2zdw"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "telemetry",
+              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "previous": "false"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "check_rbac",
+            "args": {
+              "namespace": "telemetry",
+              "resource": "secrets",
+              "serviceAccount": "log-shipper",
+              "verb": "list"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "RbacDenied",
+        "rootCause": "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its attempts to list secrets are denied by RBAC, which the container logs as a Kubernetes Forbidden error, so the workload cannot do its job even though the pod runs.",
+        "suggestedFix": "Grant the log-shipper ServiceAccount a Role with list on secrets and bind it with a RoleBinding, if the workload truly needs that access. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "telemetry"
+            },
+            "excerpt": "pod log-shipper-7dcb8ffd45-k2zdw is Running (1/1); the container is healthy, not crashing"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "telemetry",
+              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "previous": "false"
+            },
+            "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
+          },
+          {
+            "tool": "check_rbac",
+            "args": {
+              "namespace": "telemetry",
+              "serviceAccount": "log-shipper",
+              "verb": "list",
+              "resource": "secrets"
+            },
+            "excerpt": "check_rbac reports serviceAccount log-shipper is not allowed to list secrets (allowed: false)"
+          }
+        ]
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "tokensIn": 3000,
+      "tokensOut": 520,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 25
+    },
+    {
+      "scenarioId": "rbac-denied",
+      "steps": [
+        {
+          "index": 0,
+          "toolCall": {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "telemetry"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 1,
+          "toolCall": {
+            "tool": "describe_pod",
+            "args": {
+              "namespace": "telemetry",
+              "pod": "log-shipper-7dcb8ffd45-k2zdw"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 2,
+          "toolCall": {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "telemetry",
+              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "previous": "false"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        },
+        {
+          "index": 3,
+          "toolCall": {
+            "tool": "check_rbac",
+            "args": {
+              "namespace": "telemetry",
+              "resource": "secrets",
+              "serviceAccount": "log-shipper",
+              "verb": "list"
+            }
+          },
+          "latencyMs": 5,
+          "tokensIn": 600,
+          "tokensOut": 90
+        }
+      ],
+      "diagnosis": {
+        "failureClass": "RbacDenied",
+        "rootCause": "The log-shipper workload runs under the log-shipper ServiceAccount, which is bound to no Role granting list on secrets. Its attempts to list secrets are denied by RBAC, which the container logs as a Kubernetes Forbidden error, so the workload cannot do its job even though the pod runs.",
+        "suggestedFix": "Grant the log-shipper ServiceAccount a Role with list on secrets and bind it with a RoleBinding, if the workload truly needs that access. This is advice only; the tool applies nothing.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "tool": "get_pods",
+            "args": {
+              "namespace": "telemetry"
+            },
+            "excerpt": "pod log-shipper-7dcb8ffd45-k2zdw is Running (1/1); the container is healthy, not crashing"
+          },
+          {
+            "tool": "get_logs",
+            "args": {
+              "namespace": "telemetry",
+              "pod": "log-shipper-7dcb8ffd45-k2zdw",
+              "previous": "false"
+            },
+            "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
+          },
+          {
+            "tool": "check_rbac",
+            "args": {
+              "namespace": "telemetry",
+              "serviceAccount": "log-shipper",
+              "verb": "list",
+              "resource": "secrets"
+            },
+            "excerpt": "check_rbac reports serviceAccount log-shipper is not allowed to list secrets (allowed: false)"
+          }
+        ]
+      },
+      "stepCount": 4,
+      "totalTokens": 3520,
+      "tokensIn": 3000,
+      "tokensOut": 520,
+      "cacheReadTokens": 0,
+      "costUsd": 0,
+      "totalLatencyMs": 25
     },
     {
       "scenarioId": "rbac-denied",

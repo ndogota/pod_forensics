@@ -40,17 +40,19 @@ spec:
       serviceAccountName: log-shipper
       containers:
         - name: log-shipper
-          # A real, always-pullable image with kubectl on PATH. In-cluster,
-          # kubectl authenticates as the pod's ServiceAccount, so `kubectl get
-          # secrets` is denied by RBAC and the Forbidden error is written to
-          # stdout. The `|| true` keeps the shell loop alive past the non-zero
-          # exit, and the sleep paces the retries, so the container never exits
-          # and the pod stays Running. Any pullable kubectl image works here.
-          # bitnami/kubectl was retired from the public Docker Hub catalog, so it
-          # can no longer be pulled; rancher/kubectl is a stable public image that
-          # ships kubectl. imagePullPolicy IfNotPresent reuses a cached layer when
-          # present and avoids a needless registry round trip on recapture.
-          image: rancher/kubectl:v1.30.0
+          # A real, always-pullable image with both a POSIX shell and kubectl on
+          # PATH. In-cluster, kubectl authenticates as the pod's ServiceAccount, so
+          # `kubectl get secrets` is denied by RBAC and the Forbidden error is
+          # written to stdout. The `|| true` keeps the shell loop alive past the
+          # non-zero exit, and the sleep paces the retries, so the container never
+          # exits and the pod stays Running. The image must ship a real /bin/sh:
+          # rancher/kubectl:v1.30.0 has no usable shell, so /bin/sh -c never runs
+          # (the container fails with StartError and empty logs). alpine/k8s:1.30.0
+          # is a public image built on Alpine, so it has both a POSIX shell and
+          # kubectl, and was validated on the cluster. imagePullPolicy IfNotPresent
+          # reuses a cached layer when present and avoids a needless registry round
+          # trip on recapture.
+          image: alpine/k8s:1.30.0
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh

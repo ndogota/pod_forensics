@@ -95,43 +95,68 @@ function deleteNamespace(namespace: string): void {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// A container that cannot be pulled never runs, so no wait predicate can ever
-// pass. These are the two terminal image-pull waiting reasons the kubelet
-// surfaces: ErrImagePull on the first failure, ImagePullBackOff once it backs
-// off. Either means the pod is stuck and polling should stop immediately rather
-// than burn the full timeout.
-const IMAGE_PULL_FAILURE_REASONS = new Set(["ImagePullBackOff", "ErrImagePull"]);
+// A container that can never run means no wait predicate can ever pass, so
+// polling should stop immediately rather than burn the full timeout. Two kinds of
+// terminal condition are covered:
+//   - Image pull: ErrImagePull on the first failure, ImagePullBackOff once the
+//     kubelet backs off. The container is stuck waiting and the image will never
+//     arrive.
+//   - Container start: the image was pulled but the kubelet cannot create or run
+//     the container. RunContainerError, CreateContainerError, and
+//     CreateContainerConfigError surface while waiting; StartError surfaces on a
+//     container that terminated because it could not start (e.g. an image whose
+//     command references a /bin/sh it does not ship). None of these clears on its
+//     own.
+// Transient reasons are deliberately excluded: ContainerCreating and
+// PodInitializing resolve on their own and must NOT abort capture. A crash loop
+// with logs is likewise a legitimate failure under test, not a start failure, so
+// CrashLoopBackOff is not listed here.
+const TERMINAL_CONTAINER_FAILURE_REASONS = new Set([
+  "ImagePullBackOff",
+  "ErrImagePull",
+  "RunContainerError",
+  "CreateContainerError",
+  "CreateContainerConfigError",
+  "StartError",
+]);
 
-// A pod container stuck waiting on an image pull, with the naming detail needed
-// for a clear failure message.
-interface ImagePullFailure {
+// A pod container stuck in a terminal, never-runs condition, with the naming
+// detail needed for a clear failure message.
+interface TerminalContainerFailure {
   pod: string;
   container: string;
   reason: string;
   message: string;
 }
 
-// Scan the namespace's pods for any container waiting with a terminal image-pull
-// reason. Returns the first such container, or null if none. Shared across all
-// scenarios: an unpullable image is never the failure under test, so it should
-// fail capture fast regardless of scenario.
-async function findImagePullFailure(
+// Scan the namespace's pods for any container in a terminal never-runs condition,
+// whether waiting (image pull / container create) or terminated (StartError).
+// Returns the first such container, or null if none. Shared across all scenarios:
+// a container that cannot run is never the failure under test, so it should fail
+// capture fast regardless of scenario.
+async function findTerminalContainerFailure(
   provider: LiveProvider,
   namespace: string,
-): Promise<ImagePullFailure | null> {
+): Promise<TerminalContainerFailure | null> {
   const podsResult = await provider.resolve({
     tool: "get_pods",
     args: normalizeArgs({ namespace }),
   });
   for (const pod of (podsResult.output as GetPodsOutput).pods) {
     for (const cs of pod.containerStatuses) {
-      if (cs.state === "waiting" && cs.reason && IMAGE_PULL_FAILURE_REASONS.has(cs.reason)) {
+      if (
+        (cs.state === "waiting" || cs.state === "terminated") &&
+        cs.reason &&
+        TERMINAL_CONTAINER_FAILURE_REASONS.has(cs.reason)
+      ) {
         return {
           pod: pod.name,
           container: cs.name,
           reason: cs.reason,
-          // The kubelet's waiting message names the image, e.g.
-          // `Back-off pulling image "rancher/kubectl:v1.30.0"`.
+          // The kubelet's message names the cause, e.g.
+          // `Back-off pulling image "alpine/k8s:1.30.0"` for a pull failure or
+          // `failed to create containerd task: ... exec: "/bin/sh"` for a start
+          // failure.
           message: cs.message ?? "",
         };
       }
@@ -161,20 +186,25 @@ async function waitForFailure(
     const elapsedMs = Date.now() - start;
     const elapsed = Math.round(elapsedMs / 1000);
 
-    // Fail fast on an unpullable image. A container stuck in ImagePullBackOff or
-    // ErrImagePull never starts, so the scenario's failure can never manifest and
+    // Fail fast on a container that can never run. A container stuck on an image
+    // pull (ImagePullBackOff / ErrImagePull) or that the kubelet cannot create or
+    // start (RunContainerError, CreateContainerError, CreateContainerConfigError,
+    // StartError) never runs, so the scenario's failure can never manifest and
     // waiting out the timeout would only delay a certain failure. Naming the pod,
-    // image, and reason makes the misconfiguration obvious.
-    const pullFailure = await findImagePullFailure(provider, scenario.namespace);
-    if (pullFailure) {
+    // container, and reason makes the misconfiguration obvious.
+    const terminalFailure = await findTerminalContainerFailure(
+      provider,
+      scenario.namespace,
+    );
+    if (terminalFailure) {
       throw new Error(
-        `image pull failed for "${scenario.id}": pod ${pullFailure.pod} ` +
-          `container ${pullFailure.container} is stuck with reason ` +
-          `${pullFailure.reason}` +
-          (pullFailure.message ? ` (${pullFailure.message})` : "") +
-          `. The image cannot be pulled, so the pod will never run. Fix the ` +
-          `image in the scenario manifests. Namespace ${scenario.namespace} ` +
-          `left in place for inspection.`,
+        `container failure for "${scenario.id}": pod ${terminalFailure.pod} ` +
+          `container ${terminalFailure.container} is stuck with reason ` +
+          `${terminalFailure.reason}` +
+          (terminalFailure.message ? ` (${terminalFailure.message})` : "") +
+          `. The container will never run, so the failure under test can never ` +
+          `manifest. Fix the image or command in the scenario manifests. ` +
+          `Namespace ${scenario.namespace} left in place for inspection.`,
       );
     }
 
