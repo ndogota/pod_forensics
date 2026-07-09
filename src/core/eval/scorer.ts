@@ -14,12 +14,14 @@
 // judge so its numbers do not move.
 
 import type {
+  ByTierSummary,
   Diagnosis,
   DifficultyTier,
   GroundTruth,
   RunTrace,
   Scenario,
   ScenarioScore,
+  TierSummary,
 } from "../types";
 import type { ModelClient } from "../agent/modelClient";
 import type { RunUsage } from "../agent/loop";
@@ -178,4 +180,45 @@ export async function scoreScenario(
     evidenceRecall: mean(recallScores),
     rootCauseJudgeScore: mean(judgeScores),
   };
+}
+
+// Roll up per-scenario scores into per-tier means and the headline cause-accuracy
+// gap. The gap is the eval's most interesting number: obvious-tier cause accuracy
+// minus misleading-tier cause accuracy, which isolates whether the agent reasons
+// about the cause or pattern-matches a surface signal. It is null unless both
+// tiers are present, since the difference is undefined with only one.
+export function summarizeByTier(scores: ScenarioScore[]): ByTierSummary {
+  // Group by tier, preserving a stable obvious-before-misleading order for
+  // display regardless of scenario ordering.
+  const order: DifficultyTier[] = ["obvious", "misleading"];
+  const groups = new Map<DifficultyTier, ScenarioScore[]>();
+  for (const s of scores) {
+    const group = groups.get(s.tier) ?? [];
+    group.push(s);
+    groups.set(s.tier, group);
+  }
+
+  const tiers: TierSummary[] = [];
+  for (const tier of order) {
+    const group = groups.get(tier);
+    if (!group || group.length === 0) continue;
+    tiers.push({
+      tier,
+      scenarioCount: group.length,
+      completionRate: mean(group.map((s) => s.completionRate)),
+      symptomAccuracy: mean(group.map((s) => s.symptomAccuracy)),
+      causeAccuracy: mean(group.map((s) => s.causeAccuracy)),
+      evidenceRecall: mean(group.map((s) => s.evidenceRecall)),
+      rootCauseJudge: mean(group.map((s) => s.rootCauseJudgeScore)),
+    });
+  }
+
+  const obvious = tiers.find((t) => t.tier === "obvious");
+  const misleading = tiers.find((t) => t.tier === "misleading");
+  const causeAccuracyGap =
+    obvious && misleading
+      ? obvious.causeAccuracy - misleading.causeAccuracy
+      : null;
+
+  return { tiers, causeAccuracyGap };
 }

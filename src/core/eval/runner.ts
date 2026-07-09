@@ -12,7 +12,12 @@ import type { ModelClient } from "../agent/modelClient";
 import type { AgentConfig } from "../agent/config";
 import { FixtureProvider } from "../providers/fixtureProvider";
 import type { RunReport, RunTrace, Scenario } from "../types";
-import { scoreScenario, type RootCauseJudge, type RunOutcome } from "./scorer";
+import {
+  scoreScenario,
+  summarizeByTier,
+  type RootCauseJudge,
+  type RunOutcome,
+} from "./scorer";
 
 export interface RunEvalOptions {
   scenario: Scenario;
@@ -105,6 +110,7 @@ export async function runEval(options: RunEvalOptions): Promise<RunEvalResult> {
       createdAt,
       model: client.model,
       scenarioScores: [scenarioScore],
+      byTier: summarizeByTier([scenarioScore]),
       confusionMatrix: buildConfusionMatrix(scenario, traces),
       traces,
     },

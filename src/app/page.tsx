@@ -47,9 +47,67 @@ export default async function HomePage() {
     );
   }
 
+  const { byTier } = report;
+
   return (
     <main>
       <Intro />
+
+      <section>
+        <h2>Cause accuracy by tier</h2>
+        <p className="note">
+          The obvious tier has a plain surface signal. The misleading tier hides a
+          decoy signal that points at the wrong cause. The gap between them is the
+          headline number: it measures whether the agent reasons about the cause
+          or pattern-matches what it sees.
+        </p>
+
+        {byTier.causeAccuracyGap !== null ? (
+          <p className="headline">
+            <span className="headline-number">
+              {byTier.causeAccuracyGap.toFixed(2)}
+            </span>
+            <span className="headline-label">
+              cause-accuracy gap (obvious minus misleading)
+            </span>
+          </p>
+        ) : (
+          <p className="meta">
+            Gap not shown: both the obvious and misleading tiers must be present.
+          </p>
+        )}
+
+        <div className="tier-grid">
+          {byTier.tiers.map((t) => (
+            <div key={t.tier} className="tier-card">
+              <h3>{t.tier}</h3>
+              <p className="meta">{t.scenarioCount} scenario(s)</p>
+              <dl className="tier-metrics">
+                <div>
+                  <dt>cause accuracy</dt>
+                  <dd className="lead">{t.causeAccuracy.toFixed(2)}</dd>
+                </div>
+                <div>
+                  <dt>symptom accuracy</dt>
+                  <dd>{t.symptomAccuracy.toFixed(2)}</dd>
+                </div>
+                <div>
+                  <dt>completion rate</dt>
+                  <dd>{t.completionRate.toFixed(2)}</dd>
+                </div>
+                <div>
+                  <dt>evidence recall</dt>
+                  <dd>{t.evidenceRecall.toFixed(2)}</dd>
+                </div>
+                <div>
+                  <dt>root cause judge</dt>
+                  <dd>{t.rootCauseJudge.toFixed(2)}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2>Eval summary</h2>

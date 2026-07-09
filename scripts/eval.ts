@@ -39,6 +39,7 @@ import { runEval, type FailedRunUsage } from "../src/core/eval/runner";
 import {
   makeModelJudge,
   stringOverlapJudge,
+  summarizeByTier,
   type RootCauseJudge,
 } from "../src/core/eval/scorer";
 import { SCENARIOS, findScenario } from "../src/scenarios";
@@ -175,6 +176,9 @@ async function main(): Promise<void> {
     createdAt,
     model: args.client === "anthropic" ? anthropic!.model : "fake-model",
     scenarioScores: [],
+    // Filled in after every scenario is scored, once the full set of
+    // scenarioScores is known (see summarizeByTier below).
+    byTier: { tiers: [], causeAccuracyGap: null },
     confusionMatrix: {},
     traces: [],
   };
@@ -216,6 +220,10 @@ async function main(): Promise<void> {
     mergeConfusion(combined.confusionMatrix, report.confusionMatrix);
   }
 
+  // Roll the full set of per-scenario scores up into the per-tier summary and the
+  // headline cause-accuracy gap, now that every scenario has been scored.
+  combined.byTier = summarizeByTier(combined.scenarioScores);
+
   const outDir = path.resolve(process.cwd(), "reports");
   await mkdir(outDir, { recursive: true });
   const outPath = path.join(outDir, "run-report.json");
@@ -233,6 +241,23 @@ async function main(): Promise<void> {
         `rootCauseJudge ${score.rootCauseJudgeScore.toFixed(2)}`,
     );
   }
+
+  console.log("\nby tier:");
+  for (const tier of combined.byTier.tiers) {
+    console.log(
+      `  ${tier.tier} (${tier.scenarioCount} scenario(s)): ` +
+        `completionRate ${tier.completionRate.toFixed(2)}, ` +
+        `symptomAccuracy ${tier.symptomAccuracy.toFixed(2)}, ` +
+        `causeAccuracy ${tier.causeAccuracy.toFixed(2)}, ` +
+        `evidenceRecall ${tier.evidenceRecall.toFixed(2)}, ` +
+        `rootCauseJudge ${tier.rootCauseJudge.toFixed(2)}`,
+    );
+  }
+  const gap = combined.byTier.causeAccuracyGap;
+  console.log(
+    `  causeAccuracyGap (obvious - misleading): ` +
+      `${gap === null ? "n/a (both tiers not present)" : gap.toFixed(2)}`,
+  );
 
   printCostSummary(combined, combinedFailedRuns);
 }

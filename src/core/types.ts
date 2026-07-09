@@ -143,10 +143,37 @@ export interface ScenarioScore {
   rootCauseJudgeScore: number; // 0..1 from the LLM-as-judge rubric
 }
 
+// Per-tier aggregate across the scenarios in one difficulty tier. Each metric is
+// the mean of that metric over the tier's scenarios (an unweighted mean of the
+// already-aggregated ScenarioScores, so every scenario in the tier counts once).
+export interface TierSummary {
+  tier: DifficultyTier;
+  scenarioCount: number;       // scenarios aggregated into this tier
+  completionRate: number;      // mean over the tier's scenarios
+  symptomAccuracy: number;
+  causeAccuracy: number;
+  evidenceRecall: number;
+  rootCauseJudge: number;      // mean of ScenarioScore.rootCauseJudgeScore
+}
+
+// The tier breakdown for a run. The gap between the obvious and misleading tiers'
+// cause accuracy is the eval's headline number: it measures whether the agent
+// reasons about the cause or pattern-matches a surface signal.
+export interface ByTierSummary {
+  tiers: TierSummary[];        // one per tier present, obvious before misleading
+  // obvious causeAccuracy minus misleading causeAccuracy. Null unless both tiers
+  // are present, since the gap is undefined with only one.
+  causeAccuracyGap: number | null;
+}
+
 export interface RunReport {
   createdAt: string;
   model: string;
   scenarioScores: ScenarioScore[];
+  // Per-tier rollup of the scenarioScores, plus the headline obvious-vs-misleading
+  // cause-accuracy gap. Derived from scenarioScores, kept on the report so the
+  // static dashboard needs no recomputation.
+  byTier: ByTierSummary;
   // Keyed on RootCauseClass (actual -> predicted -> count): the cause is the
   // interesting axis, where an agent that pattern-matches a surface symptom goes
   // wrong.

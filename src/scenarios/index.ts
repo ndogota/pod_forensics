@@ -19,12 +19,18 @@ export const SCENARIOS: Scenario[] = [
     target: { kind: "Deployment", name: "checkout" },
     manifestsPath: "src/scenarios/crashloopbackoff-bad-command/manifests.yaml",
     groundTruth: crashloopGroundTruth as GroundTruth,
-    // TODO: the container's log line mentions a missing "--config" flag, which is
-    // an accidental misleading signal: it invites a MissingConfigOrSecret cause,
-    // but the true rootCauseClass is BadCommand (the command exits non-zero) and
-    // creating a ConfigMap would not fix it. A real run already misclassified the
-    // cause on exactly this cue. Good candidate to promote to tier "misleading".
-    tier: "obvious",
+    // Misleading tier. The container's log line names a missing "--config" flag,
+    // which is a decoy: it steers a diagnosing agent toward rootCauseClass
+    // MissingConfigOrSecret, yet the true cause is BadCommand. The start command
+    // exits non-zero on its own; no ConfigMap or Secret is actually absent, so
+    // creating one would not fix the crash. A run that grep-matches the "--config"
+    // string in the log lands on the wrong cause; only a run that reasons past the
+    // surface signal (the command itself is bad, not its configuration) gets it
+    // right. That gap between pattern-matching and reasoning is exactly what the
+    // misleading tier measures, so this scenario belongs there rather than in the
+    // obvious tier. A real agent run misclassified the cause on precisely this
+    // cue. See groundtruth.json, which records the same decoy in its rootCause.
+    tier: "misleading",
   },
   {
     id: "pod-unschedulable",

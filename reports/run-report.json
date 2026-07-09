@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-07-08T21:44:42.738Z",
+  "createdAt": "2026-07-09T12:01:29.083Z",
   "model": "fake-model",
   "scenarioScores": [
     {
       "scenarioId": "crashloopbackoff-bad-command",
-      "tier": "obvious",
+      "tier": "misleading",
       "runs": 3,
       "completionRate": 1,
       "symptomAccuracy": 1,
@@ -43,6 +43,29 @@
       "rootCauseJudgeScore": 0.9545454545454546
     }
   ],
+  "byTier": {
+    "tiers": [
+      {
+        "tier": "obvious",
+        "scenarioCount": 3,
+        "completionRate": 1,
+        "symptomAccuracy": 1,
+        "causeAccuracy": 1,
+        "evidenceRecall": 1,
+        "rootCauseJudge": 0.9848484848484849
+      },
+      {
+        "tier": "misleading",
+        "scenarioCount": 1,
+        "completionRate": 1,
+        "symptomAccuracy": 1,
+        "causeAccuracy": 1,
+        "evidenceRecall": 1,
+        "rootCauseJudge": 0.9512195121951219
+      }
+    ],
+    "causeAccuracyGap": 0
+  },
   "confusionMatrix": {
     "BadCommand": {
       "BadCommand": 3

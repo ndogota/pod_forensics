@@ -33,6 +33,19 @@ import { SYSTEM_PROMPT, buildInitialUserPrompt } from "./prompts";
 // never retries blindly and never loops unbounded.
 const MAX_DIAGNOSIS_CORRECTIONS = 2;
 
+// Split an integer total evenly across n buckets, preserving the total exactly:
+// each bucket gets floor(total/n) and the first `remainder` buckets get one more.
+// Used to attribute a turn's usage across the several tool-call steps that turn
+// produces, instead of dumping the whole turn on the first step and leaving the
+// rest showing a misleading zero. Because the parts sum to the total, the run and
+// trace totals are unchanged; only the per-step breakdown is corrected.
+function distribute(total: number, n: number): number[] {
+  if (n <= 0) return [];
+  const base = Math.floor(total / n);
+  const remainder = total - base * n;
+  return Array.from({ length: n }, (_, i) => base + (i < remainder ? 1 : 0));
+}
+
 export interface RunAgentOptions {
   scenarioId: string;
   namespace: string;
@@ -148,8 +161,23 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
     }
 
     const toolResults: ModelToolResult[] = [];
-    let firstStepOfTurn = true;
     let concluded: Diagnosis | null = null;
+
+    // A turn's usage is spent once to produce all of its tool calls, so split it
+    // across the steps that turn will yield rather than charging the first step
+    // for the whole turn. The steps are the non-submit tool-call blocks up to the
+    // first submit_diagnosis (a submit is terminal intent: any calls after it in
+    // the same response are ignored below, so they yield no steps). The shares sum
+    // to the turn total, keeping the run totals exact.
+    const stepBlocks: typeof toolUses = [];
+    for (const block of toolUses) {
+      if (block.name === SUBMIT_DIAGNOSIS_TOOL) break;
+      stepBlocks.push(block);
+    }
+    const latencyShare = distribute(latencyMs, stepBlocks.length);
+    const tokensInShare = distribute(result.tokensIn, stepBlocks.length);
+    const tokensOutShare = distribute(result.tokensOut, stepBlocks.length);
+    let stepInTurn = 0;
 
     for (const block of toolUses) {
       if (block.name === SUBMIT_DIAGNOSIS_TOOL) {
@@ -233,13 +261,14 @@ export async function runAgent(options: RunAgentOptions): Promise<RunTrace> {
       steps.push({
         index: steps.length,
         toolCall: call,
-        // Attribute this turn's usage to its first investigative step so the
-        // per-step totals sum to the run totals.
-        latencyMs: firstStepOfTurn ? latencyMs : 0,
-        tokensIn: firstStepOfTurn ? result.tokensIn : 0,
-        tokensOut: firstStepOfTurn ? result.tokensOut : 0,
+        // This turn's usage, split evenly across the turn's steps so each real
+        // tool call carries a share and the per-step totals still sum to the run
+        // totals. See distribute().
+        latencyMs: latencyShare[stepInTurn],
+        tokensIn: tokensInShare[stepInTurn],
+        tokensOut: tokensOutShare[stepInTurn],
       });
-      firstStepOfTurn = false;
+      stepInTurn++;
 
       toolResults.push({ toolUseId: block.id, content: output, isError });
     }

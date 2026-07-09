@@ -49,6 +49,68 @@ td {
   vertical-align: top;
 }
 
+.headline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.headline-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.headline-label {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.tier-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.tier-card h3 {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.tier-metrics {
+  margin: 0.75rem 0 0;
+}
+
+.tier-metrics > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tier-metrics dt {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.tier-metrics dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tier-metrics dd.lead {
+  font-weight: 600;
+}
+
 .run {
   border: 1px solid var(--border);
   border-radius: 8px;

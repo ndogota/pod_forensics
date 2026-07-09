@@ -172,10 +172,30 @@ export interface ScenarioScore {
   rootCauseJudgeScore: number; // 0..1 from the LLM-as-judge rubric
 }
 
+// Per-tier rollup of the scenarioScores. Each metric is the mean over that
+// tier's scenarios.
+export interface TierSummary {
+  tier: DifficultyTier;
+  scenarioCount: number;
+  completionRate: number;
+  symptomAccuracy: number;
+  causeAccuracy: number;
+  evidenceRecall: number;
+  rootCauseJudge: number; // mean of ScenarioScore.rootCauseJudgeScore
+}
+
+export interface ByTierSummary {
+  tiers: TierSummary[]; // one per tier present, obvious before misleading
+  // obvious causeAccuracy minus misleading causeAccuracy; null unless both
+  // tiers are present. The eval's headline number.
+  causeAccuracyGap: number | null;
+}
+
 export interface RunReport {
   createdAt: string;
   model: string;
   scenarioScores: ScenarioScore[];
+  byTier: ByTierSummary; // derived from scenarioScores; the tier rollup and gap
   confusionMatrix: Record<string, Record<string, number>>; // keyed on RootCauseClass
   traces: RunTrace[];
 }
@@ -198,6 +218,8 @@ Eight tools, all read only. Equivalents of common kubectl reads.
 ## Scenarios
 
 Ten seeded scenarios. Eight at the obvious tier, one per failure class. Two at the misleading tier, where the obvious surface signal is a symptom of a different root cause. The misleading scenarios are the point of the eval: they measure whether the agent reasons or just pattern matches on a string it sees in a tool output.
+
+(Amendment: scenario 1 below, the seeded crashloopbackoff-bad-command, was reclassified from the obvious tier to the misleading tier. Its container log names a missing --config flag, which is a decoy that steers a diagnosing agent toward MissingConfigOrSecret while the true cause is BadCommand; a real run misclassified the cause on exactly that cue. So the seeded set currently carries three obvious scenarios and one misleading, not the eight-and-two split the full taxonomy below describes.)
 
 Obvious tier, one each:
 
