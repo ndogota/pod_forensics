@@ -12,6 +12,9 @@ methodology, the capture-and-replay seam, and the read-only safety posture, not
 breadth of failure coverage. Production tools already occupy the diagnosis space,
 which is a sign the problem is real, not a reason to present this as a product.
 
+Live dashboard: https://pod-forensics.vercel.app. It is a static read of the
+committed eval artifacts, so it runs no cluster and needs no API key.
+
 ## Capture and replay
 
 One decision drives the whole system: the agent never talks to Kubernetes
