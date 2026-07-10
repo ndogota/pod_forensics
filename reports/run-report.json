@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-07-10T14:38:07.436Z",
+  "createdAt": "2026-07-10T19:42:31.151Z",
   "model": "fake-model",
   "scenarioScores": [
     {
@@ -73,8 +73,7 @@
         "evidenceRecall": 1,
         "rootCauseJudge": 0.75
       }
-    ],
-    "causeAccuracyGap": 0
+    ]
   },
   "confusionMatrix": {
     "BadCommand": {
@@ -115,7 +114,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw"
+              "pod": "checkout-5b676c6c8f-xnzzv"
             }
           },
           "latencyMs": 5,
@@ -140,7 +139,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw",
+              "pod": "checkout-5b676c6c8f-xnzzv",
               "previous": "true"
             }
           },
@@ -167,7 +166,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw"
+              "pod": "checkout-5b676c6c8f-xnzzv"
             },
             "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
@@ -175,7 +174,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw",
+              "pod": "checkout-5b676c6c8f-xnzzv",
               "previous": "true"
             },
             "excerpt": "previous logs show: FATAL: missing required flag --config"
@@ -218,7 +217,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw"
+              "pod": "checkout-5b676c6c8f-xnzzv"
             }
           },
           "latencyMs": 5,
@@ -243,7 +242,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw",
+              "pod": "checkout-5b676c6c8f-xnzzv",
               "previous": "true"
             }
           },
@@ -270,7 +269,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw"
+              "pod": "checkout-5b676c6c8f-xnzzv"
             },
             "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
@@ -278,7 +277,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw",
+              "pod": "checkout-5b676c6c8f-xnzzv",
               "previous": "true"
             },
             "excerpt": "previous logs show: FATAL: missing required flag --config"
@@ -321,7 +320,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw"
+              "pod": "checkout-5b676c6c8f-xnzzv"
             }
           },
           "latencyMs": 5,
@@ -346,7 +345,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw",
+              "pod": "checkout-5b676c6c8f-xnzzv",
               "previous": "true"
             }
           },
@@ -373,7 +372,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw"
+              "pod": "checkout-5b676c6c8f-xnzzv"
             },
             "excerpt": "container checkout is waiting in CrashLoopBackOff, last terminated with a non-zero exit (reason Error)"
           },
@@ -381,7 +380,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "shop",
-              "pod": "checkout-5b676c6c8f-hc7qw",
+              "pod": "checkout-5b676c6c8f-xnzzv",
               "previous": "true"
             },
             "excerpt": "previous logs show: FATAL: missing required flag --config"
@@ -424,7 +423,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "analytics",
-              "pod": "aggregator-65f4dd9986-cg79l"
+              "pod": "aggregator-65f4dd9986-k9pwd"
             }
           },
           "latencyMs": 5,
@@ -462,7 +461,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "analytics",
-              "pod": "aggregator-65f4dd9986-cg79l"
+              "pod": "aggregator-65f4dd9986-k9pwd"
             },
             "excerpt": "pod phase Pending, PodScheduled condition is False, no node assigned"
           },
@@ -504,7 +503,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "analytics",
-              "pod": "aggregator-65f4dd9986-cg79l"
+              "pod": "aggregator-65f4dd9986-k9pwd"
             }
           },
           "latencyMs": 5,
@@ -542,7 +541,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "analytics",
-              "pod": "aggregator-65f4dd9986-cg79l"
+              "pod": "aggregator-65f4dd9986-k9pwd"
             },
             "excerpt": "pod phase Pending, PodScheduled condition is False, no node assigned"
           },
@@ -584,7 +583,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "analytics",
-              "pod": "aggregator-65f4dd9986-cg79l"
+              "pod": "aggregator-65f4dd9986-k9pwd"
             }
           },
           "latencyMs": 5,
@@ -622,7 +621,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "analytics",
-              "pod": "aggregator-65f4dd9986-cg79l"
+              "pod": "aggregator-65f4dd9986-k9pwd"
             },
             "excerpt": "pod phase Pending, PodScheduled condition is False, no node assigned"
           },
@@ -664,7 +663,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "storefront",
-              "pod": "web-6d79859664-bj7gf"
+              "pod": "web-6d79859664-hctck"
             }
           },
           "latencyMs": 5,
@@ -697,13 +696,13 @@
             "args": {
               "namespace": "storefront"
             },
-            "excerpt": "pod web-6d79859664-bj7gf is Running and Ready (1/1)"
+            "excerpt": "pod web-6d79859664-hctck is Running and Ready (1/1)"
           },
           {
             "tool": "describe_pod",
             "args": {
               "namespace": "storefront",
-              "pod": "web-6d79859664-bj7gf"
+              "pod": "web-6d79859664-hctck"
             },
             "excerpt": "pod labels include app=web-backend"
           },
@@ -746,7 +745,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "storefront",
-              "pod": "web-6d79859664-bj7gf"
+              "pod": "web-6d79859664-hctck"
             }
           },
           "latencyMs": 5,
@@ -779,13 +778,13 @@
             "args": {
               "namespace": "storefront"
             },
-            "excerpt": "pod web-6d79859664-bj7gf is Running and Ready (1/1)"
+            "excerpt": "pod web-6d79859664-hctck is Running and Ready (1/1)"
           },
           {
             "tool": "describe_pod",
             "args": {
               "namespace": "storefront",
-              "pod": "web-6d79859664-bj7gf"
+              "pod": "web-6d79859664-hctck"
             },
             "excerpt": "pod labels include app=web-backend"
           },
@@ -828,7 +827,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "storefront",
-              "pod": "web-6d79859664-bj7gf"
+              "pod": "web-6d79859664-hctck"
             }
           },
           "latencyMs": 5,
@@ -861,13 +860,13 @@
             "args": {
               "namespace": "storefront"
             },
-            "excerpt": "pod web-6d79859664-bj7gf is Running and Ready (1/1)"
+            "excerpt": "pod web-6d79859664-hctck is Running and Ready (1/1)"
           },
           {
             "tool": "describe_pod",
             "args": {
               "namespace": "storefront",
-              "pod": "web-6d79859664-bj7gf"
+              "pod": "web-6d79859664-hctck"
             },
             "excerpt": "pod labels include app=web-backend"
           },
@@ -910,7 +909,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg"
+              "pod": "log-shipper-97956dbdb-zjrdr"
             }
           },
           "latencyMs": 5,
@@ -923,7 +922,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg",
+              "pod": "log-shipper-97956dbdb-zjrdr",
               "previous": "false"
             }
           },
@@ -959,13 +958,13 @@
             "args": {
               "namespace": "telemetry"
             },
-            "excerpt": "pod log-shipper-97956dbdb-g72bg is Running (1/1); the container is healthy, not crashing"
+            "excerpt": "pod log-shipper-97956dbdb-zjrdr is Running (1/1); the container is healthy, not crashing"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg",
+              "pod": "log-shipper-97956dbdb-zjrdr",
               "previous": "false"
             },
             "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
@@ -1011,7 +1010,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg"
+              "pod": "log-shipper-97956dbdb-zjrdr"
             }
           },
           "latencyMs": 5,
@@ -1024,7 +1023,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg",
+              "pod": "log-shipper-97956dbdb-zjrdr",
               "previous": "false"
             }
           },
@@ -1060,13 +1059,13 @@
             "args": {
               "namespace": "telemetry"
             },
-            "excerpt": "pod log-shipper-97956dbdb-g72bg is Running (1/1); the container is healthy, not crashing"
+            "excerpt": "pod log-shipper-97956dbdb-zjrdr is Running (1/1); the container is healthy, not crashing"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg",
+              "pod": "log-shipper-97956dbdb-zjrdr",
               "previous": "false"
             },
             "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
@@ -1112,7 +1111,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg"
+              "pod": "log-shipper-97956dbdb-zjrdr"
             }
           },
           "latencyMs": 5,
@@ -1125,7 +1124,7 @@
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg",
+              "pod": "log-shipper-97956dbdb-zjrdr",
               "previous": "false"
             }
           },
@@ -1161,13 +1160,13 @@
             "args": {
               "namespace": "telemetry"
             },
-            "excerpt": "pod log-shipper-97956dbdb-g72bg is Running (1/1); the container is healthy, not crashing"
+            "excerpt": "pod log-shipper-97956dbdb-zjrdr is Running (1/1); the container is healthy, not crashing"
           },
           {
             "tool": "get_logs",
             "args": {
               "namespace": "telemetry",
-              "pod": "log-shipper-97956dbdb-g72bg",
+              "pod": "log-shipper-97956dbdb-zjrdr",
               "previous": "false"
             },
             "excerpt": "container stdout shows a Kubernetes Forbidden error: secrets is forbidden: User \"system:serviceaccount:telemetry:log-shipper\" cannot list resource \"secrets\" in API group \"\" in the namespace \"telemetry\""
@@ -1213,7 +1212,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "cms",
-              "pod": "renderer-88f7579f-vs2sk"
+              "pod": "renderer-88f7579f-rg645"
             }
           },
           "latencyMs": 5,
@@ -1258,7 +1257,7 @@
             "args": {
               "namespace": "cms"
             },
-            "excerpt": "pod renderer-88f7579f-vs2sk is Pending with 0/1 ready, container waiting in ContainerCreating"
+            "excerpt": "pod renderer-88f7579f-rg645 is Pending with 0/1 ready, container waiting in ContainerCreating"
           },
           {
             "tool": "get_events",
@@ -1306,7 +1305,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "cms",
-              "pod": "renderer-88f7579f-vs2sk"
+              "pod": "renderer-88f7579f-rg645"
             }
           },
           "latencyMs": 5,
@@ -1351,7 +1350,7 @@
             "args": {
               "namespace": "cms"
             },
-            "excerpt": "pod renderer-88f7579f-vs2sk is Pending with 0/1 ready, container waiting in ContainerCreating"
+            "excerpt": "pod renderer-88f7579f-rg645 is Pending with 0/1 ready, container waiting in ContainerCreating"
           },
           {
             "tool": "get_events",
@@ -1399,7 +1398,7 @@
             "tool": "describe_pod",
             "args": {
               "namespace": "cms",
-              "pod": "renderer-88f7579f-vs2sk"
+              "pod": "renderer-88f7579f-rg645"
             }
           },
           "latencyMs": 5,
@@ -1444,7 +1443,7 @@
             "args": {
               "namespace": "cms"
             },
-            "excerpt": "pod renderer-88f7579f-vs2sk is Pending with 0/1 ready, container waiting in ContainerCreating"
+            "excerpt": "pod renderer-88f7579f-rg645 is Pending with 0/1 ready, container waiting in ContainerCreating"
           },
           {
             "tool": "get_events",

@@ -193,14 +193,15 @@ function Cell({
   );
 }
 
-// The per-model tier rollup: the obvious/misleading cause accuracy and the gap
-// between them — the eval's headline number. Rendered as a compact strip so it
-// frames the grid without competing with it.
+// The per-model tier rollup: the obvious and misleading cause accuracy side by
+// side. Tier is a descriptive grouping only, so no obvious-minus-misleading gap
+// is shown — measurement found difficulty to be model-dependent, not a property
+// of the tier. Rendered as a compact strip so it frames the grid without
+// competing with it.
 function ModelRollup({ summary }: { summary: ModelSummary }) {
   const byTier = new Map(summary.byTier.tiers.map((t) => [t.tier, t]));
   const obvious = byTier.get("obvious");
   const misleading = byTier.get("misleading");
-  const gap = summary.byTier.causeAccuracyGap;
   return (
     <div className="rollup">
       <div className="rollup-model">{modelLabel(summary.model)}</div>
@@ -217,18 +218,10 @@ function ModelRollup({ summary }: { summary: ModelSummary }) {
             {misleading ? `${pct(misleading.causeAccuracy)}%` : "—"}
           </span>
         </span>
-        <span className="rollup-tier rollup-gap">
-          <span className="rt-label">gap</span>
-          <span className="rt-val">
-            {gap == null ? "n/a" : `${(gap * 100).toFixed(0)} pts`}
-          </span>
-        </span>
       </div>
-      {gap == null && (
-        <div className="rollup-note">
-          the obvious-minus-misleading gap needs both tiers present
-        </div>
-      )}
+      <div className="rollup-note">
+        tier is a descriptive grouping, not a difficulty ranking
+      </div>
     </div>
   );
 }
@@ -366,8 +359,8 @@ function FragmentRow({
           <span className="tier-name">{tier} tier</span>
           <span className="tier-desc">
             {tier === "misleading"
-              ? "the surface signal points at the wrong cause; the trap the eval exists to measure"
-              : "the surface signal names the true cause"}
+              ? "initial grouping: the symptom can diverge from the cause class"
+              : "initial grouping: the symptom and cause class were assumed to align"}
           </span>
         </div>
       )}

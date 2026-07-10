@@ -151,16 +151,17 @@ export function Runs({
   return (
     <section className="runs-section" aria-label="reference run transcripts">
       <div className="runs-head">
-        <div className="eyebrow">reference transcripts</div>
+        <div className="eyebrow">reference transcripts · illustrative</div>
         <h2 className="runs-title">One run, end to end</h2>
         <p className="runs-lede">
-          A single representative run per scenario from the committed
-          deterministic reference report (<code>{report.model}</code>,{" "}
-          {report.traces.length} traces total). The matrix above is the
-          aggregate; these show the tool-call sequence and the structured
-          diagnosis for one concrete run, so the loop is legible rather than
-          summarized. This is the single-model view; per-model matrix traces are
-          not embedded in the matrix artifact.
+          The matrix above is the real-model measurement — every model against
+          every scenario, aggregated over N runs with confidence intervals. These
+          transcripts are illustrative single runs, not measurement: one
+          representative run per scenario from the committed deterministic
+          reference report (<code>{report.model}</code>, {report.traces.length}{" "}
+          traces total), shown so the tool-call sequence and the structured
+          diagnosis are legible rather than summarized. Per-model matrix traces
+          are not embedded in the matrix artifact.
         </p>
       </div>
 

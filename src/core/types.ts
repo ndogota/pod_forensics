@@ -75,6 +75,10 @@ export interface GroundTruth {
   expectedEvidence: string[];   // signals the diagnosis should cite
 }
 
+// A descriptive grouping label for scenarios, not a difficulty ranking.
+// Scenarios were initially grouped by assumed difficulty (obvious vs
+// misleading), but measurement showed difficulty is model-dependent, so the
+// grouping is descriptive only.
 export type DifficultyTier = "obvious" | "misleading";
 
 export interface Scenario {
@@ -156,23 +160,20 @@ export interface TierSummary {
   rootCauseJudge: number;      // mean of ScenarioScore.rootCauseJudgeScore
 }
 
-// The tier breakdown for a run. The gap between the obvious and misleading tiers'
-// cause accuracy is the eval's headline number: it measures whether the agent
-// reasons about the cause or pattern-matches a surface signal.
+// The tier breakdown for a run: per-tier means over the scenarios in each tier.
+// Tier is a descriptive grouping only. No obvious-minus-misleading cause-accuracy
+// gap is computed: measurement showed difficulty is model-dependent, not a
+// property of the tier, so such a gap would be misleading.
 export interface ByTierSummary {
   tiers: TierSummary[];        // one per tier present, obvious before misleading
-  // obvious causeAccuracy minus misleading causeAccuracy. Null unless both tiers
-  // are present, since the gap is undefined with only one.
-  causeAccuracyGap: number | null;
 }
 
 export interface RunReport {
   createdAt: string;
   model: string;
   scenarioScores: ScenarioScore[];
-  // Per-tier rollup of the scenarioScores, plus the headline obvious-vs-misleading
-  // cause-accuracy gap. Derived from scenarioScores, kept on the report so the
-  // static dashboard needs no recomputation.
+  // Per-tier rollup of the scenarioScores. Derived from scenarioScores, kept on
+  // the report so the static dashboard needs no recomputation.
   byTier: ByTierSummary;
   // Keyed on RootCauseClass (actual -> predicted -> count): the cause is the
   // interesting axis, where an agent that pattern-matches a surface symptom goes

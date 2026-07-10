@@ -55,7 +55,6 @@ export interface ModelSummary {
   model: string;
   byTier: {
     tiers: TierRollup[];
-    causeAccuracyGap: number | null;
   };
   tierIntervals: TierIntervals[];
   cost: {
@@ -95,7 +94,8 @@ export interface ScenarioMeta {
 
 // --- display helpers --------------------------------------------------------
 
-// Tier display order: obvious cases first, then the misleading traps.
+// Tier display order. Tier is a descriptive grouping label, not a difficulty
+// ranking; this only fixes a stable, consistent row order.
 const TIER_ORDER: Record<string, number> = { obvious: 0, misleading: 1 };
 
 export function tierRank(tier: string): number {

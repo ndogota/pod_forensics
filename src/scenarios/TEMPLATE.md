@@ -44,6 +44,14 @@ Five scenarios are seeded: four at the obvious tier and one at the misleading
 tier. Each is labelled with a symptom and a root-cause class (symptom /
 rootCauseClass):
 
+Note on the tier labels: scenarios were initially grouped by assumed difficulty
+(obvious vs misleading), but measurement showed difficulty is model-dependent, so
+the grouping is descriptive only. The tier is a neutral grouping label, not a
+difficulty ranking, and no obvious-minus-misleading accuracy gap is computed. In
+the committed matrix the one genuinely hard case sits in the obvious tier
+(crashloop, where cause accuracy scales Haiku 0.40, Sonnet 0.60, Opus 0.90),
+while the misleading-tier scenario is at or near 1.00 for every model.
+
 Obvious tier:
 
 - CrashLoopBackOff / BadCommand — a bad container command that exits non-zero.

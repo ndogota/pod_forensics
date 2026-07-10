@@ -462,8 +462,7 @@
             "evidenceRecall": 0.7666666666666667,
             "rootCauseJudge": 0.9399999999999998
           }
-        ],
-        "causeAccuracyGap": -0.15000000000000002
+        ]
       },
       "tierIntervals": [
         {
@@ -545,8 +544,7 @@
             "evidenceRecall": 1,
             "rootCauseJudge": 0.95
           }
-        ],
-        "causeAccuracyGap": -0.09999999999999998
+        ]
       },
       "tierIntervals": [
         {
@@ -628,8 +626,7 @@
             "evidenceRecall": 0.9666666666666666,
             "rootCauseJudge": 0.953
           }
-        ],
-        "causeAccuracyGap": -0.025000000000000022
+        ]
       },
       "tierIntervals": [
         {

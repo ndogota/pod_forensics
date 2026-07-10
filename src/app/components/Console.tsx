@@ -1,10 +1,15 @@
 "use client";
 
 import type { RunReport } from "../../core/types";
-import type { MatrixArtifact, ScenarioMeta } from "../lib/matrix";
-import { modelLabel } from "../lib/matrix";
+import type { MatrixArtifact, MatrixCell, ScenarioMeta } from "../lib/matrix";
+import { accBand, modelLabel, pct } from "../lib/matrix";
 import { Matrix } from "./Matrix";
 import { Runs } from "./Runs";
+
+// The one genuinely hard scenario: where the surface log names a missing
+// --config flag but the true cause is a bad command. This is the case the
+// headline finding is built on.
+const HARD_SCENARIO = "crashloopbackoff-bad-command";
 
 // Format an ISO timestamp as a compact UTC stamp, e.g. "2026-07-10 15:44 UTC".
 // Kept deterministic (no locale) so the static build renders identically
@@ -103,6 +108,82 @@ function Header({ matrix }: { matrix: MatrixArtifact }) {
   );
 }
 
+// The headline finding, above the matrix. Read straight from the committed
+// cells so the numbers shown are the measurement itself, not a restatement of
+// it: cause-identification accuracy on the one hard case, per model, with the
+// Wilson interval each carries; the note that the other scenarios are saturated;
+// and an honest surfacing of the single failed Opus run.
+function Finding({ matrix }: { matrix: MatrixArtifact }) {
+  // Per-model cause accuracy on the hard case, in the artifact's model order.
+  const hard: MatrixCell[] = matrix.metadata.models
+    .map((m) =>
+      matrix.cells.find(
+        (c) => c.model === m && c.scenarioId === HARD_SCENARIO,
+      ),
+    )
+    .filter((c): c is MatrixCell => !!c);
+  if (hard.length === 0) return null;
+
+  // A completion rate below 1 means at least one attempted run produced no valid
+  // diagnosis. On this case that is the one Opus run the correction loop rejected.
+  const failed = hard.find((c) => c.completionRate < 1);
+
+  return (
+    <section className="finding" aria-label="headline finding">
+      <div className="eyebrow">headline finding</div>
+      <h2 className="finding-title">
+        Model scale moves the needle on exactly one case
+      </h2>
+      <p className="finding-lede">
+        On the one genuinely hard scenario — <code>{HARD_SCENARIO}</code>, where
+        an application log names a missing <code>--config</code> flag while the
+        true cause is a bad container command — cause-identification accuracy
+        scales with model size. The other four scenarios sit at or near 100% for
+        every model, so this is the one place where model scale matters.
+      </p>
+
+      <div className="finding-scale" role="list">
+        {hard.map((c) => (
+          <div key={c.model} className="fs-cell" role="listitem">
+            <span className="fs-model">{modelLabel(c.model)}</span>
+            <span className={`fs-val band-${accBand(c.causeAccuracy)}`}>
+              {pct(c.causeAccuracy)}
+              <span className="metric-unit">%</span>
+            </span>
+            <span className="fs-ci">
+              95% CI [{pct(c.causeAccuracyCI.lower)},{" "}
+              {pct(c.causeAccuracyCI.upper)}]
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="finding-frame">
+        The harness localizes exactly where model scale matters and where it does
+        not: four scenarios are saturated for all three models, and only the hard
+        case separates them.
+      </p>
+
+      {failed && (
+        <p className="finding-note">
+          One {modelLabel(failed.model)} run on this case failed to produce a
+          valid diagnosis (completion rate {pct(failed.completionRate)}%): the
+          model leaked tool-call syntax into a diagnosis field value, and the
+          validation-and-correction loop rejected the submit. It is counted as a
+          failed run, never silently dropped — the completionRate metric and the
+          correction loop are doing exactly their job.
+        </p>
+      )}
+
+      <p className="finding-honest">
+        Scenarios were initially grouped by assumed difficulty (obvious vs
+        misleading), but measurement showed difficulty is model-dependent, so the
+        grouping is descriptive only.
+      </p>
+    </section>
+  );
+}
+
 // Shown when the artifact is absent or empty. The build must reach this cleanly,
 // never crash, so a fresh clone with no reference run still deploys.
 function Placeholder({ report }: { report: RunReport | null }) {
@@ -154,6 +235,7 @@ export function Console({
         {matrix ? (
           <>
             <Header matrix={matrix} />
+            <Finding matrix={matrix} />
             <Matrix matrix={matrix} scenarioById={scenarioById} />
           </>
         ) : (

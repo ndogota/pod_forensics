@@ -195,11 +195,10 @@ export async function scoreScenario(
   };
 }
 
-// Roll up per-scenario scores into per-tier means and the headline cause-accuracy
-// gap. The gap is the eval's most interesting number: obvious-tier cause accuracy
-// minus misleading-tier cause accuracy, which isolates whether the agent reasons
-// about the cause or pattern-matches a surface signal. It is null unless both
-// tiers are present, since the difference is undefined with only one.
+// Roll up per-scenario scores into per-tier means. Tier is a descriptive
+// grouping only: no obvious-minus-misleading cause-accuracy gap is computed,
+// because measurement showed difficulty is model-dependent rather than a
+// property of the tier, so that gap would be misleading.
 export function summarizeByTier(scores: ScenarioScore[]): ByTierSummary {
   // Group by tier, preserving a stable obvious-before-misleading order for
   // display regardless of scenario ordering.
@@ -226,12 +225,5 @@ export function summarizeByTier(scores: ScenarioScore[]): ByTierSummary {
     });
   }
 
-  const obvious = tiers.find((t) => t.tier === "obvious");
-  const misleading = tiers.find((t) => t.tier === "misleading");
-  const causeAccuracyGap =
-    obvious && misleading
-      ? obvious.causeAccuracy - misleading.causeAccuracy
-      : null;
-
-  return { tiers, causeAccuracyGap };
+  return { tiers };
 }

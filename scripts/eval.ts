@@ -180,7 +180,7 @@ async function main(): Promise<void> {
     scenarioScores: [],
     // Filled in after every scenario is scored, once the full set of
     // scenarioScores is known (see summarizeByTier below).
-    byTier: { tiers: [], causeAccuracyGap: null },
+    byTier: { tiers: [] },
     confusionMatrix: {},
     traces: [],
   };
@@ -222,8 +222,8 @@ async function main(): Promise<void> {
     mergeConfusion(combined.confusionMatrix, report.confusionMatrix);
   }
 
-  // Roll the full set of per-scenario scores up into the per-tier summary and the
-  // headline cause-accuracy gap, now that every scenario has been scored.
+  // Roll the full set of per-scenario scores up into the per-tier summary, now
+  // that every scenario has been scored.
   combined.byTier = summarizeByTier(combined.scenarioScores);
 
   const outDir = path.resolve(process.cwd(), "reports");
@@ -255,11 +255,6 @@ async function main(): Promise<void> {
         `rootCauseJudge ${tier.rootCauseJudge.toFixed(2)}`,
     );
   }
-  const gap = combined.byTier.causeAccuracyGap;
-  console.log(
-    `  causeAccuracyGap (obvious - misleading): ` +
-      `${gap === null ? "n/a (both tiers not present)" : gap.toFixed(2)}`,
-  );
 
   printCostSummary(combined, combinedFailedRuns);
 }

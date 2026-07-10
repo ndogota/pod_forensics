@@ -186,9 +186,12 @@ export interface TierSummary {
 
 export interface ByTierSummary {
   tiers: TierSummary[]; // one per tier present, obvious before misleading
-  // obvious causeAccuracy minus misleading causeAccuracy; null unless both
-  // tiers are present. The eval's headline number.
-  causeAccuracyGap: number | null;
+  // (Amendment: an obvious-minus-misleading causeAccuracyGap field was removed.
+  // The reference matrix showed the gap is negative for every model because the
+  // one genuinely hard case (crashloop) sits in the obvious tier while the
+  // misleading scenario is trivial, so difficulty is model-dependent rather than
+  // a property of the tier. The gap is no longer computed or displayed; tier is a
+  // descriptive grouping only.)
 }
 
 export interface RunReport {
@@ -272,7 +275,7 @@ A good evaluator will see these, so the README names them first.
 
 - LLM non-determinism means evals are run N times and reported as a success rate, never a single pass or fail.
 - The taxonomy is finite and clean. Real incidents are messier, multi-cause, and ambiguous. This is a controlled demonstration, not a production tool.
-- An agent can cheat by reading a literal failure string from a tool output. The misleading-tier scenarios exist to measure exactly that, and the gap between obvious-tier and misleading-tier accuracy is the most interesting number the eval produces.
+- An agent can cheat by reading a literal failure string from a tool output. The misleading-tier scenarios were designed to measure exactly that. (Amendment: an obvious-minus-misleading accuracy gap was once framed as the eval's headline number, but the reference matrix retired it: the gap is negative for every model because the one genuinely hard case is a crashloop in the obvious tier where a decoy log line names a missing --config flag, while the misleading scenario is at or near 1.00 for all models. Difficulty proved model-dependent, so tier is now a descriptive grouping only and no gap is computed. The finding that survives is a per-cell model-scaling effect: on that crashloop case, cause accuracy scales Haiku 0.40, Sonnet 0.60, Opus 0.90.)
 
 ## README narrative guidance
 

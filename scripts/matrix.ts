@@ -122,7 +122,7 @@ interface ModelCost {
 
 interface ModelSummary {
   model: string;
-  byTier: ByTierSummary; // per-model tier aggregates and the cause-accuracy gap (point estimates)
+  byTier: ByTierSummary; // per-model tier aggregates (point estimates)
   tierIntervals: TierIntervals[]; // per-tier uncertainty, obvious before misleading
   cost: ModelCost;
 }
@@ -458,11 +458,6 @@ async function main(): Promise<void> {
           `rootCauseJudge ${tier.rootCauseJudge.toFixed(2)} +/- ${(ci?.rootCauseJudge.stdDev ?? 0).toFixed(2)}`,
       );
     }
-    const gap = m.byTier.causeAccuracyGap;
-    console.log(
-      `  ${m.model} causeAccuracyGap (obvious - misleading): ` +
-        `${gap === null ? "n/a (both tiers not present)" : gap.toFixed(2)}`,
-    );
   }
 
   console.log(
