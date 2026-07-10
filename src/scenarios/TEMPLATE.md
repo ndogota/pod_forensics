@@ -40,18 +40,33 @@ A scenario is data. To add one:
 
 ## Seeded so far
 
-Four obvious-tier scenarios are seeded. Each is labelled with a symptom and a
-root-cause class (symptom / rootCauseClass):
+Five scenarios are seeded: four at the obvious tier and one at the misleading
+tier. Each is labelled with a symptom and a root-cause class (symptom /
+rootCauseClass):
+
+Obvious tier:
 
 - CrashLoopBackOff / BadCommand — a bad container command that exits non-zero.
-  The container's log mentions a missing --config flag, which is a misleading
-  signal; the cause is still the bad command, not a missing config.
+  The container's log mentions a missing --config flag, which looks like a decoy
+  toward MissingConfigOrSecret, but an 8-run measurement showed the agent scores
+  causeAccuracy 1.00 here: it reasons past the log string, so this is an honest
+  obvious case, not a trap.
 - Pending / InsufficientResources — a memory request no node can satisfy
 - ServiceNoEndpoints / SelectorLabelMismatch — a selector that does not match
   pod labels
 - RunningDegraded / RbacDenied — a ServiceAccount bound to no Role (checked with
   a SubjectAccessReview against the workload identity); the pod runs but is
   degraded because its API calls are forbidden
+
+Misleading tier:
+
+- Pending / MissingConfigOrSecret (configmap-volume-missing) — a pod mounts a
+  ConfigMap as a volume where the referenced ConfigMap does not exist, so the pod
+  is stuck in ContainerCreating (phase Pending) with a FailedMount event. The
+  not-running symptom reads like a generic scheduling or startup fault; the
+  discriminating move is to read the FailedMount event that names the ConfigMap
+  and probe get_configmap to see it absent, which pins the cause to
+  MissingConfigOrSecret.
 
 Each has a directory (manifests, groundtruth, captureSet+captureSpec), an entry
 in `index.ts`, a `CaptureSpec` in `captureRegistry.ts`, and a FakeModelClient
@@ -66,11 +81,15 @@ obvious surface signal is a symptom of a different root cause.
 - ImagePullBackOff from a wrong image tag (obvious)
 - OOMKilled from a memory limit set too low (obvious)
 - ProbeMisconfigured from a readiness probe on the wrong port (obvious)
-- MissingConfigOrSecret from a volume referencing a missing ConfigMap (obvious)
-- CrashLoopBackOff whose true cause is a missing ConfigMap at startup, class
-  MissingConfigOrSecret (misleading)
 - ServiceNoEndpoints whose true cause is that the backing pods are all
   unschedulable, class PodUnschedulable (misleading)
+
+The "volume referencing a missing ConfigMap" mechanism is already seeded, but at
+the misleading tier (configmap-volume-missing above) rather than the obvious
+tier the original taxonomy slotted it in: the not-running symptom is a genuine
+trap. A separate obvious MissingConfigOrSecret scenario, if wanted, should use a
+distinct mechanism (for example an envFrom configMapRef) so it does not duplicate
+this one.
 
 Each will also need a `CaptureSpec`, a FakeModelClient script (or a switch to
 AnthropicModelClient), and the two misleading-tier entries carry `tier:

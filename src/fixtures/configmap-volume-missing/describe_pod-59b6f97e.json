@@ -1,0 +1,68 @@
+{
+  "capturedAt": "2026-07-10T12:10:24.039Z",
+  "output": {
+    "namespace": "cms",
+    "name": "renderer-88f7579f-86qjz",
+    "phase": "Pending",
+    "node": "pod-forensics-control-plane",
+    "labels": {
+      "app": "renderer",
+      "pod-template-hash": "88f7579f"
+    },
+    "containers": [
+      {
+        "name": "renderer",
+        "ready": false,
+        "restartCount": 0,
+        "state": "waiting",
+        "reason": "ContainerCreating"
+      }
+    ],
+    "conditions": [
+      {
+        "type": "PodReadyToStartContainers",
+        "status": "False"
+      },
+      {
+        "type": "Initialized",
+        "status": "True"
+      },
+      {
+        "type": "Ready",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [renderer]"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "False",
+        "reason": "ContainersNotReady",
+        "message": "containers with unready status: [renderer]"
+      },
+      {
+        "type": "PodScheduled",
+        "status": "True"
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "Scheduled",
+        "message": "Successfully assigned cms/renderer-88f7579f-86qjz to pod-forensics-control-plane",
+        "count": 1,
+        "firstSeen": "2026-07-10T12:10:07.000Z",
+        "lastSeen": "2026-07-10T12:10:07.000Z",
+        "involvedObject": "Pod/renderer-88f7579f-86qjz"
+      },
+      {
+        "type": "Warning",
+        "reason": "FailedMount",
+        "message": "MountVolume.SetUp failed for volume \"config\" : configmap \"renderer-config\" not found",
+        "count": 6,
+        "firstSeen": "2026-07-10T12:10:07.000Z",
+        "lastSeen": "2026-07-10T12:10:23.000Z",
+        "involvedObject": "Pod/renderer-88f7579f-86qjz"
+      }
+    ]
+  }
+}

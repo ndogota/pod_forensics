@@ -9,6 +9,7 @@ import crashloopGroundTruth from "./crashloopbackoff-bad-command/groundtruth.jso
 import unschedulableGroundTruth from "./pod-unschedulable/groundtruth.json";
 import serviceNoEndpointsGroundTruth from "./service-no-endpoints/groundtruth.json";
 import rbacDeniedGroundTruth from "./rbac-denied/groundtruth.json";
+import configmapVolumeMissingGroundTruth from "./configmap-volume-missing/groundtruth.json";
 
 export const SCENARIOS: Scenario[] = [
   {
@@ -19,18 +20,15 @@ export const SCENARIOS: Scenario[] = [
     target: { kind: "Deployment", name: "checkout" },
     manifestsPath: "src/scenarios/crashloopbackoff-bad-command/manifests.yaml",
     groundTruth: crashloopGroundTruth as GroundTruth,
-    // Misleading tier. The container's log line names a missing "--config" flag,
-    // which is a decoy: it steers a diagnosing agent toward rootCauseClass
-    // MissingConfigOrSecret, yet the true cause is BadCommand. The start command
-    // exits non-zero on its own; no ConfigMap or Secret is actually absent, so
-    // creating one would not fix the crash. A run that grep-matches the "--config"
-    // string in the log lands on the wrong cause; only a run that reasons past the
-    // surface signal (the command itself is bad, not its configuration) gets it
-    // right. That gap between pattern-matching and reasoning is exactly what the
-    // misleading tier measures, so this scenario belongs there rather than in the
-    // obvious tier. A real agent run misclassified the cause on precisely this
-    // cue. See groundtruth.json, which records the same decoy in its rootCause.
-    tier: "misleading",
+    // Obvious tier. The container's log line names a missing "--config" flag,
+    // which reads like a decoy toward rootCauseClass MissingConfigOrSecret even
+    // though the true cause is BadCommand. It was briefly classed misleading on
+    // that theory, but an 8-run measurement showed the agent reliably identifies
+    // BadCommand here (causeAccuracy 1.00 over 8 runs): it reasons past the log
+    // string rather than grep-matching it. So this is an honest obvious case, not
+    // a trap. See groundtruth.json, which still records the "--config" line as the
+    // present-but-non-decisive signal it is.
+    tier: "obvious",
   },
   {
     id: "pod-unschedulable",
@@ -61,6 +59,27 @@ export const SCENARIOS: Scenario[] = [
     manifestsPath: "src/scenarios/rbac-denied/manifests.yaml",
     groundTruth: rbacDeniedGroundTruth as GroundTruth,
     tier: "obvious",
+  },
+  {
+    id: "configmap-volume-missing",
+    description:
+      "A Deployment whose pod mounts a ConfigMap as a volume where the referenced ConfigMap does not exist, so the pod cannot start and sits in ContainerCreating (phase Pending).",
+    namespace: "cms",
+    target: { kind: "Deployment", name: "renderer" },
+    manifestsPath: "src/scenarios/configmap-volume-missing/manifests.yaml",
+    groundTruth: configmapVolumeMissingGroundTruth as GroundTruth,
+    // Misleading tier. The surface signal is "the pod will not start": phase
+    // Pending, container waiting in ContainerCreating, no logs. A shallow agent
+    // may read that as a generic scheduling or startup fault and stop there,
+    // landing on the wrong cause the way the Pending unschedulable scenario looks.
+    // The true cause is a missing ConfigMap: the renderer-config object the volume
+    // references does not exist. The discriminating move is to read the
+    // FailedMount event that names renderer-config and then probe get_configmap
+    // for it and see it absent, which pins the cause to MissingConfigOrSecret. The
+    // container image and command are healthy, so nothing in the workload itself
+    // is at fault. That gap between reading the not-running symptom and reasoning
+    // to the absent object is what the misleading tier measures.
+    tier: "misleading",
   },
 ];
 

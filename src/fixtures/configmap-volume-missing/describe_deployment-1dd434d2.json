@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-07-10T12:10:24.089Z",
+  "output": {
+    "namespace": "cms",
+    "name": "renderer",
+    "desiredReplicas": 1,
+    "availableReplicas": 0,
+    "selector": {
+      "app": "renderer"
+    },
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "False",
+        "reason": "MinimumReplicasUnavailable",
+        "message": "Deployment does not have minimum availability."
+      },
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "ReplicaSetUpdated",
+        "message": "ReplicaSet \"renderer-88f7579f\" is progressing."
+      }
+    ],
+    "events": [
+      {
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled up replica set renderer-88f7579f from 0 to 1",
+        "count": 1,
+        "firstSeen": "2026-07-10T12:10:07.000Z",
+        "lastSeen": "2026-07-10T12:10:07.000Z",
+        "involvedObject": "Deployment/renderer"
+      }
+    ]
+  }
+}

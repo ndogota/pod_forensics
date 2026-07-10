@@ -1,0 +1,59 @@
+# configmap-volume-missing
+#
+# A Deployment whose pod mounts a ConfigMap as a volume, where the referenced
+# ConfigMap does not exist in the namespace. The container itself is fine: it is
+# a plain busybox running a long-lived sleep, so nothing about the command or the
+# image is at fault. The pod still cannot start, because the kubelet cannot
+# populate the volume from a ConfigMap that is absent, so the pod sits in
+# ContainerCreating (phase Pending) and the kubelet emits a FailedMount event
+# naming the missing ConfigMap.
+#
+# This is the misleading-tier scenario. The surface signal is "the pod will not
+# start" (phase Pending, ContainerCreating), which a shallow agent may read as a
+# generic scheduling or startup problem in the same bucket as an unschedulable
+# pod. The true cause is a missing ConfigMap, and the discriminating move is to
+# read the FailedMount event that names renderer-config and then probe
+# get_configmap for it and see it absent. The container being healthy is the
+# whole point: the fault is entirely in the missing configuration object, not in
+# the workload.
+#
+# This manifest is data for the capture step. It is never applied by the agent or
+# the eval, which are read only. Note there is deliberately no ConfigMap object
+# here: its absence is the failure under test.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: renderer
+  namespace: cms
+  labels:
+    app: renderer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: renderer
+  template:
+    metadata:
+      labels:
+        app: renderer
+    spec:
+      containers:
+        - name: renderer
+          # A small, always-pullable image. The container is intentionally
+          # healthy: a long-lived sleep that would run indefinitely if it ever
+          # started. The failure under test is the missing ConfigMap volume, not
+          # the image or the command.
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - "sleep 3600"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/renderer
+      volumes:
+        # References a ConfigMap that does not exist in the namespace. Optional is
+        # left at its default (false), so the kubelet blocks container creation on
+        # the missing object rather than starting without it.
+        - name: config
+          configMap:
+            name: renderer-config

@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-07-10T12:10:24.101Z",
+  "output": {
+    "namespace": "cms",
+    "name": "renderer-config",
+    "exists": false,
+    "data": {}
+  }
+}

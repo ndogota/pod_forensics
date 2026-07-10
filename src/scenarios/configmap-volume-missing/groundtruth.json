@@ -1,0 +1,10 @@
+{
+  "symptom": "Pending",
+  "rootCauseClass": "MissingConfigOrSecret",
+  "rootCause": "The renderer pod mounts a ConfigMap named renderer-config as a volume, but no such ConfigMap exists in the cms namespace. The kubelet cannot populate the volume from an absent object, so it never creates the container: the pod stays in ContainerCreating with phase Pending and the kubelet repeatedly emits a FailedMount event naming the missing ConfigMap. The container image and command are healthy and would run a long-lived process if the volume could be mounted, so nothing about the workload itself is at fault. The fix is to create the renderer-config ConfigMap (or correct the volume reference), not to touch the container.",
+  "expectedEvidence": [
+    "FailedMount",
+    "MountVolume.SetUp failed",
+    "configmap \"renderer-config\" not found"
+  ]
+}

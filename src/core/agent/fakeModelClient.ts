@@ -336,6 +336,59 @@ export function buildRbacDeniedScript(scenario: Scenario): CompletionResult[] {
   ];
 }
 
+// A plausible investigation for configmap-volume-missing, the misleading-tier
+// scenario: list pods (renderer is Pending, container stuck ContainerCreating),
+// describe the pod, read events (the kubelet's FailedMount naming the missing
+// ConfigMap), then make the discriminating move of probing get_configmap for the
+// named ConfigMap and seeing it absent, and diagnose MissingConfigOrSecret. The
+// pod never starts a container, so this path reads no logs, matching the surface.
+// Cited excerpts carry the "FailedMount", "MountVolume.SetUp failed", and
+// `configmap "renderer-config" not found` markers, all present in the committed
+// events fixture, plus the get_configmap not-found that pins the cause. The
+// Pending pod name is resolved from the committed get_pods fixture, never
+// hardcoded.
+export function buildConfigmapVolumeMissingScript(
+  scenario: Scenario,
+): CompletionResult[] {
+  const namespace = scenario.namespace;
+  const pod = resolvePodName(scenario);
+  const configmap = "renderer-config";
+  return [
+    step("call-0", "get_pods", { namespace }),
+    step("call-1", "describe_pod", { namespace, pod }),
+    step("call-2", "get_events", { namespace }),
+    step("call-3", "get_configmap", { namespace, name: configmap }),
+    submitStep("call-4", {
+      symptom: "Pending",
+      rootCauseClass: "MissingConfigOrSecret",
+      rootCause:
+        "The renderer pod mounts a ConfigMap named renderer-config as a volume, but that ConfigMap does not exist in the cms namespace. The kubelet cannot populate the volume from an absent object, so it never creates the container: the pod stays in ContainerCreating with phase Pending and repeatedly emits a FailedMount event naming the missing ConfigMap. The container image and command are healthy; the fault is the missing configuration object, so the fix is to create renderer-config, not to touch the workload.",
+      evidence: [
+        {
+          tool: "get_pods",
+          args: { namespace },
+          excerpt: `pod ${pod} is Pending with 0/1 ready, container waiting in ContainerCreating`,
+        },
+        {
+          tool: "get_events",
+          args: { namespace },
+          excerpt:
+            'Warning FailedMount: MountVolume.SetUp failed for volume "config" : configmap "renderer-config" not found',
+        },
+        {
+          tool: "get_configmap",
+          args: { namespace, name: configmap },
+          excerpt:
+            "get_configmap renderer-config reports exists: false, confirming the ConfigMap the volume references is absent",
+        },
+      ],
+      suggestedFix:
+        "Create the renderer-config ConfigMap in the cms namespace (or correct the volume's configMap reference to an existing one), then let the pod recreate so the volume can be populated and the container can start. This is advice only; the tool applies nothing.",
+      confidence: 0.9,
+    }),
+  ];
+}
+
 // A variant of the crashloop script that exercises the self-correction path.
 // The first submit_diagnosis omits confidence and suggestedFix, so it fails the
 // Diagnosis schema. The loop returns the validation issues, and the next turn

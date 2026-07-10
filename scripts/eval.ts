@@ -30,6 +30,7 @@ import {
   buildUnschedulableScript,
   buildServiceNoEndpointsScript,
   buildRbacDeniedScript,
+  buildConfigmapVolumeMissingScript,
 } from "../src/core/agent/fakeModelClient";
 import type { CompletionResult } from "../src/core/agent/modelClient";
 import { submitDiagnosisDefinition } from "../src/core/agent/diagnosisSchema";
@@ -53,6 +54,7 @@ const FAKE_SCRIPTS: Record<string, (scenario: Scenario) => CompletionResult[]> =
   "pod-unschedulable": buildUnschedulableScript,
   "service-no-endpoints": buildServiceNoEndpointsScript,
   "rbac-denied": buildRbacDeniedScript,
+  "configmap-volume-missing": buildConfigmapVolumeMissingScript,
 };
 
 // The judge always runs on the cheapest model, independent of the agent model.

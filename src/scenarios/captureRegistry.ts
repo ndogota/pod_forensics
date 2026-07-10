@@ -9,6 +9,7 @@ import { captureSpec as crashloopSpec } from "./crashloopbackoff-bad-command/cap
 import { captureSpec as unschedulableSpec } from "./pod-unschedulable/captureSet";
 import { captureSpec as serviceNoEndpointsSpec } from "./service-no-endpoints/captureSet";
 import { captureSpec as rbacDeniedSpec } from "./rbac-denied/captureSet";
+import { captureSpec as configmapVolumeMissingSpec } from "./configmap-volume-missing/captureSet";
 import type { CaptureSpec } from "./captureSpec";
 
 export const CAPTURE_SPECS: Record<string, CaptureSpec> = {
@@ -16,6 +17,7 @@ export const CAPTURE_SPECS: Record<string, CaptureSpec> = {
   "pod-unschedulable": unschedulableSpec,
   "service-no-endpoints": serviceNoEndpointsSpec,
   "rbac-denied": rbacDeniedSpec,
+  "configmap-volume-missing": configmapVolumeMissingSpec,
 };
 
 // TODO: remaining scenarios to add a CaptureSpec for as they are seeded: the

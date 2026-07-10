@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-07-10T12:10:24.011Z",
+  "output": {
+    "namespace": "cms",
+    "pods": [
+      {
+        "name": "renderer-88f7579f-86qjz",
+        "phase": "Pending",
+        "ready": "0/1",
+        "restarts": 0,
+        "age": "17s",
+        "node": "pod-forensics-control-plane",
+        "containerStatuses": [
+          {
+            "name": "renderer",
+            "ready": false,
+            "restartCount": 0,
+            "state": "waiting",
+            "reason": "ContainerCreating"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-10T12:10:24.066Z",
+  "output": {
+    "apiError": {
+      "code": 400,
+      "reason": "",
+      "message": "HTTP-Code: 400\nMessage: Unknown API Status Code!\nBody: \"{\\\"kind\\\":\\\"Status\\\",\\\"apiVersion\\\":\\\"v1\\\",\\\"metadata\\\":{},\\\"status\\\":\\\"Failure\\\",\\\"message\\\":\\\"container \\\\\\\"renderer\\\\\\\" in pod \\\\\\\"renderer-88f7579f-86qjz\\\\\\\" is waiting to start: ContainerCreating\\\",\\\"reason\\\":\\\"BadRequest\\\",\\\"code\\\":400}\\n\"\nHeaders: {\"audit-id\":\"666090e9-b5a2-4b40-bc27-d201d81ce6ae\",\"cache-control\":\"no-cache, private\",\"connection\":\"close\",\"content-length\":\"211\",\"content-type\":\"application/json\",\"date\":\"Fri, 10 Jul 2026 12:10:24 GMT\"}"
+    }
+  }
+}

@@ -219,7 +219,7 @@ Eight tools, all read only. Equivalents of common kubectl reads.
 
 Ten seeded scenarios. Eight at the obvious tier, one per failure class. Two at the misleading tier, where the obvious surface signal is a symptom of a different root cause. The misleading scenarios are the point of the eval: they measure whether the agent reasons or just pattern matches on a string it sees in a tool output.
 
-(Amendment: scenario 1 below, the seeded crashloopbackoff-bad-command, was reclassified from the obvious tier to the misleading tier. Its container log names a missing --config flag, which is a decoy that steers a diagnosing agent toward MissingConfigOrSecret while the true cause is BadCommand; a real run misclassified the cause on exactly that cue. So the seeded set currently carries three obvious scenarios and one misleading, not the eight-and-two split the full taxonomy below describes.)
+(Amendment: scenario 1 below, the seeded crashloopbackoff-bad-command, was briefly reclassified to the misleading tier on the theory that its "missing --config" log line is a decoy toward MissingConfigOrSecret while the true cause is BadCommand. An 8-run measurement retired that theory: the agent scores causeAccuracy 1.00 on it, so it reasons past the log string rather than grep-matching it. It is an honest obvious case and has been returned to the obvious tier. The genuine trap that replaced it is scenario configmap-volume-missing (see below): a pod stuck not-running with a volume mount that references a ConfigMap which does not exist, symptom Pending, true cause MissingConfigOrSecret. The seeded set currently carries four obvious scenarios and one misleading, not the eight-and-two split the full taxonomy below describes.)
 
 Obvious tier, one each:
 
