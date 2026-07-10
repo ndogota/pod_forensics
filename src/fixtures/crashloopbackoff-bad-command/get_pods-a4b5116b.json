@@ -1,10 +1,10 @@
 {
-  "capturedAt": "2026-07-08T21:20:21.353Z",
+  "capturedAt": "2026-07-10T15:40:26.557Z",
   "output": {
     "namespace": "shop",
     "pods": [
       {
-        "name": "checkout-5b676c6c8f-hc7qw",
+        "name": "checkout-5b676c6c8f-xnzzv",
         "phase": "Running",
         "ready": "0/1",
         "restarts": 3,
@@ -21,8 +21,8 @@
             "lastTerminated": {
               "exitCode": 1,
               "reason": "Error",
-              "startedAt": "2026-07-08T21:19:47.000Z",
-              "finishedAt": "2026-07-08T21:19:47.000Z"
+              "startedAt": "2026-07-10T15:39:55.000Z",
+              "finishedAt": "2026-07-10T15:39:55.000Z"
             }
           }
         ]

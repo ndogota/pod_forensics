@@ -1,8 +1,8 @@
 {
-  "capturedAt": "2026-07-08T21:21:41.644Z",
+  "capturedAt": "2026-07-10T15:42:37.847Z",
   "output": {
     "namespace": "telemetry",
-    "name": "log-shipper-97956dbdb-g72bg",
+    "name": "log-shipper-97956dbdb-zjrdr",
     "phase": "Running",
     "node": "pod-forensics-control-plane",
     "labels": {
@@ -43,38 +43,38 @@
       {
         "type": "Normal",
         "reason": "Scheduled",
-        "message": "Successfully assigned telemetry/log-shipper-97956dbdb-g72bg to pod-forensics-control-plane",
+        "message": "Successfully assigned telemetry/log-shipper-97956dbdb-zjrdr to pod-forensics-control-plane",
         "count": 1,
-        "firstSeen": "2026-07-08T21:21:39.000Z",
-        "lastSeen": "2026-07-08T21:21:39.000Z",
-        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
+        "firstSeen": "2026-07-10T15:42:35.000Z",
+        "lastSeen": "2026-07-10T15:42:35.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-zjrdr"
       },
       {
         "type": "Normal",
         "reason": "Pulled",
         "message": "Container image \"alpine/k8s:1.30.0\" already present on machine and can be accessed by the pod",
         "count": 1,
-        "firstSeen": "2026-07-08T21:21:39.000Z",
-        "lastSeen": "2026-07-08T21:21:39.000Z",
-        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
+        "firstSeen": "2026-07-10T15:42:35.000Z",
+        "lastSeen": "2026-07-10T15:42:35.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-zjrdr"
       },
       {
         "type": "Normal",
         "reason": "Created",
         "message": "Container created",
         "count": 1,
-        "firstSeen": "2026-07-08T21:21:39.000Z",
-        "lastSeen": "2026-07-08T21:21:39.000Z",
-        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
+        "firstSeen": "2026-07-10T15:42:36.000Z",
+        "lastSeen": "2026-07-10T15:42:36.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-zjrdr"
       },
       {
         "type": "Normal",
         "reason": "Started",
         "message": "Container started",
         "count": 1,
-        "firstSeen": "2026-07-08T21:21:39.000Z",
-        "lastSeen": "2026-07-08T21:21:39.000Z",
-        "involvedObject": "Pod/log-shipper-97956dbdb-g72bg"
+        "firstSeen": "2026-07-10T15:42:36.000Z",
+        "lastSeen": "2026-07-10T15:42:36.000Z",
+        "involvedObject": "Pod/log-shipper-97956dbdb-zjrdr"
       }
     ]
   }

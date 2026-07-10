@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-10T15:42:37.856Z",
+  "output": {
+    "apiError": {
+      "code": 400,
+      "reason": "",
+      "message": "HTTP-Code: 400\nMessage: Unknown API Status Code!\nBody: \"{\\\"kind\\\":\\\"Status\\\",\\\"apiVersion\\\":\\\"v1\\\",\\\"metadata\\\":{},\\\"status\\\":\\\"Failure\\\",\\\"message\\\":\\\"previous terminated container \\\\\\\"log-shipper\\\\\\\" in pod \\\\\\\"log-shipper-97956dbdb-zjrdr\\\\\\\" not found\\\",\\\"reason\\\":\\\"BadRequest\\\",\\\"code\\\":400}\\n\"\nHeaders: {\"audit-id\":\"c8d121cd-a7d9-4bc8-bcd2-1408e75226bf\",\"cache-control\":\"no-cache, private\",\"connection\":\"close\",\"content-length\":\"209\",\"content-type\":\"application/json\",\"date\":\"Fri, 10 Jul 2026 15:42:37 GMT\"}"
+    }
+  }
+}

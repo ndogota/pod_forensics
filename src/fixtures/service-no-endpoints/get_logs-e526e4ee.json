@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-10T15:42:29.267Z",
+  "output": {
+    "apiError": {
+      "code": 400,
+      "reason": "",
+      "message": "HTTP-Code: 400\nMessage: Unknown API Status Code!\nBody: \"{\\\"kind\\\":\\\"Status\\\",\\\"apiVersion\\\":\\\"v1\\\",\\\"metadata\\\":{},\\\"status\\\":\\\"Failure\\\",\\\"message\\\":\\\"previous terminated container \\\\\\\"web\\\\\\\" in pod \\\\\\\"web-6d79859664-hctck\\\\\\\" not found\\\",\\\"reason\\\":\\\"BadRequest\\\",\\\"code\\\":400}\\n\"\nHeaders: {\"audit-id\":\"9e20abcb-8fd2-4488-b20f-b7a1e7c2619f\",\"cache-control\":\"no-cache, private\",\"connection\":\"close\",\"content-length\":\"194\",\"content-type\":\"application/json\",\"date\":\"Fri, 10 Jul 2026 15:42:29 GMT\"}"
+    }
+  }
+}

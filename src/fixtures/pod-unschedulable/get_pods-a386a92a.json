@@ -1,14 +1,14 @@
 {
-  "capturedAt": "2026-07-08T21:21:28.041Z",
+  "capturedAt": "2026-07-10T15:42:18.625Z",
   "output": {
     "namespace": "analytics",
     "pods": [
       {
-        "name": "aggregator-65f4dd9986-cg79l",
+        "name": "aggregator-65f4dd9986-k9pwd",
         "phase": "Pending",
         "ready": "0/0",
         "restarts": 0,
-        "age": "1s",
+        "age": "0s",
         "containerStatuses": []
       }
     ]

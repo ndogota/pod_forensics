@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-08T21:21:28.096Z",
+  "capturedAt": "2026-07-10T15:42:18.683Z",
   "output": {
     "namespace": "analytics",
     "name": "aggregator",
@@ -28,8 +28,8 @@
         "reason": "ScalingReplicaSet",
         "message": "Scaled up replica set aggregator-65f4dd9986 from 0 to 1",
         "count": 1,
-        "firstSeen": "2026-07-08T21:21:27.000Z",
-        "lastSeen": "2026-07-08T21:21:27.000Z",
+        "firstSeen": "2026-07-10T15:42:18.000Z",
+        "lastSeen": "2026-07-10T15:42:18.000Z",
         "involvedObject": "Deployment/aggregator"
       }
     ]
