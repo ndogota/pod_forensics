@@ -98,9 +98,10 @@ function Header({ matrix }: { matrix: MatrixArtifact }) {
       </dl>
 
       <p className="head-method">
-        Each rate carries a <strong>Wilson 95% confidence interval</strong> over
-        the cell&apos;s N runs. At low N a point estimate is not a fact: five
-        clean runs are still consistent with a true rate well below 1.0, and the
+        Each rate carries a Wilson 95% confidence interval over
+        the cell&apos;s N runs. At low N a point estimate is not a fact: a
+        handful of clean runs are still consistent with a true rate well below
+        1.0, and the
         interval says so. The bars below draw that interval directly — a wide
         bracket means low confidence, not a wide result.
       </p>

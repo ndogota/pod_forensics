@@ -207,13 +207,13 @@ function ModelRollup({ summary }: { summary: ModelSummary }) {
       <div className="rollup-model">{modelLabel(summary.model)}</div>
       <div className="rollup-tiers">
         <span className="rollup-tier">
-          <span className="rt-label">obvious cause</span>
+          <span className="rt-label">symptom / cause aligned</span>
           <span className="rt-val">
             {obvious ? `${pct(obvious.causeAccuracy)}%` : "—"}
           </span>
         </span>
         <span className="rollup-tier">
-          <span className="rt-label">misleading cause</span>
+          <span className="rt-label">symptom / cause divergent</span>
           <span className="rt-val">
             {misleading ? `${pct(misleading.causeAccuracy)}%` : "—"}
           </span>
@@ -251,8 +251,8 @@ export function Matrix({
     gridTemplateColumns: `var(--label-col) repeat(${modelList.length}, minmax(200px, 1fr))`,
   };
 
-  // Rows are already tier-ordered; emit a tier separator whenever the tier
-  // changes so the obvious block and the misleading block read as distinct.
+  // Rows are already tier-ordered; emit a group separator whenever the tier
+  // changes so the aligned block and the divergent block read as distinct.
   let lastTier: string | null = null;
 
   return (
@@ -356,7 +356,11 @@ function FragmentRow({
       {tierBreak && (
         <div className={`tier-row tier-${tier}`}>
           <span className="tier-mark" />
-          <span className="tier-name">{tier} tier</span>
+          <span className="tier-name">
+            {tier === "misleading"
+              ? "symptom / cause divergent"
+              : "symptom / cause aligned"}
+          </span>
           <span className="tier-desc">
             {tier === "misleading"
               ? "initial grouping: the symptom can diverge from the cause class"
