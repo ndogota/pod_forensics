@@ -1,44 +1,442 @@
 {
   "metadata": {
     "models": [
-      "claude-haiku-4-5-20251001"
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-4-6",
+      "claude-opus-4-8"
     ],
-    "runsPerCell": 5,
+    "runsPerCell": 10,
     "scenarioIds": [
-      "crashloopbackoff-bad-command"
+      "crashloopbackoff-bad-command",
+      "pod-unschedulable",
+      "service-no-endpoints",
+      "rbac-denied",
+      "configmap-volume-missing"
     ],
     "judgeModel": "claude-haiku-4-5-20251001",
-    "createdAt": "2026-07-10T15:44:09.132Z",
-    "methodologyNote": "completionRate, symptomAccuracy, causeAccuracy and evidenceRecall carry a Wilson score 95% confidence interval (lower, upper) over the N runs of each cell (N = runsPerCell = 5); per-tier intervals recompute over all runs in the tier. Intervals widen at low N: with only a handful of runs a point estimate is uncertain, and a rate of 1.0 gives an asymmetric interval whose upper bound is 1 but whose lower bound sits well below it. rootCauseJudge is a mean of continuous judge scores, not a proportion of runs, so it reports mean and standard deviation instead of a Wilson interval."
+    "createdAt": "2026-07-10T18:17:41.184Z",
+    "methodologyNote": "completionRate, symptomAccuracy, causeAccuracy and evidenceRecall carry a Wilson score 95% confidence interval (lower, upper) over the N runs of each cell (N = runsPerCell = 10); per-tier intervals recompute over all runs in the tier. Intervals widen at low N: with only a handful of runs a point estimate is uncertain, and a rate of 1.0 gives an asymmetric interval whose upper bound is 1 but whose lower bound sits well below it. rootCauseJudge is a mean of continuous judge scores, not a proportion of runs, so it reports mean and standard deviation instead of a Wilson interval."
   },
   "cells": [
     {
       "model": "claude-haiku-4-5-20251001",
       "scenarioId": "crashloopbackoff-bad-command",
       "tier": "obvious",
-      "runs": 5,
+      "runs": 10,
       "completionRate": 1,
       "completionRateCI": {
-        "lower": 0.5655085052479191,
+        "lower": 0.7224598312333834,
         "upper": 1
       },
       "symptomAccuracy": 1,
       "symptomAccuracyCI": {
-        "lower": 0.5655085052479191,
+        "lower": 0.7224598312333834,
         "upper": 1
       },
-      "causeAccuracy": 0.8,
+      "causeAccuracy": 0.4,
       "causeAccuracyCI": {
-        "lower": 0.3755282641185388,
-        "upper": 0.9637768390302125
+        "lower": 0.16817758120350962,
+        "upper": 0.6873304525498136
       },
-      "evidenceRecall": 0.6666666666666666,
+      "evidenceRecall": 0.6000000000000001,
       "evidenceRecallCI": {
-        "lower": 0.27519400294897955,
-        "upper": 0.9133088321336601
+        "lower": 0.31266954745018644,
+        "upper": 0.8318224187964904
       },
-      "rootCauseJudge": 0.48,
-      "rootCauseJudgeStdDev": null
+      "rootCauseJudge": 0.4299999999999999,
+      "rootCauseJudgeStdDev": 0.1903213656482693
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "scenarioId": "pod-unschedulable",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.915,
+      "rootCauseJudgeStdDev": 0.04743416490252567
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "scenarioId": "service-no-endpoints",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.95,
+      "rootCauseJudgeStdDev": 0
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "scenarioId": "rbac-denied",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.95,
+      "rootCauseJudgeStdDev": 0
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "scenarioId": "configmap-volume-missing",
+      "tier": "misleading",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 0.7666666666666667,
+      "evidenceRecallCI": {
+        "lower": 0.4578657553390306,
+        "upper": 0.9274461546521071
+      },
+      "rootCauseJudge": 0.9399999999999998,
+      "rootCauseJudgeStdDev": 0.03162277660168379
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "scenarioId": "crashloopbackoff-bad-command",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 0.6,
+      "causeAccuracyCI": {
+        "lower": 0.3126695474501863,
+        "upper": 0.8318224187964902
+      },
+      "evidenceRecall": 0.5333333333333333,
+      "evidenceRecallCI": {
+        "lower": 0.26109482453741745,
+        "upper": 0.7870691642114747
+      },
+      "rootCauseJudge": 0.4800000000000001,
+      "rootCauseJudgeStdDev": 0.3172801075810878
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "scenarioId": "pod-unschedulable",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.885,
+      "rootCauseJudgeStdDev": 0.08181958472422385
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "scenarioId": "service-no-endpoints",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.9549999999999998,
+      "rootCauseJudgeStdDev": 0.01581138830084191
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "scenarioId": "rbac-denied",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.95,
+      "rootCauseJudgeStdDev": 0
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "scenarioId": "configmap-volume-missing",
+      "tier": "misleading",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.95,
+      "rootCauseJudgeStdDev": 0
+    },
+    {
+      "model": "claude-opus-4-8",
+      "scenarioId": "crashloopbackoff-bad-command",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 0.9,
+      "completionRateCI": {
+        "lower": 0.5958436145024278,
+        "upper": 0.9821242504842788
+      },
+      "symptomAccuracy": 0.9,
+      "symptomAccuracyCI": {
+        "lower": 0.5958436145024278,
+        "upper": 0.9821242504842788
+      },
+      "causeAccuracy": 0.9,
+      "causeAccuracyCI": {
+        "lower": 0.5958436145024278,
+        "upper": 0.9821242504842788
+      },
+      "evidenceRecall": 0.4,
+      "evidenceRecallCI": {
+        "lower": 0.16817758120350962,
+        "upper": 0.6873304525498136
+      },
+      "rootCauseJudge": 0.8550000000000001,
+      "rootCauseJudgeStdDev": 0.300416377715996
+    },
+    {
+      "model": "claude-opus-4-8",
+      "scenarioId": "pod-unschedulable",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 0.85,
+      "evidenceRecallCI": {
+        "lower": 0.5411480024644724,
+        "upper": 0.9645738793988958
+      },
+      "rootCauseJudge": 0.9470000000000001,
+      "rootCauseJudgeStdDev": 0.009486832980505112
+    },
+    {
+      "model": "claude-opus-4-8",
+      "scenarioId": "service-no-endpoints",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.95,
+      "rootCauseJudgeStdDev": 0
+    },
+    {
+      "model": "claude-opus-4-8",
+      "scenarioId": "rbac-denied",
+      "tier": "obvious",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 1,
+      "evidenceRecallCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "rootCauseJudge": 0.95,
+      "rootCauseJudgeStdDev": 0
+    },
+    {
+      "model": "claude-opus-4-8",
+      "scenarioId": "configmap-volume-missing",
+      "tier": "misleading",
+      "runs": 10,
+      "completionRate": 1,
+      "completionRateCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "causeAccuracy": 1,
+      "causeAccuracyCI": {
+        "lower": 0.7224598312333834,
+        "upper": 1
+      },
+      "evidenceRecall": 0.9666666666666666,
+      "evidenceRecallCI": {
+        "lower": 0.6767793881383133,
+        "upper": 0.9975164543461776
+      },
+      "rootCauseJudge": 0.953,
+      "rootCauseJudgeStdDev": 0.009486832980505146
     }
   ],
   "byModel": [
@@ -48,55 +446,256 @@
         "tiers": [
           {
             "tier": "obvious",
+            "scenarioCount": 4,
+            "completionRate": 1,
+            "symptomAccuracy": 1,
+            "causeAccuracy": 0.85,
+            "evidenceRecall": 0.9,
+            "rootCauseJudge": 0.81125
+          },
+          {
+            "tier": "misleading",
             "scenarioCount": 1,
             "completionRate": 1,
             "symptomAccuracy": 1,
-            "causeAccuracy": 0.8,
-            "evidenceRecall": 0.6666666666666666,
-            "rootCauseJudge": 0.48
+            "causeAccuracy": 1,
+            "evidenceRecall": 0.7666666666666667,
+            "rootCauseJudge": 0.9399999999999998
           }
         ],
-        "causeAccuracyGap": null
+        "causeAccuracyGap": -0.15000000000000002
       },
       "tierIntervals": [
         {
           "tier": "obvious",
-          "runs": 5,
+          "runs": 40,
           "completionRateCI": {
-            "lower": 0.5655085052479191,
+            "lower": 0.9123754607496077,
             "upper": 1
           },
           "symptomAccuracyCI": {
-            "lower": 0.5655085052479191,
+            "lower": 0.9123754607496077,
             "upper": 1
           },
           "causeAccuracyCI": {
-            "lower": 0.3755282641185388,
-            "upper": 0.9637768390302125
+            "lower": 0.7092737396097997,
+            "upper": 0.9293890829149256
           },
           "evidenceRecallCI": {
-            "lower": 0.27519400294897955,
-            "upper": 0.9133088321336601
+            "lower": 0.7694792561952611,
+            "upper": 0.9604211124044252
           },
           "rootCauseJudge": {
-            "mean": 0.48,
-            "stdDev": null
+            "mean": 0.8112499999999996,
+            "stdDev": 0.24244679564380445
+          }
+        },
+        {
+          "tier": "misleading",
+          "runs": 10,
+          "completionRateCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "symptomAccuracyCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "causeAccuracyCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "evidenceRecallCI": {
+            "lower": 0.4578657553390306,
+            "upper": 0.9274461546521071
+          },
+          "rootCauseJudge": {
+            "mean": 0.9399999999999998,
+            "stdDev": 0.03162277660168379
           }
         }
       ],
       "cost": {
-        "tokensIn": 34849,
-        "tokensOut": 6511,
-        "cacheReadTokens": 71422,
-        "estUsd": 0.10995995,
+        "tokensIn": 407476,
+        "tokensOut": 56623,
+        "cacheReadTokens": 249865,
+        "estUsd": 0.9499087500000001,
         "failedRuns": 0
+      }
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "byTier": {
+        "tiers": [
+          {
+            "tier": "obvious",
+            "scenarioCount": 4,
+            "completionRate": 1,
+            "symptomAccuracy": 1,
+            "causeAccuracy": 0.9,
+            "evidenceRecall": 0.8833333333333333,
+            "rootCauseJudge": 0.8175000000000001
+          },
+          {
+            "tier": "misleading",
+            "scenarioCount": 1,
+            "completionRate": 1,
+            "symptomAccuracy": 1,
+            "causeAccuracy": 1,
+            "evidenceRecall": 1,
+            "rootCauseJudge": 0.95
+          }
+        ],
+        "causeAccuracyGap": -0.09999999999999998
+      },
+      "tierIntervals": [
+        {
+          "tier": "obvious",
+          "runs": 40,
+          "completionRateCI": {
+            "lower": 0.9123754607496077,
+            "upper": 1
+          },
+          "symptomAccuracyCI": {
+            "lower": 0.9123754607496077,
+            "upper": 1
+          },
+          "causeAccuracyCI": {
+            "lower": 0.7694792561952611,
+            "upper": 0.9604211124044252
+          },
+          "evidenceRecallCI": {
+            "lower": 0.7489548209789687,
+            "upper": 0.950533032262397
+          },
+          "rootCauseJudge": {
+            "mean": 0.8174999999999997,
+            "stdDev": 0.2540820582168138
+          }
+        },
+        {
+          "tier": "misleading",
+          "runs": 10,
+          "completionRateCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "symptomAccuracyCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "causeAccuracyCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "evidenceRecallCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "rootCauseJudge": {
+            "mean": 0.95,
+            "stdDev": 0
+          }
+        }
+      ],
+      "cost": {
+        "tokensIn": 292,
+        "tokensOut": 57862,
+        "cacheReadTokens": 658995,
+        "estUsd": 1.3777732500000002,
+        "failedRuns": 0
+      }
+    },
+    {
+      "model": "claude-opus-4-8",
+      "byTier": {
+        "tiers": [
+          {
+            "tier": "obvious",
+            "scenarioCount": 4,
+            "completionRate": 0.975,
+            "symptomAccuracy": 0.975,
+            "causeAccuracy": 0.975,
+            "evidenceRecall": 0.8125,
+            "rootCauseJudge": 0.9255
+          },
+          {
+            "tier": "misleading",
+            "scenarioCount": 1,
+            "completionRate": 1,
+            "symptomAccuracy": 1,
+            "causeAccuracy": 1,
+            "evidenceRecall": 0.9666666666666666,
+            "rootCauseJudge": 0.953
+          }
+        ],
+        "causeAccuracyGap": -0.025000000000000022
+      },
+      "tierIntervals": [
+        {
+          "tier": "obvious",
+          "runs": 40,
+          "completionRateCI": {
+            "lower": 0.8711834051199223,
+            "upper": 0.9955732825922052
+          },
+          "symptomAccuracyCI": {
+            "lower": 0.8711834051199223,
+            "upper": 0.9955732825922052
+          },
+          "causeAccuracyCI": {
+            "lower": 0.8711834051199223,
+            "upper": 0.9955732825922052
+          },
+          "evidenceRecallCI": {
+            "lower": 0.6663787049279786,
+            "upper": 0.9038559580405263
+          },
+          "rootCauseJudge": {
+            "mean": 0.9255000000000001,
+            "stdDev": 0.15016145157283714
+          }
+        },
+        {
+          "tier": "misleading",
+          "runs": 10,
+          "completionRateCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "symptomAccuracyCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "causeAccuracyCI": {
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "evidenceRecallCI": {
+            "lower": 0.6767793881383133,
+            "upper": 0.9975164543461776
+          },
+          "rootCauseJudge": {
+            "mean": 0.953,
+            "stdDev": 0.009486832980505146
+          }
+        }
+      ],
+      "cost": {
+        "tokensIn": 410,
+        "tokensOut": 71202,
+        "cacheReadTokens": 835855,
+        "estUsd": 2.871833749999999,
+        "failedRuns": 1
       }
     }
   ],
   "cost": {
     "perModelUsd": {
-      "claude-haiku-4-5-20251001": 0.10995995
+      "claude-haiku-4-5-20251001": 0.9499087500000001,
+      "claude-sonnet-4-6": 1.3777732500000002,
+      "claude-opus-4-8": 2.871833749999999
     },
-    "totalUsd": 0.10995995
+    "totalUsd": 5.19951575
   }
 }
