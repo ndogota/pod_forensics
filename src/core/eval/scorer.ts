@@ -139,6 +139,16 @@ function mean(values: number[]): number {
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
+// A scored scenario plus the raw per-run judge scores that fed its mean. The
+// ScenarioScore stays the frozen aggregate; the judge scores ride alongside so a
+// caller that wants the spread (the matrix, for its standard deviation) does not
+// have to re-invoke the judge. One entry per attempted run, in run order; a
+// failed run contributes 0.
+export interface ScenarioScoreResult {
+  score: ScenarioScore;
+  judgeScores: number[];
+}
+
 // Aggregate the scores for one scenario across N attempted runs. Failed runs
 // count as zero on every dimension, so averages divide by attempts, not by
 // successes. completionRate reports the fraction that produced a valid
@@ -147,7 +157,7 @@ export async function scoreScenario(
   scenario: Scenario,
   outcomes: RunOutcome[],
   judge: RootCauseJudge,
-): Promise<ScenarioScore> {
+): Promise<ScenarioScoreResult> {
   const gt = scenario.groundTruth;
   const attempted = outcomes.length;
 
@@ -171,14 +181,17 @@ export async function scoreScenario(
 
   const tier: DifficultyTier = scenario.tier;
   return {
-    scenarioId: scenario.id,
-    tier,
-    runs: attempted,
-    completionRate: attempted === 0 ? 0 : completed / attempted,
-    symptomAccuracy: mean(symptomScores),
-    causeAccuracy: mean(causeScores),
-    evidenceRecall: mean(recallScores),
-    rootCauseJudgeScore: mean(judgeScores),
+    score: {
+      scenarioId: scenario.id,
+      tier,
+      runs: attempted,
+      completionRate: attempted === 0 ? 0 : completed / attempted,
+      symptomAccuracy: mean(symptomScores),
+      causeAccuracy: mean(causeScores),
+      evidenceRecall: mean(recallScores),
+      rootCauseJudgeScore: mean(judgeScores),
+    },
+    judgeScores,
   };
 }
 

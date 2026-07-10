@@ -39,6 +39,12 @@ import {
   summarizeByTier,
   type RootCauseJudge,
 } from "../src/core/eval/scorer";
+import {
+  wilsonInterval,
+  meanStdDev,
+  type Interval,
+  type MeanStdDev,
+} from "../src/core/eval/stats";
 import { SCENARIOS, findScenario } from "../src/scenarios";
 import type {
   ByTierSummary,
@@ -63,16 +69,42 @@ const OPUS_MODEL = "claude-opus-4-8";
 // pnpm eval's.
 
 // One (model, scenario) cell: the six per-cell metrics the showcase compares.
+// Each of the four proportion metrics carries a Wilson 95 percent confidence
+// interval over the cell's N runs alongside its point estimate, so a reader sees
+// the uncertainty and not just the point. The root-cause judge is a mean of
+// continuous scores rather than a proportion of runs, so it reports a standard
+// deviation over the runs instead of a Wilson interval.
 interface MatrixCell {
   model: string;
   scenarioId: string;
   tier: string;
   runs: number;
   completionRate: number;
+  completionRateCI: Interval;
   symptomAccuracy: number;
+  symptomAccuracyCI: Interval;
   causeAccuracy: number;
+  causeAccuracyCI: Interval;
   evidenceRecall: number;
-  rootCauseJudge: number; // ScenarioScore.rootCauseJudgeScore, renamed for the artifact
+  evidenceRecallCI: Interval;
+  rootCauseJudge: number; // ScenarioScore.rootCauseJudgeScore mean, renamed for the artifact
+  rootCauseJudgeStdDev: number; // sample standard deviation of the per-run judge scores
+}
+
+// Per-model, per-tier uncertainty. Parallel to ByTierSummary (which stays the
+// frozen point-estimate rollup): the frozen TierSummary type has no room for
+// intervals, so the matrix carries them here instead. Each interval is
+// recomputed from scratch over every run in the tier (runs = scenarios in tier x
+// runs per cell), never averaged from the per-cell intervals, so the interval
+// tightens with the tier's larger N as it should.
+interface TierIntervals {
+  tier: string;
+  runs: number; // total attempted runs pooled across the tier's scenarios
+  completionRateCI: Interval;
+  symptomAccuracyCI: Interval;
+  causeAccuracyCI: Interval;
+  evidenceRecallCI: Interval;
+  rootCauseJudge: MeanStdDev; // mean and standard deviation over all judge scores in the tier
 }
 
 // Token totals and estimated USD for one model across the whole matrix. estUsd
@@ -90,7 +122,8 @@ interface ModelCost {
 
 interface ModelSummary {
   model: string;
-  byTier: ByTierSummary; // per-model tier aggregates and the cause-accuracy gap
+  byTier: ByTierSummary; // per-model tier aggregates and the cause-accuracy gap (point estimates)
+  tierIntervals: TierIntervals[]; // per-tier uncertainty, obvious before misleading
   cost: ModelCost;
 }
 
@@ -103,6 +136,7 @@ interface MatrixArtifact {
     scenarioIds: string[];
     judgeModel: string; // held constant across all models for consistent scoring
     createdAt: string;
+    methodologyNote: string; // how to read the intervals on every cell and tier
   };
   cells: MatrixCell[];
   byModel: ModelSummary[];
@@ -196,6 +230,51 @@ function costForModel(
   };
 }
 
+// "[0.49, 0.94]" for a CLI line. Two decimals, matching the point estimates.
+function fmtInterval(ci: Interval): string {
+  return `[${ci.lower.toFixed(2)}, ${ci.upper.toFixed(2)}]`;
+}
+
+// Recompute the per-tier Wilson intervals for one model by pooling every run in
+// the tier, never by averaging the per-cell intervals. runsPerScenario is
+// constant across a model's cells, so the pooled point estimate equals the
+// frozen ByTierSummary mean; pooling here is what gives the interval its larger
+// N (and so its tighter width) than any single cell. Judge scores pool the same
+// way into one mean and standard deviation over the whole tier.
+function buildTierIntervals(
+  scores: ScenarioScore[],
+  judgeScoresByScenario: number[][],
+): TierIntervals[] {
+  const order: string[] = ["obvious", "misleading"];
+  const out: TierIntervals[] = [];
+  for (const tier of order) {
+    const idx = scores
+      .map((s, i) => ({ s, i }))
+      .filter(({ s }) => s.tier === tier);
+    if (idx.length === 0) continue;
+
+    const totalRuns = idx.reduce((a, { s }) => a + s.runs, 0);
+    // Runs-weighted pooled proportion. Equal runs per cell make this the plain
+    // mean, but weighting keeps it correct if a cell ever has fewer runs.
+    const pooled = (pick: (s: ScenarioScore) => number): number =>
+      totalRuns === 0
+        ? 0
+        : idx.reduce((a, { s }) => a + pick(s) * s.runs, 0) / totalRuns;
+    const tierJudgeScores = idx.flatMap(({ i }) => judgeScoresByScenario[i]);
+
+    out.push({
+      tier,
+      runs: totalRuns,
+      completionRateCI: wilsonInterval(pooled((s) => s.completionRate), totalRuns),
+      symptomAccuracyCI: wilsonInterval(pooled((s) => s.symptomAccuracy), totalRuns),
+      causeAccuracyCI: wilsonInterval(pooled((s) => s.causeAccuracy), totalRuns),
+      evidenceRecallCI: wilsonInterval(pooled((s) => s.evidenceRecall), totalRuns),
+      rootCauseJudge: meanStdDev(tierJudgeScores),
+    });
+  }
+  return out;
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
 
@@ -245,11 +324,14 @@ async function main(): Promise<void> {
     );
 
     const modelScores: ScenarioScore[] = [];
+    // Raw per-run judge scores per scenario, in the same order as modelScores, so
+    // the tier rollup can pool them for a tier-wide mean and standard deviation.
+    const modelJudgeScores: number[][] = [];
     const modelTraces: RunTrace[] = [];
     const modelFailed: FailedRunUsage[] = [];
 
     for (const scenario of scenarios) {
-      const { report, failedRuns } = await runEval({
+      const { report, failedRuns, judgeScores } = await runEval({
         scenario,
         client,
         judge,
@@ -258,19 +340,28 @@ async function main(): Promise<void> {
       });
       const score = report.scenarioScores[0];
       modelScores.push(score);
+      modelJudgeScores.push(judgeScores);
       modelTraces.push(...report.traces);
       modelFailed.push(...failedRuns);
 
+      // The four proportion metrics get a Wilson interval over this cell's N
+      // runs; the judge gets the standard deviation of its per-run scores (the
+      // mean is already the point estimate).
       cells.push({
         model: client.model,
         scenarioId: score.scenarioId,
         tier: score.tier,
         runs: score.runs,
         completionRate: score.completionRate,
+        completionRateCI: wilsonInterval(score.completionRate, score.runs),
         symptomAccuracy: score.symptomAccuracy,
+        symptomAccuracyCI: wilsonInterval(score.symptomAccuracy, score.runs),
         causeAccuracy: score.causeAccuracy,
+        causeAccuracyCI: wilsonInterval(score.causeAccuracy, score.runs),
         evidenceRecall: score.evidenceRecall,
+        evidenceRecallCI: wilsonInterval(score.evidenceRecall, score.runs),
         rootCauseJudge: score.rootCauseJudgeScore,
+        rootCauseJudgeStdDev: meanStdDev(judgeScores).stdDev,
       });
 
       // Per-run cache diagnostic (Quest 4). A successful run that read nothing
@@ -298,6 +389,7 @@ async function main(): Promise<void> {
     byModel.push({
       model: client.model,
       byTier: summarizeByTier(modelScores),
+      tierIntervals: buildTierIntervals(modelScores, modelJudgeScores),
       cost,
     });
   }
@@ -311,6 +403,16 @@ async function main(): Promise<void> {
       scenarioIds: scenarios.map((s) => s.id),
       judgeModel: JUDGE_MODEL,
       createdAt,
+      methodologyNote:
+        `completionRate, symptomAccuracy, causeAccuracy and evidenceRecall carry ` +
+        `a Wilson score 95% confidence interval (lower, upper) over the N runs of ` +
+        `each cell (N = runsPerCell = ${args.runs}); per-tier intervals recompute ` +
+        `over all runs in the tier. Intervals widen at low N: with only a handful ` +
+        `of runs a point estimate is uncertain, and a rate of 1.0 gives an ` +
+        `asymmetric interval whose upper bound is 1 but whose lower bound sits ` +
+        `well below it. rootCauseJudge is a mean of continuous judge scores, not a ` +
+        `proportion of runs, so it reports mean and standard deviation instead of ` +
+        `a Wilson interval.`,
     },
     cells,
     byModel,
@@ -328,27 +430,32 @@ async function main(): Promise<void> {
     `models: ${args.models.join(", ")}; runs/cell: ${args.runs}; judge: ${JUDGE_MODEL}`,
   );
 
-  console.log("\nmatrix (model x scenario):");
+  console.log(
+    "\nmatrix (model x scenario), point [lower, upper] = Wilson 95% CI over N runs:",
+  );
   for (const cell of cells) {
     console.log(
       `  ${cell.model} / ${cell.scenarioId} (${cell.tier}): ${cell.runs} runs, ` +
-        `completionRate ${cell.completionRate.toFixed(2)}, ` +
-        `symptomAccuracy ${cell.symptomAccuracy.toFixed(2)}, ` +
-        `causeAccuracy ${cell.causeAccuracy.toFixed(2)}, ` +
-        `evidenceRecall ${cell.evidenceRecall.toFixed(2)}, ` +
-        `rootCauseJudge ${cell.rootCauseJudge.toFixed(2)}`,
+        `completionRate ${cell.completionRate.toFixed(2)} ${fmtInterval(cell.completionRateCI)}, ` +
+        `symptomAccuracy ${cell.symptomAccuracy.toFixed(2)} ${fmtInterval(cell.symptomAccuracyCI)}, ` +
+        `causeAccuracy ${cell.causeAccuracy.toFixed(2)} ${fmtInterval(cell.causeAccuracyCI)}, ` +
+        `evidenceRecall ${cell.evidenceRecall.toFixed(2)} ${fmtInterval(cell.evidenceRecallCI)}, ` +
+        `rootCauseJudge ${cell.rootCauseJudge.toFixed(2)} +/- ${cell.rootCauseJudgeStdDev.toFixed(2)}`,
     );
   }
 
-  console.log("\nper-model tiers:");
+  console.log("\nper-model tiers (point [lower, upper] = Wilson 95% CI over all tier runs):");
   for (const m of byModel) {
+    // Pair each tier's point-estimate rollup with its recomputed intervals.
+    const ciByTier = new Map(m.tierIntervals.map((t) => [t.tier, t]));
     for (const tier of m.byTier.tiers) {
+      const ci = ciByTier.get(tier.tier);
       console.log(
-        `  ${m.model} ${tier.tier} (${tier.scenarioCount} scenario(s)): ` +
-          `causeAccuracy ${tier.causeAccuracy.toFixed(2)}, ` +
-          `symptomAccuracy ${tier.symptomAccuracy.toFixed(2)}, ` +
-          `evidenceRecall ${tier.evidenceRecall.toFixed(2)}, ` +
-          `rootCauseJudge ${tier.rootCauseJudge.toFixed(2)}`,
+        `  ${m.model} ${tier.tier} (${tier.scenarioCount} scenario(s), ${ci?.runs ?? 0} runs): ` +
+          `causeAccuracy ${tier.causeAccuracy.toFixed(2)} ${ci ? fmtInterval(ci.causeAccuracyCI) : ""}, ` +
+          `symptomAccuracy ${tier.symptomAccuracy.toFixed(2)} ${ci ? fmtInterval(ci.symptomAccuracyCI) : ""}, ` +
+          `evidenceRecall ${tier.evidenceRecall.toFixed(2)} ${ci ? fmtInterval(ci.evidenceRecallCI) : ""}, ` +
+          `rootCauseJudge ${tier.rootCauseJudge.toFixed(2)} +/- ${(ci?.rootCauseJudge.stdDev ?? 0).toFixed(2)}`,
       );
     }
     const gap = m.byTier.causeAccuracyGap;

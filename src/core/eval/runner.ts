@@ -40,10 +40,14 @@ export interface FailedRunUsage {
 }
 
 // What runEval returns: the RunReport plus the usage of any runs that failed and
-// produced no trace. Kept separate so the frozen RunReport shape is untouched.
+// produced no trace, plus the raw per-run root-cause judge scores. All three ride
+// alongside the frozen RunReport rather than inside it, so its shape is untouched.
+// judgeScores lets a caller report the judge's spread (the matrix computes its
+// standard deviation from them) without re-invoking the judge.
 export interface RunEvalResult {
   report: RunReport;
   failedRuns: FailedRunUsage[];
+  judgeScores: number[];
 }
 
 // Build the confusion matrix over root-cause classes from the successful traces.
@@ -103,7 +107,11 @@ export async function runEval(options: RunEvalOptions): Promise<RunEvalResult> {
     .filter((o) => o.usage !== undefined)
     .map((o) => ({ scenarioId: scenario.id, usage: o.usage! }));
 
-  const scenarioScore = await scoreScenario(scenario, outcomes, judge);
+  const { score: scenarioScore, judgeScores } = await scoreScenario(
+    scenario,
+    outcomes,
+    judge,
+  );
 
   return {
     report: {
@@ -115,5 +123,6 @@ export async function runEval(options: RunEvalOptions): Promise<RunEvalResult> {
       traces,
     },
     failedRuns,
+    judgeScores,
   };
 }

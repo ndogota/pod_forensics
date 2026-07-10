@@ -8,7 +8,8 @@
       "crashloopbackoff-bad-command"
     ],
     "judgeModel": "claude-haiku-4-5-20251001",
-    "createdAt": "2026-07-10T12:59:13.156Z"
+    "createdAt": "2026-07-10T15:44:09.132Z",
+    "methodologyNote": "completionRate, symptomAccuracy, causeAccuracy and evidenceRecall carry a Wilson score 95% confidence interval (lower, upper) over the N runs of each cell (N = runsPerCell = 5); per-tier intervals recompute over all runs in the tier. Intervals widen at low N: with only a handful of runs a point estimate is uncertain, and a rate of 1.0 gives an asymmetric interval whose upper bound is 1 but whose lower bound sits well below it. rootCauseJudge is a mean of continuous judge scores, not a proportion of runs, so it reports mean and standard deviation instead of a Wilson interval."
   },
   "cells": [
     {
@@ -17,10 +18,27 @@
       "tier": "obvious",
       "runs": 5,
       "completionRate": 1,
-      "symptomAccuracy": 0.8,
-      "causeAccuracy": 0.6,
-      "evidenceRecall": 0.6,
-      "rootCauseJudge": 0.7899999999999999
+      "completionRateCI": {
+        "lower": 0.5655085052479191,
+        "upper": 1
+      },
+      "symptomAccuracy": 1,
+      "symptomAccuracyCI": {
+        "lower": 0.5655085052479191,
+        "upper": 1
+      },
+      "causeAccuracy": 0.8,
+      "causeAccuracyCI": {
+        "lower": 0.3755282641185388,
+        "upper": 0.9637768390302125
+      },
+      "evidenceRecall": 0.6666666666666666,
+      "evidenceRecallCI": {
+        "lower": 0.27519400294897955,
+        "upper": 0.9133088321336601
+      },
+      "rootCauseJudge": 0.48,
+      "rootCauseJudgeStdDev": null
     }
   ],
   "byModel": [
@@ -32,27 +50,53 @@
             "tier": "obvious",
             "scenarioCount": 1,
             "completionRate": 1,
-            "symptomAccuracy": 0.8,
-            "causeAccuracy": 0.6,
-            "evidenceRecall": 0.6,
-            "rootCauseJudge": 0.7899999999999999
+            "symptomAccuracy": 1,
+            "causeAccuracy": 0.8,
+            "evidenceRecall": 0.6666666666666666,
+            "rootCauseJudge": 0.48
           }
         ],
         "causeAccuracyGap": null
       },
+      "tierIntervals": [
+        {
+          "tier": "obvious",
+          "runs": 5,
+          "completionRateCI": {
+            "lower": 0.5655085052479191,
+            "upper": 1
+          },
+          "symptomAccuracyCI": {
+            "lower": 0.5655085052479191,
+            "upper": 1
+          },
+          "causeAccuracyCI": {
+            "lower": 0.3755282641185388,
+            "upper": 0.9637768390302125
+          },
+          "evidenceRecallCI": {
+            "lower": 0.27519400294897955,
+            "upper": 0.9133088321336601
+          },
+          "rootCauseJudge": {
+            "mean": 0.48,
+            "stdDev": null
+          }
+        }
+      ],
       "cost": {
-        "tokensIn": 31647,
-        "tokensOut": 6564,
-        "cacheReadTokens": 56612,
-        "estUsd": 0.10475570000000001,
+        "tokensIn": 34849,
+        "tokensOut": 6511,
+        "cacheReadTokens": 71422,
+        "estUsd": 0.10995995,
         "failedRuns": 0
       }
     }
   ],
   "cost": {
     "perModelUsd": {
-      "claude-haiku-4-5-20251001": 0.10475570000000001
+      "claude-haiku-4-5-20251001": 0.10995995
     },
-    "totalUsd": 0.10475570000000001
+    "totalUsd": 0.10995995
   }
 }
