@@ -55,13 +55,16 @@ export interface CaptureSurface {
   // A Service the scenario defines, for get_service_endpoints. Omit when the
   // scenario has no Service.
   service?: string;
-  // ConfigMap names to probe with get_configmap. A name that does not exist is
-  // recorded as a real not-found result on purpose: an exploring agent probes for
-  // a ConfigMap to rule MissingConfigOrSecret in or out, and the negative is the
-  // signal that lets it. Usually the workload name, the most likely guess.
+  // Extra ConfigMap names to probe with get_configmap, beyond the deployment name
+  // (which buildReadSurface always probes on its own; see below). A name that does
+  // not exist is recorded as a real not-found result on purpose: an exploring agent
+  // probes for a ConfigMap to rule MissingConfigOrSecret in or out, and the
+  // negative is the signal that lets it. List a name here only when it is not the
+  // workload name, e.g. a ConfigMap a volume references by a distinct name.
   configmaps?: string[];
-  // Secret names to probe with get_secret_meta (existence and key names only,
-  // never values). Same not-found-is-wanted rationale as configmaps.
+  // Extra Secret names to probe with get_secret_meta (existence and key names only,
+  // never values), beyond the deployment name. Same not-found-is-wanted rationale
+  // as configmaps.
   secrets?: string[];
   // An RBAC permission to check for the scenario's ServiceAccount, for
   // check_rbac. Omit when the scenario has no RBAC dimension.
@@ -85,6 +88,16 @@ export interface CaptureSpec {
 // ConfigMap or Secret that does not exist), not only the smoking gun. Every
 // call's args go through the shared canonicalizeToolArgs, so a recorded fixture
 // key matches exactly what the agent hashes at replay.
+//
+// The deployment name is always probed with both get_configmap and get_secret_meta
+// on top of the scenario's declared configmaps/secrets, deduplicated. The
+// deployment name is the name an exploring agent most often infers when it reaches
+// for a ConfigMap or Secret, so capturing it for every scenario turns that common
+// inferred probe into a real captured result (exists where it exists, a real
+// not-found where it does not) instead of a coverage MISS. This is structural: a
+// new scenario inherits it without its author having to remember. It pairs with
+// the FixtureProvider's deterministic not-found, which covers the rest of the
+// unbounded name space (pod-hash suffixes and other inferred names) at replay.
 export function buildReadSurface(
   namespace: string,
   surface: CaptureSurface,
@@ -139,13 +152,30 @@ export function buildReadSurface(
       }),
     });
   }
-  for (const name of surface.configmaps ?? []) {
+  // Probe the deployment name too, deduplicated against the declared names, so the
+  // most common inferred probe is always captured. dedupe preserves order and drops
+  // repeats and empties.
+  const dedupe = (names: string[]): string[] => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const n of names) {
+      if (n && !seen.has(n)) {
+        seen.add(n);
+        out.push(n);
+      }
+    }
+    return out;
+  };
+  const withDeployment = (declared: string[] | undefined): string[] =>
+    dedupe([...(declared ?? []), ...(surface.deployment ? [surface.deployment] : [])]);
+
+  for (const name of withDeployment(surface.configmaps)) {
     calls.push({
       tool: "get_configmap",
       args: canonicalizeToolArgs("get_configmap", { namespace, name }),
     });
   }
-  for (const name of surface.secrets ?? []) {
+  for (const name of withDeployment(surface.secrets)) {
     calls.push({
       tool: "get_secret_meta",
       args: canonicalizeToolArgs("get_secret_meta", { namespace, name }),

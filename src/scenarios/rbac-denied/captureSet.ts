@@ -17,10 +17,11 @@
 // (previous=false). previous=true is recorded too and comes back as an apiError
 // (the container never restarted).
 //
-// The surface also declares describe_deployment for the log-shipper workload and
-// a ConfigMap and Secret probe named after the workload. Neither exists, so the
-// not-found negatives are captured; probing a Secret is safe because
-// get_secret_meta returns existence and key names only, never values.
+// The surface also declares describe_deployment for the log-shipper workload;
+// buildReadSurface probes a ConfigMap and Secret named after the deployment
+// ("log-shipper"). Neither exists, so the not-found negatives are captured;
+// probing a Secret is safe because get_secret_meta returns existence and key names
+// only, never values.
 //
 // check_rbac issues a SubjectAccessReview against the workload identity
 // system:serviceaccount:<namespace>:<serviceAccount> (see LiveProvider), so it
@@ -58,9 +59,9 @@ const RESOURCE = "secrets";
 
 export const captureSpec: CaptureSpec = {
   surface: {
+    // buildReadSurface probes get_configmap and get_secret_meta for the
+    // deployment name ("log-shipper") structurally, so neither is listed here.
     deployment: "log-shipper",
-    configmaps: ["log-shipper"],
-    secrets: ["log-shipper"],
     rbac: { serviceAccount: SERVICE_ACCOUNT, verb: VERB, resource: RESOURCE },
   },
   async poll({ provider, scenario }) {

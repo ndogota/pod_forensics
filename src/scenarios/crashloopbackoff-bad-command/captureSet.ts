@@ -8,11 +8,12 @@
 // set of read-only calls: get_pods, get_events, and per pod describe_pod plus
 // both get_logs variants (a crash loop leaves its evidence in the prior
 // terminated instance, read via previous=true). The surface adds
-// describe_deployment for the checkout workload and a probe of a ConfigMap and
-// Secret named after the workload. Neither exists, so the not-found result is
-// recorded on purpose: the container's error mentions a missing --config flag, so
-// an exploring agent probes for a ConfigMap, and the captured negative lets it
-// rule MissingConfigOrSecret out and land on the bad command.
+// describe_deployment for the checkout workload. buildReadSurface also probes a
+// ConfigMap and Secret named after the deployment ("checkout"). Neither exists, so
+// the not-found result is recorded on purpose: the container's error mentions a
+// missing --config flag, so an exploring agent probes for a ConfigMap, and the
+// captured negative lets it rule MissingConfigOrSecret out and land on the bad
+// command.
 //
 // The failing pod name carries a Deployment's random template suffix, so it is
 // not known until the pod exists. The predicate resolves it from the live
@@ -27,9 +28,9 @@ import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
 export const captureSpec: CaptureSpec = {
   surface: {
+    // buildReadSurface probes get_configmap and get_secret_meta for the
+    // deployment name ("checkout") structurally, so neither is listed here.
     deployment: "checkout",
-    configmaps: ["checkout"],
-    secrets: ["checkout"],
   },
   // The failure is manifested once the target container is waiting in
   // CrashLoopBackOff or has restarted enough times that the loop is unambiguous.

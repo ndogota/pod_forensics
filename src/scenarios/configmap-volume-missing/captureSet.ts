@@ -15,7 +15,9 @@
 // the FailedMount event names renderer-config, so a reasoning agent probes
 // get_configmap for it, and the captured negative is the discriminating signal
 // that lands the diagnosis on MissingConfigOrSecret rather than a generic
-// startup or scheduling fault.
+// startup or scheduling fault. buildReadSurface also probes get_configmap and
+// get_secret_meta for the deployment name "renderer" (the name an agent most often
+// infers); neither exists, so both are captured as real not-found negatives.
 //
 // The failing pod name carries a Deployment's random template suffix, so it is
 // not known until the pod exists. The predicate resolves it from the live

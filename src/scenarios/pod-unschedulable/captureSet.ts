@@ -9,9 +9,10 @@
 // signal, consistent with recording negatives, and they keep replay robust to an
 // agent that reads logs before it realizes the pod never ran.
 //
-// The surface adds describe_deployment for the aggregator workload and a probe of
-// a ConfigMap and Secret named after the workload; neither exists, so the
-// not-found result is recorded and lets an agent rule MissingConfigOrSecret out.
+// The surface adds describe_deployment for the aggregator workload; buildReadSurface
+// also probes a ConfigMap and Secret named after the deployment ("aggregator"),
+// neither of which exists, so the not-found result is recorded and lets an agent
+// rule MissingConfigOrSecret out.
 //
 // Wait predicate: a FailedScheduling event for the pod, or the pod sitting in
 // phase Pending past a short grace period. The event is the signal we also want
@@ -29,9 +30,9 @@ const PENDING_GRACE_MS = 20_000;
 
 export const captureSpec: CaptureSpec = {
   surface: {
+    // buildReadSurface probes get_configmap and get_secret_meta for the
+    // deployment name ("aggregator") structurally, so neither is listed here.
     deployment: "aggregator",
-    configmaps: ["aggregator"],
-    secrets: ["aggregator"],
   },
   async poll({ provider, scenario, elapsedMs }) {
     const podsResult = await provider.resolve({

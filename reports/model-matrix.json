@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "models": [
+      "claude-haiku-4-5-20251001"
+    ],
+    "runsPerCell": 5,
+    "scenarioIds": [
+      "crashloopbackoff-bad-command"
+    ],
+    "judgeModel": "claude-haiku-4-5-20251001",
+    "createdAt": "2026-07-10T12:59:13.156Z"
+  },
+  "cells": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "scenarioId": "crashloopbackoff-bad-command",
+      "tier": "obvious",
+      "runs": 5,
+      "completionRate": 1,
+      "symptomAccuracy": 0.8,
+      "causeAccuracy": 0.6,
+      "evidenceRecall": 0.6,
+      "rootCauseJudge": 0.7899999999999999
+    }
+  ],
+  "byModel": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "byTier": {
+        "tiers": [
+          {
+            "tier": "obvious",
+            "scenarioCount": 1,
+            "completionRate": 1,
+            "symptomAccuracy": 0.8,
+            "causeAccuracy": 0.6,
+            "evidenceRecall": 0.6,
+            "rootCauseJudge": 0.7899999999999999
+          }
+        ],
+        "causeAccuracyGap": null
+      },
+      "cost": {
+        "tokensIn": 31647,
+        "tokensOut": 6564,
+        "cacheReadTokens": 56612,
+        "estUsd": 0.10475570000000001,
+        "failedRuns": 0
+      }
+    }
+  ],
+  "cost": {
+    "perModelUsd": {
+      "claude-haiku-4-5-20251001": 0.10475570000000001
+    },
+    "totalUsd": 0.10475570000000001
+  }
+}

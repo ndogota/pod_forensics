@@ -9,9 +9,10 @@
 // with content or empty depending on the image; recording them keeps replay
 // robust to an agent that reads logs while ruling a crash out.
 //
-// The surface declares the web Service (the empty endpoints are the smoking gun),
-// describe_deployment for the web workload, and a ConfigMap and Secret probe
-// named after the workload so the not-found negatives are captured.
+// The surface declares the web Service (the empty endpoints are the smoking gun)
+// and describe_deployment for the web workload; buildReadSurface probes a ConfigMap
+// and Secret named after the deployment ("web") so the not-found negatives are
+// captured.
 //
 // Wait predicate: the target pod is Running and Ready, and the Service resolves
 // to zero endpoint addresses. Both the Deployment and the Service share the
@@ -26,10 +27,10 @@ import { findPodByPrefix, type CaptureSpec } from "../captureSpec";
 
 export const captureSpec: CaptureSpec = {
   surface: {
+    // buildReadSurface probes get_configmap and get_secret_meta for the
+    // deployment name ("web") structurally, so neither is listed here.
     deployment: "web",
     service: "web",
-    configmaps: ["web"],
-    secrets: ["web"],
   },
   async poll({ provider, scenario }) {
     const podsResult = await provider.resolve({

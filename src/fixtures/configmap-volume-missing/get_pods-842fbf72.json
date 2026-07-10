@@ -1,10 +1,10 @@
 {
-  "capturedAt": "2026-07-10T12:10:24.011Z",
+  "capturedAt": "2026-07-10T14:03:42.095Z",
   "output": {
     "namespace": "cms",
     "pods": [
       {
-        "name": "renderer-88f7579f-86qjz",
+        "name": "renderer-88f7579f-vs2sk",
         "phase": "Pending",
         "ready": "0/1",
         "restarts": 0,
