@@ -1,8 +1,8 @@
 {
-  "capturedAt": "2026-07-10T14:03:42.125Z",
+  "capturedAt": "2026-07-10T15:42:57.128Z",
   "output": {
     "namespace": "cms",
-    "name": "renderer-88f7579f-vs2sk",
+    "name": "renderer-88f7579f-rg645",
     "phase": "Pending",
     "node": "pod-forensics-control-plane",
     "labels": {
@@ -48,20 +48,20 @@
       {
         "type": "Normal",
         "reason": "Scheduled",
-        "message": "Successfully assigned cms/renderer-88f7579f-vs2sk to pod-forensics-control-plane",
+        "message": "Successfully assigned cms/renderer-88f7579f-rg645 to pod-forensics-control-plane",
         "count": 1,
-        "firstSeen": "2026-07-10T14:03:25.000Z",
-        "lastSeen": "2026-07-10T14:03:25.000Z",
-        "involvedObject": "Pod/renderer-88f7579f-vs2sk"
+        "firstSeen": "2026-07-10T15:42:40.000Z",
+        "lastSeen": "2026-07-10T15:42:40.000Z",
+        "involvedObject": "Pod/renderer-88f7579f-rg645"
       },
       {
         "type": "Warning",
         "reason": "FailedMount",
         "message": "MountVolume.SetUp failed for volume \"config\" : configmap \"renderer-config\" not found",
         "count": 6,
-        "firstSeen": "2026-07-10T14:03:25.000Z",
-        "lastSeen": "2026-07-10T14:03:41.000Z",
-        "involvedObject": "Pod/renderer-88f7579f-vs2sk"
+        "firstSeen": "2026-07-10T15:42:40.000Z",
+        "lastSeen": "2026-07-10T15:42:56.000Z",
+        "involvedObject": "Pod/renderer-88f7579f-rg645"
       }
     ]
   }

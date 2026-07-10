@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-07-10T14:03:42.165Z",
+  "capturedAt": "2026-07-10T15:42:57.161Z",
   "output": {
     "namespace": "cms",
     "name": "renderer",
@@ -28,8 +28,8 @@
         "reason": "ScalingReplicaSet",
         "message": "Scaled up replica set renderer-88f7579f from 0 to 1",
         "count": 1,
-        "firstSeen": "2026-07-10T14:03:25.000Z",
-        "lastSeen": "2026-07-10T14:03:25.000Z",
+        "firstSeen": "2026-07-10T15:42:40.000Z",
+        "lastSeen": "2026-07-10T15:42:40.000Z",
         "involvedObject": "Deployment/renderer"
       }
     ]
