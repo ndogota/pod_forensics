@@ -122,7 +122,11 @@ export function buildReadSurface(
     });
     calls.push({
       tool: "get_logs",
-      args: canonicalizeToolArgs("get_logs", { namespace, pod, previous: true }),
+      args: canonicalizeToolArgs("get_logs", {
+        namespace,
+        pod,
+        previous: true,
+      }),
     });
     calls.push({
       tool: "get_logs",
@@ -167,7 +171,10 @@ export function buildReadSurface(
     return out;
   };
   const withDeployment = (declared: string[] | undefined): string[] =>
-    dedupe([...(declared ?? []), ...(surface.deployment ? [surface.deployment] : [])]);
+    dedupe([
+      ...(declared ?? []),
+      ...(surface.deployment ? [surface.deployment] : []),
+    ]);
 
   for (const name of withDeployment(surface.configmaps)) {
     calls.push({

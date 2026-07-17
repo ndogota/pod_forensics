@@ -51,8 +51,9 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-mono), ui-monospace, "JetBrains Mono", SFMono-Regular,
-    Menlo, monospace;
+  font-family:
+    var(--font-mono), ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo,
+    monospace;
   font-size: 14px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;

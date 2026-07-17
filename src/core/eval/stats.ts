@@ -56,7 +56,6 @@ export function meanStdDev(values: number[]): MeanStdDev {
   if (n === 0) return { mean: 0, stdDev: 0 };
   const mean = values.reduce((a, b) => a + b, 0) / n;
   if (n < 2) return { mean, stdDev: 0 };
-  const variance =
-    values.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
+  const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
   return { mean, stdDev: Math.sqrt(variance) };
 }

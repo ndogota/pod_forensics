@@ -49,7 +49,9 @@ export const captureSpec: CaptureSpec = {
 
     const eventsResult = await provider.resolve({
       tool: "get_events",
-      args: canonicalizeToolArgs("get_events", { namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_events", {
+        namespace: scenario.namespace,
+      }),
     });
     const hasFailedScheduling = (
       eventsResult.output as GetEventsOutput

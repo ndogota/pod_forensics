@@ -60,7 +60,12 @@ function toSdkMessages(messages: ModelMessage[]): Anthropic.MessageParam[] {
       content: m.content.map((b) =>
         b.type === "text"
           ? { type: "text" as const, text: b.text }
-          : { type: "tool_use" as const, id: b.id, name: b.name, input: b.input },
+          : {
+              type: "tool_use" as const,
+              id: b.id,
+              name: b.name,
+              input: b.input,
+            },
       ),
     };
   });
@@ -96,7 +101,9 @@ export class AnthropicModelClient implements ModelClient {
   // leaves room for the full payload. Configurable via the constructor.
   readonly maxTokens: number;
 
-  constructor(opts: { model?: string; apiKey?: string; maxTokens?: number } = {}) {
+  constructor(
+    opts: { model?: string; apiKey?: string; maxTokens?: number } = {},
+  ) {
     this.model = opts.model ?? DEFAULT_MODEL;
     this.maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
     // The SDK reads ANTHROPIC_API_KEY from the environment when apiKey is unset.

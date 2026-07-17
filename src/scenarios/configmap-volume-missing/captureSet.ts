@@ -44,7 +44,9 @@ const GRACE_MS = 10_000;
 // Does any event report the volume mount failing on the absent ConfigMap? This is
 // the signal that the failure under test has manifested, not merely that the pod
 // is briefly still creating.
-function eventsReferenceMissingConfigmap(events: GetEventsOutput["events"]): boolean {
+function eventsReferenceMissingConfigmap(
+  events: GetEventsOutput["events"],
+): boolean {
   return events.some(
     (e) =>
       e.reason === "FailedMount" &&
@@ -79,7 +81,9 @@ export const captureSpec: CaptureSpec = {
 
     const eventsResult = await provider.resolve({
       tool: "get_events",
-      args: canonicalizeToolArgs("get_events", { namespace: scenario.namespace }),
+      args: canonicalizeToolArgs("get_events", {
+        namespace: scenario.namespace,
+      }),
     });
     const events = (eventsResult.output as GetEventsOutput).events;
     const mountFailed = eventsReferenceMissingConfigmap(events);

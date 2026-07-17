@@ -106,7 +106,10 @@ function isoOrUndefined(d: Date | undefined): string | undefined {
 // A compact age string like kubectl's, derived from a creation timestamp.
 function ageString(creation: Date | undefined, now: Date): string {
   if (!creation) return "";
-  const secs = Math.max(0, Math.floor((now.getTime() - new Date(creation).getTime()) / 1000));
+  const secs = Math.max(
+    0,
+    Math.floor((now.getTime() - new Date(creation).getTime()) / 1000),
+  );
   if (secs < 60) return `${secs}s`;
   const mins = Math.floor(secs / 60);
   if (mins < 60) return `${mins}m`;
@@ -190,7 +193,10 @@ function mapEvent(e: k8s.CoreV1Event): EventSummary {
 }
 
 // Events for a namespace, optionally narrowed to one involved object name.
-function mapEvents(list: k8s.CoreV1EventList, forName?: string): EventSummary[] {
+function mapEvents(
+  list: k8s.CoreV1EventList,
+  forName?: string,
+): EventSummary[] {
   const items = list.items ?? [];
   const filtered = forName
     ? items.filter((e) => e.involvedObject?.name === forName)
@@ -208,11 +214,13 @@ export class LiveProvider implements ToolProvider {
   // capture harness assumes the current context points at a reachable local
   // cluster.
   constructor(kc?: k8s.KubeConfig) {
-    this.kc = kc ?? (() => {
-      const c = new k8s.KubeConfig();
-      c.loadFromDefault();
-      return c;
-    })();
+    this.kc =
+      kc ??
+      (() => {
+        const c = new k8s.KubeConfig();
+        c.loadFromDefault();
+        return c;
+      })();
     this.core = this.kc.makeApiClient(k8s.CoreV1Api);
     this.apps = this.kc.makeApiClient(k8s.AppsV1Api);
     this.authz = this.kc.makeApiClient(k8s.AuthorizationV1Api);

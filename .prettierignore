@@ -1,0 +1,22 @@
+# Build output and dependencies
+node_modules
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+pnpm-lock.yaml
+
+# Frozen, committed artifacts and captured data. Never reformat these: they are
+# the reference the eval and dashboard read, and reformatting would rewrite the
+# reference numbers or the fixture bytes.
+reports
+src/fixtures
+**/groundtruth.json
+**/manifests.yaml
+
+# Prose docs are left as authored, so formatting never reflows the narrative.
+*.md
+
+# The frozen contracts. Its trailing field comments are deliberately column
+# aligned for readability; leave that alignment untouched.
+src/core/types.ts

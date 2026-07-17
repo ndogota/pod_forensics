@@ -11,7 +11,9 @@
     "eval": "tsx scripts/eval.ts",
     "matrix": "tsx scripts/matrix.ts",
     "capture": "tsx scripts/capture.ts",
-    "test:self-correction": "tsx scripts/selfCorrectionTest.ts"
+    "test:self-correction": "tsx scripts/selfCorrectionTest.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.107.0",
@@ -25,6 +27,7 @@
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "prettier": "^3.9.5",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }

@@ -20,10 +20,9 @@ export const CAPTURE_SPECS: Record<string, CaptureSpec> = {
   "configmap-volume-missing": configmapVolumeMissingSpec,
 };
 
-// TODO: remaining scenarios to add a CaptureSpec for as they are seeded: the
-// four other obvious-tier classes (ImagePullBackOff, OOMKilled,
-// ProbeMisconfigured, MissingConfigOrSecret) and the two misleading-tier
-// scenarios. See src/scenarios/TEMPLATE.md.
+// TODO: add a CaptureSpec for each remaining scenario as it is seeded: the three
+// other obvious-tier classes (ImagePullBackOff, OOMKilled, ProbeMisconfigured)
+// and the two misleading-tier scenarios. See src/scenarios/TEMPLATE.md.
 
 export function findCaptureSpec(scenarioId: string): CaptureSpec | undefined {
   return CAPTURE_SPECS[scenarioId];

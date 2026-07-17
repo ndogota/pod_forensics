@@ -151,9 +151,7 @@ export function buildRows(
     byScenario.set(c.scenarioId, list);
   }
   // Preserve the artifact's scenario order within a tier, tier order across.
-  const order = scenarioIds.length
-    ? scenarioIds
-    : [...byScenario.keys()];
+  const order = scenarioIds.length ? scenarioIds : [...byScenario.keys()];
   const rows: ScenarioRow[] = order
     .filter((id) => byScenario.has(id))
     .map((id) => {
@@ -168,18 +166,14 @@ export function buildRows(
   // Stable sort by tier rank, keeping artifact order within a tier.
   return rows
     .map((r, i) => ({ r, i }))
-    .sort((a, b) =>
-      tierRank(a.r.tier) - tierRank(b.r.tier) || a.i - b.i,
-    )
+    .sort((a, b) => tierRank(a.r.tier) - tierRank(b.r.tier) || a.i - b.i)
     .map(({ r }) => r);
 }
 
 // Short display label for a model id: drop the vendor prefix and the trailing
 // date stamp so columns stay narrow. "claude-haiku-4-5-20251001" -> "haiku 4.5".
 export function modelLabel(model: string): string {
-  const m = model.match(
-    /^claude-(haiku|sonnet|opus)-(\d+)-(\d+)(?:-\d{8})?$/,
-  );
+  const m = model.match(/^claude-(haiku|sonnet|opus)-(\d+)-(\d+)(?:-\d{8})?$/);
   if (m) return `${m[1]} ${m[2]}.${m[3]}`;
   return model.replace(/^claude-/, "");
 }

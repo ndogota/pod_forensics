@@ -2,7 +2,7 @@
 //
 // Each entry is a frozen Scenario. The namespace under diagnosis and the target
 // workload are fields on the Scenario itself, so no runtime wrapper is needed.
-// Quest 1 seeds one scenario. See TEMPLATE.md to add more.
+// Five scenarios are seeded and captured today. See TEMPLATE.md to add more.
 
 import type { GroundTruth, Scenario } from "../core/types";
 import crashloopGroundTruth from "./crashloopbackoff-bad-command/groundtruth.json";
@@ -83,12 +83,14 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
-// TODO: six more scenarios to seed per the architecture doc. Obvious tier, one
-// per remaining failure class: ImagePullBackOff, OOMKilled, ProbeMisconfigured,
-// MissingConfigOrSecret. Misleading tier: the two scenarios where the obvious
-// surface signal is a symptom of a different root cause. Add each as a directory
-// plus a registry entry here and a CaptureSpec in captureRegistry.ts. See
-// TEMPLATE.md.
+// TODO: five more scenarios to reach the ten in the architecture doc. Obvious
+// tier, one per remaining failure class: ImagePullBackOff, OOMKilled,
+// ProbeMisconfigured (MissingConfigOrSecret is already seeded as
+// configmap-volume-missing). Misleading tier: the two scenarios where the
+// surface signal is a symptom of a different root cause (a CrashLoopBackOff whose
+// true cause is a missing ConfigMap; a service with no endpoints whose true cause
+// is unschedulable backing pods). Add each as a directory plus a registry entry
+// here and a CaptureSpec in captureRegistry.ts. See TEMPLATE.md.
 
 export function findScenario(id: string): Scenario | undefined {
   return SCENARIOS.find((s) => s.id === id);

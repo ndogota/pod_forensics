@@ -49,13 +49,14 @@ import type { RunReport, Scenario } from "../src/core/types";
 // The scripted fake client per scenario. A scenario must appear here to run
 // under the fake (deterministic) client. Adding a scenario means adding its
 // builder here alongside its captureSet and registry entry.
-const FAKE_SCRIPTS: Record<string, (scenario: Scenario) => CompletionResult[]> = {
-  "crashloopbackoff-bad-command": buildCrashloopScript,
-  "pod-unschedulable": buildUnschedulableScript,
-  "service-no-endpoints": buildServiceNoEndpointsScript,
-  "rbac-denied": buildRbacDeniedScript,
-  "configmap-volume-missing": buildConfigmapVolumeMissingScript,
-};
+const FAKE_SCRIPTS: Record<string, (scenario: Scenario) => CompletionResult[]> =
+  {
+    "crashloopbackoff-bad-command": buildCrashloopScript,
+    "pod-unschedulable": buildUnschedulableScript,
+    "service-no-endpoints": buildServiceNoEndpointsScript,
+    "rbac-denied": buildRbacDeniedScript,
+    "configmap-volume-missing": buildConfigmapVolumeMissingScript,
+  };
 
 // The judge always runs on the cheapest model, independent of the agent model.
 const JUDGE_MODEL = "claude-haiku-4-5-20251001";
@@ -159,11 +160,15 @@ async function main(): Promise<void> {
     }
     // Agent model: --model, then AGENT_MODEL, then the client default.
     const agentModel = args.model ?? process.env.AGENT_MODEL;
-    anthropic = new AnthropicModelClient(agentModel ? { model: agentModel } : {});
+    anthropic = new AnthropicModelClient(
+      agentModel ? { model: agentModel } : {},
+    );
     // Report the model and output token ceiling this run operates under, so a
     // truncation failure can be read against the budget that produced it.
     console.error(`[eval] agent model: ${anthropic.model}`);
-    console.error(`[eval] AnthropicModelClient max_tokens: ${anthropic.maxTokens}`);
+    console.error(
+      `[eval] AnthropicModelClient max_tokens: ${anthropic.maxTokens}`,
+    );
     // The judge runs on its own client at the cheapest model, independent of the
     // agent model. Using a model inside scoring makes the eval non-deterministic.
     const judgeClient = new AnthropicModelClient({ model: JUDGE_MODEL });
@@ -322,7 +327,9 @@ function printCostSummary(
       cacheReadTokens: u.cacheReadTokens,
     }).toFixed(4);
 
-  console.log(`\ncost summary (${report.model}; arithmetic on returned usage, no network):`);
+  console.log(
+    `\ncost summary (${report.model}; arithmetic on returned usage, no network):`,
+  );
   for (const [scenarioId, u] of byScenario) {
     const failed = failedCount.get(scenarioId) ?? 0;
     const note = failed > 0 ? ` (includes ${failed} failed run(s))` : "";

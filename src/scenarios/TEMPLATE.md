@@ -82,13 +82,15 @@ script wired into `FAKE_SCRIPTS` in `scripts/eval.ts`.
 
 ## Still to seed (TODO)
 
-Per the architecture doc, six more scenarios remain: four more at the obvious
+Per the architecture doc, five more scenarios remain: three more at the obvious
 tier (one per remaining failure class) and two at the misleading tier, where the
 obvious surface signal is a symptom of a different root cause.
 
 - ImagePullBackOff from a wrong image tag (obvious)
 - OOMKilled from a memory limit set too low (obvious)
 - ProbeMisconfigured from a readiness probe on the wrong port (obvious)
+- CrashLoopBackOff whose true cause is a ConfigMap consumed at startup that does
+  not exist, class MissingConfigOrSecret (misleading)
 - ServiceNoEndpoints whose true cause is that the backing pods are all
   unschedulable, class PodUnschedulable (misleading)
 

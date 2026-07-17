@@ -11,10 +11,6 @@
 //
 // Safety note: get_secret_meta returns existence and key names only, never
 // secret values, so nothing sensitive can land in a fixture or a trace.
-//
-// TODO: the architecture document heading says "Eight tools" but the read-only
-// tool set explicitly lists nine. All nine listed tools are defined here. The
-// count wording should be reconciled in the document.
 
 import { z } from "zod";
 import type { ToolDefinition } from "../types";
@@ -25,7 +21,7 @@ import type { ToolDefinition } from "../types";
 // restarted, which is the signal a crash loop leaves behind.
 export interface ContainerStateTerminated {
   exitCode: number;
-  reason?: string;    // e.g. Error, OOMKilled, Completed
+  reason?: string; // e.g. Error, OOMKilled, Completed
   startedAt?: string;
   finishedAt?: string;
   message?: string;
@@ -37,9 +33,9 @@ export interface ContainerStatusSummary {
   ready: boolean;
   restartCount: number;
   state: "running" | "waiting" | "terminated";
-  reason?: string;    // current waiting/terminated reason, e.g. CrashLoopBackOff
+  reason?: string; // current waiting/terminated reason, e.g. CrashLoopBackOff
   message?: string;
-  exitCode?: number;  // set when the container is currently terminated
+  exitCode?: number; // set when the container is currently terminated
   lastTerminated?: ContainerStateTerminated; // prior instance, for crash loops
 }
 
@@ -70,8 +66,8 @@ export const getPodsInput = z.object({
 
 export interface PodSummary {
   name: string;
-  phase: string;        // Pending, Running, Succeeded, Failed, Unknown
-  ready: string;        // "0/1"
+  phase: string; // Pending, Running, Succeeded, Failed, Unknown
+  ready: string; // "0/1"
   restarts: number;
   age: string;
   node?: string;
@@ -118,9 +114,10 @@ export const getLogsInput = z.object({
   namespace: z.string(),
   pod: z.string(),
   container: z.string().optional(),
-  // previous reads the logs of the prior crashed instance.
-  // TODO: ToolCall.args is Record<string, string>, so this boolean is coerced
-  // to/from a string at the agent boundary. Coercion is a later quest.
+  // previous reads the logs of the prior crashed instance. This schema is the
+  // model-facing shape, so previous is a boolean here; a ToolCall carries args
+  // as Record<string, string>, so canonicalizeToolArgs stringifies it ("true"/
+  // "false") and the providers read that string back at the tool boundary.
   previous: z.boolean().optional(),
 });
 
@@ -280,7 +277,7 @@ const SPECS: ToolSpec[] = [
     description:
       "Check whether a service account is allowed to perform a verb on a resource, " +
       "in the style of kubectl auth can-i. When a log line or event shows a " +
-      'Kubernetes Forbidden error (for example: secrets is forbidden: User ' +
+      "Kubernetes Forbidden error (for example: secrets is forbidden: User " +
       '"system:serviceaccount:telemetry:log-shipper" cannot list resource "secrets"), ' +
       "call this using the exact verb, resource, and service account that error " +
       "names (there, verb=list, resource=secrets, serviceAccount=log-shipper) rather " +
@@ -301,5 +298,3 @@ export const toolDefinitions: ToolDefinition[] = SPECS.map((s) => ({
   description: s.description,
   inputSchema: z.toJSONSchema(s.inputSchema),
 }));
-
-export const toolNames: string[] = SPECS.map((s) => s.name);

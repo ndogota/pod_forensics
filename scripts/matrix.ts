@@ -265,10 +265,22 @@ function buildTierIntervals(
     out.push({
       tier,
       runs: totalRuns,
-      completionRateCI: wilsonInterval(pooled((s) => s.completionRate), totalRuns),
-      symptomAccuracyCI: wilsonInterval(pooled((s) => s.symptomAccuracy), totalRuns),
-      causeAccuracyCI: wilsonInterval(pooled((s) => s.causeAccuracy), totalRuns),
-      evidenceRecallCI: wilsonInterval(pooled((s) => s.evidenceRecall), totalRuns),
+      completionRateCI: wilsonInterval(
+        pooled((s) => s.completionRate),
+        totalRuns,
+      ),
+      symptomAccuracyCI: wilsonInterval(
+        pooled((s) => s.symptomAccuracy),
+        totalRuns,
+      ),
+      causeAccuracyCI: wilsonInterval(
+        pooled((s) => s.causeAccuracy),
+        totalRuns,
+      ),
+      evidenceRecallCI: wilsonInterval(
+        pooled((s) => s.evidenceRecall),
+        totalRuns,
+      ),
       rootCauseJudge: meanStdDev(tierJudgeScores),
     });
   }
@@ -364,7 +376,7 @@ async function main(): Promise<void> {
         rootCauseJudgeStdDev: meanStdDev(judgeScores).stdDev,
       });
 
-      // Per-run cache diagnostic (Quest 4). A successful run that read nothing
+      // Per-run cache diagnostic. A successful run that read nothing
       // from the prompt cache missed it, which is where cost silently rises. The
       // frozen RunTrace records cache reads but not cache writes, so this reports
       // the read side; the loop's own "[loop] cache summary" stderr line carries
@@ -376,7 +388,9 @@ async function main(): Promise<void> {
             `cacheRead=${t.cacheReadTokens} -> ${engaged ? "ENGAGED" : "MISSED (no prompt cache hit)"}`,
         );
       });
-      const missed = report.traces.filter((t) => t.cacheReadTokens === 0).length;
+      const missed = report.traces.filter(
+        (t) => t.cacheReadTokens === 0,
+      ).length;
       if (missed > 0) {
         console.error(
           `[matrix] cache WARNING ${client.model} / ${scenario.id}: ${missed}/${report.traces.length} completed run(s) missed cache`,
@@ -444,7 +458,9 @@ async function main(): Promise<void> {
     );
   }
 
-  console.log("\nper-model tiers (point [lower, upper] = Wilson 95% CI over all tier runs):");
+  console.log(
+    "\nper-model tiers (point [lower, upper] = Wilson 95% CI over all tier runs):",
+  );
   for (const m of byModel) {
     // Pair each tier's point-estimate rollup with its recomputed intervals.
     const ciByTier = new Map(m.tierIntervals.map((t) => [t.tier, t]));
@@ -464,7 +480,10 @@ async function main(): Promise<void> {
     "\ncost summary (arithmetic on returned usage, no network; failed runs omit cache-write cost):",
   );
   for (const m of byModel) {
-    const note = m.cost.failedRuns > 0 ? ` (includes ${m.cost.failedRuns} failed run(s))` : "";
+    const note =
+      m.cost.failedRuns > 0
+        ? ` (includes ${m.cost.failedRuns} failed run(s))`
+        : "";
     console.log(
       `  ${m.model}: in ${m.cost.tokensIn}, out ${m.cost.tokensOut}, ` +
         `cacheRead ${m.cost.cacheReadTokens}, est $${m.cost.estUsd.toFixed(4)}${note}`,

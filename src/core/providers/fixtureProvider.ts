@@ -63,9 +63,9 @@ const NAME_LOOKUP_NOT_FOUND: Record<
 };
 
 // Default fixtures root, relative to the process working directory. Capture and
-// eval run from the project root.
-// TODO: make the base directory robust to the working directory once the
-// capture and eval harnesses exist.
+// eval both run from the project root, so cwd resolves correctly today.
+// TODO: resolve this relative to the package root rather than cwd, so a caller
+// invoking the provider from another directory still finds the fixtures.
 const DEFAULT_FIXTURES_ROOT = path.resolve(process.cwd(), "src/fixtures");
 
 export class FixtureProvider implements ToolProvider {

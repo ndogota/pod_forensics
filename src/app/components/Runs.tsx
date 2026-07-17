@@ -155,8 +155,8 @@ export function Runs({
         <h2 className="runs-title">One run, end to end</h2>
         <p className="runs-lede">
           The matrix above is the real-model measurement — every model against
-          every scenario, aggregated over N runs with confidence intervals. These
-          transcripts are illustrative single runs, not measurement: one
+          every scenario, aggregated over N runs with confidence intervals.
+          These transcripts are illustrative single runs, not measurement: one
           representative run per scenario from the committed deterministic
           reference report (<code>{report.model}</code>, {report.traces.length}{" "}
           traces total), shown so the tool-call sequence and the structured

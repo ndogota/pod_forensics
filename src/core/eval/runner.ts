@@ -88,7 +88,11 @@ export async function runEval(options: RunEvalOptions): Promise<RunEvalResult> {
         // lowers the completion rate. Carry the usage it spent before failing so
         // the cost summary can still price it.
         console.error(`run ${i} failed and was recorded: ${err.message}`);
-        outcomes.push({ status: "failed", error: err.message, usage: err.usage });
+        outcomes.push({
+          status: "failed",
+          error: err.message,
+          usage: err.usage,
+        });
       } else {
         throw err;
       }
@@ -96,7 +100,9 @@ export async function runEval(options: RunEvalOptions): Promise<RunEvalResult> {
   }
 
   const traces = outcomes
-    .filter((o): o is Extract<RunOutcome, { status: "ok" }> => o.status === "ok")
+    .filter(
+      (o): o is Extract<RunOutcome, { status: "ok" }> => o.status === "ok",
+    )
     .map((o) => o.trace);
 
   const failedRuns: FailedRunUsage[] = outcomes

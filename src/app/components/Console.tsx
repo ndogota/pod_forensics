@@ -34,7 +34,8 @@ function StatusBar({ matrix }: { matrix: MatrixArtifact | null }) {
           <>
             <span className="sb-spacer" />
             <span className="sb-seg">
-              <span className="sb-k">models</span> {matrix.metadata.models.length}
+              <span className="sb-k">models</span>{" "}
+              {matrix.metadata.models.length}
             </span>
             <span className="sb-dot">·</span>
             <span className="sb-seg">
@@ -42,14 +43,19 @@ function StatusBar({ matrix }: { matrix: MatrixArtifact | null }) {
             </span>
             <span className="sb-dot">·</span>
             <span className="sb-seg">
-              <span className="sb-k">judge</span> {modelLabel(matrix.metadata.judgeModel)}
+              <span className="sb-k">judge</span>{" "}
+              {modelLabel(matrix.metadata.judgeModel)}
             </span>
             <span className="sb-dot">·</span>
             <span className="sb-seg">
-              <span className="sb-k">est</span> ${matrix.cost.totalUsd.toFixed(2)}
+              <span className="sb-k">est</span> $
+              {matrix.cost.totalUsd.toFixed(2)}
             </span>
             <span className="sb-dot">·</span>
-            <span className="sb-seg sb-ro" title="Every tool is read-only; the secret tool returns key names only, never values.">
+            <span
+              className="sb-seg sb-ro"
+              title="Every tool is read-only; the secret tool returns key names only, never values."
+            >
               read-only
             </span>
           </>
@@ -74,8 +80,8 @@ function Header({ matrix }: { matrix: MatrixArtifact }) {
         read-only diagnostic tools. It reasons — observe, hypothesize, fetch the
         evidence that confirms or refutes — then emits a structured diagnosis.
         Each diagnosis is scored on two independent axes: the observable{" "}
-        <em>symptom</em> and the underlying <em>root cause</em>. The matrix below
-        is every model against every scenario.
+        <em>symptom</em> and the underlying <em>root cause</em>. The matrix
+        below is every model against every scenario.
       </p>
 
       <dl className="head-meta">
@@ -98,12 +104,11 @@ function Header({ matrix }: { matrix: MatrixArtifact }) {
       </dl>
 
       <p className="head-method">
-        Each rate carries a Wilson 95% confidence interval over
-        the cell&apos;s N runs. At low N a point estimate is not a fact: a
-        handful of clean runs are still consistent with a true rate well below
-        1.0, and the
-        interval says so. The bars below draw that interval directly — a wide
-        bracket means low confidence, not a wide result.
+        Each rate carries a Wilson 95% confidence interval over the cell&apos;s
+        N runs. At low N a point estimate is not a fact: a handful of clean runs
+        are still consistent with a true rate well below 1.0, and the interval
+        says so. The bars below draw that interval directly — a wide bracket
+        means low confidence, not a wide result.
       </p>
     </header>
   );
@@ -118,9 +123,7 @@ function Finding({ matrix }: { matrix: MatrixArtifact }) {
   // Per-model cause accuracy on the hard case, in the artifact's model order.
   const hard: MatrixCell[] = matrix.metadata.models
     .map((m) =>
-      matrix.cells.find(
-        (c) => c.model === m && c.scenarioId === HARD_SCENARIO,
-      ),
+      matrix.cells.find((c) => c.model === m && c.scenarioId === HARD_SCENARIO),
     )
     .filter((c): c is MatrixCell => !!c);
   if (hard.length === 0) return null;
@@ -160,9 +163,9 @@ function Finding({ matrix }: { matrix: MatrixArtifact }) {
       </div>
 
       <p className="finding-frame">
-        The harness localizes exactly where model scale matters and where it does
-        not: four scenarios are saturated for all three models, and only the hard
-        case separates them.
+        The harness localizes exactly where model scale matters and where it
+        does not: four scenarios are saturated for all three models, and only
+        the hard case separates them.
       </p>
 
       {failed && (
@@ -178,8 +181,8 @@ function Finding({ matrix }: { matrix: MatrixArtifact }) {
 
       <p className="finding-honest">
         Scenarios were initially grouped by assumed difficulty (obvious vs
-        misleading), but measurement showed difficulty is model-dependent, so the
-        grouping is descriptive only.
+        misleading), but measurement showed difficulty is model-dependent, so
+        the grouping is descriptive only.
       </p>
     </section>
   );
@@ -202,10 +205,10 @@ function Placeholder({ report }: { report: RunReport | null }) {
       </p>
       <p className="ph-body">
         The showcase matrix reads <code>reports/model-matrix.json</code>, which
-        is not present or has no cells. Generate it with <code>pnpm matrix</code>{" "}
-        (needs <code>ANTHROPIC_API_KEY</code> and captured fixtures), then commit
-        the artifact. The page is a static read of that file, so it rebuilds
-        automatically once the artifact exists.
+        is not present or has no cells. Generate it with{" "}
+        <code>pnpm matrix</code> (needs <code>ANTHROPIC_API_KEY</code> and
+        captured fixtures), then commit the artifact. The page is a static read
+        of that file, so it rebuilds automatically once the artifact exists.
       </p>
       {report && (
         <p className="ph-body ph-muted">

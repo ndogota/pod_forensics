@@ -6,14 +6,12 @@
 // reused across runs. This is what makes the committed eval reproducible and
 // free: no network, no model, same output every time.
 //
-// The script is scenario specific. buildCrashloopScript and the three builders
-// below drive the four currently-seeded scenarios. Each walks a plausible
-// read-only investigation and then submits a valid one-shot diagnosis whose
-// cited excerpts carry the scenario's expectedEvidence markers, so evidence
-// recall is meaningful.
-// TODO: add a script per scenario, or switch to AnthropicModelClient, as the
-// remaining scenarios (four obvious classes and the two misleading tier) are
-// seeded.
+// The script is scenario specific. One builder drives each of the five seeded
+// scenarios (see the builders below). Each walks a plausible read-only
+// investigation and then submits a valid one-shot diagnosis whose cited excerpts
+// carry the scenario's expectedEvidence markers, so evidence recall is
+// meaningful. A scenario seeded later needs either its own builder here or a run
+// under AnthropicModelClient.
 //
 // Recapture resilience: a Deployment names its pod with a random template-hash
 // suffix that capture cannot know ahead of time and that changes on every
@@ -180,7 +178,9 @@ function submitStep(
   input: Record<string, unknown>,
 ): CompletionResult {
   return {
-    content: [{ type: "tool_use", id: callId, name: SUBMIT_DIAGNOSIS_TOOL, input }],
+    content: [
+      { type: "tool_use", id: callId, name: SUBMIT_DIAGNOSIS_TOOL, input },
+    ],
     stopReason: "tool_use",
     tokensIn: FAKE_TOKENS_IN,
     tokensOut: 160,
@@ -195,7 +195,9 @@ function submitStep(
 // captureSet. Cited excerpts carry the "FailedScheduling" and "Insufficient
 // memory" markers. The Pending pod name is resolved from the committed get_pods
 // fixture, never hardcoded.
-export function buildUnschedulableScript(scenario: Scenario): CompletionResult[] {
+export function buildUnschedulableScript(
+  scenario: Scenario,
+): CompletionResult[] {
   const namespace = scenario.namespace;
   const pod = resolvePodName(scenario);
   return [
@@ -324,7 +326,12 @@ export function buildRbacDeniedScript(scenario: Scenario): CompletionResult[] {
         },
         {
           tool: "check_rbac",
-          args: { namespace, serviceAccount, verb: "list", resource: "secrets" },
+          args: {
+            namespace,
+            serviceAccount,
+            verb: "list",
+            resource: "secrets",
+          },
           excerpt:
             "check_rbac reports serviceAccount log-shipper is not allowed to list secrets (allowed: false)",
         },

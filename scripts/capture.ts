@@ -36,7 +36,10 @@ import type { GetPodsOutput } from "../src/core/tools";
 import { LiveProvider } from "../src/core/providers/liveProvider";
 import { RecordingProvider } from "../src/core/providers/recordingProvider";
 import { findCaptureSpec } from "../src/scenarios/captureRegistry";
-import { buildReadSurface, type CaptureSpec } from "../src/scenarios/captureSpec";
+import {
+  buildReadSurface,
+  type CaptureSpec,
+} from "../src/scenarios/captureSpec";
 import { findScenario } from "../src/scenarios";
 import type { Scenario } from "../src/core/types";
 

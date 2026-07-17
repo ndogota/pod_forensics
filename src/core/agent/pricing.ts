@@ -22,8 +22,9 @@ const CACHE_WRITE_MULTIPLIER = 1.25;
 
 // Resolve pricing for a model id. Exact aliases hit directly; dated snapshot ids
 // (for example the judge's claude-haiku-4-5-20251001) resolve by alias prefix so
-// the table stays small without missing them.
-export function pricingFor(model: string): ModelPricing | undefined {
+// the table stays small without missing them. Internal: estimateCostUsd is the
+// module's public entry point.
+function pricingFor(model: string): ModelPricing | undefined {
   if (PRICING[model]) return PRICING[model];
   for (const key of Object.keys(PRICING)) {
     if (model.startsWith(key)) return PRICING[key];

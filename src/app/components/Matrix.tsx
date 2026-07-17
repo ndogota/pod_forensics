@@ -125,7 +125,8 @@ function CellDetail({
         </span>
         <span className="cd-judge-note">
           mean of the LLM-as-judge rubric over {cell.runs} run(s); a continuous
-          score, so it carries a standard deviation rather than a Wilson interval
+          score, so it carries a standard deviation rather than a Wilson
+          interval
         </span>
       </div>
 
@@ -237,9 +238,7 @@ export function Matrix({
   // actually have cells so an empty column never renders.
   const present = new Set(matrix.cells.map((c) => c.model));
   const models = matrix.metadata.models.filter((m) => present.has(m));
-  const modelList = models.length
-    ? models
-    : [...present];
+  const modelList = models.length ? models : [...present];
 
   const rows = buildRows(matrix.cells, modelList, matrix.metadata.scenarioIds);
 
